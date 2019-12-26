@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
-from slam_domain.models import Domain
+from slam_domain.models import Domain, DomainEntry
 
 
 @login_required
@@ -28,7 +28,24 @@ def domain(request, name):
     if request.headers['Accept'] == 'application/json' or \
             request.GET.get('format') == 'json':
         rest_api = True
-    if request.method == 'POST':
+    if request.method == 'GET':
+        ns_domain = Domain.objects.get(name=name)
+        ns_entry = DomainEntry.objects.filter(domain=ns_domain)
+        entries = []
+        for entry in ns_entry:
+            entries.append({
+                'name': entry.name,
+                'type': entry.type,
+                'description': entry.description
+            })
+        result = {
+            'domain': name,
+            'description': ns_domain.description,
+            'contact': ns_domain.contact,
+            'master': ns_domain.dns_master,
+            'entries': entries
+        }
+    elif request.method == 'POST':
         description = request.POST.get('description')
         master = request.POST.get('master')
         contact = request.POST.get('contact')
@@ -72,10 +89,10 @@ def domain(request, name):
 
 @login_required
 def dns_entry(request, name, ns_entry):
-    print('Add DNS entry {} in {}'.format(ns_entry, name))
     rest_api = False
     result = {}
-    if request.headers['Accept'] == 'application/json':
+    if request.headers['Accept'] == 'application/json' or \
+            request.GET.get('format') == 'json':
         rest_api = True
     if request.method == 'GET':
         result = {
@@ -84,6 +101,16 @@ def dns_entry(request, name, ns_entry):
             'type': 'A'
         }
     if request.method == 'POST':
+        ns_domain = Domain.objects.get(name=name)
+        options = {
+            'name': ns_entry,
+            'domain': ns_domain,
+        }
+        if request.POST.get('type') is not None:
+            options['type'] = request.POST.get('type')
+        if request.POST.get('description') is not None:
+            options['description'] = request.POST.get('description')
+        DomainEntry.objects.create(**options)
         result = {
             'domain': name,
             'entry': ns_entry,

@@ -18,5 +18,6 @@ class DomainEntry(models.Model):
     """
     name = models.CharField(max_length=50)
     domain = models.ForeignKey(Domain, on_delete=models.DO_NOTHING)
-    description = models.CharField(max_length=120)
+    type = models.CharField(max_length=5, default='A')
+    description = models.CharField(max_length=150, blank=True, default='', null=True)
     creation_date = models.DateField(default=timezone.now)
