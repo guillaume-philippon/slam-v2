@@ -129,7 +129,7 @@ class DomainsModelController {
             async: false,
             success: function(data){
                 $.each(data, function(key, item){
-                    var current_domain = new Domain(item.name);
+                    var current_domain = new Domain(item.name, self);
                     current_domain.description = item.description;
                     current_domain.master = item.master;
                     current_domain.contact = item.contact;
@@ -139,11 +139,25 @@ class DomainsModelController {
         });
         return result;
     }
+
+    put(domain, options) {
+        var self = this;
+        var csrftoken = $.cookie('csrftoken')
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": csrftoken }
+        });
+        $.ajax({
+            url: '/domains/' + domain,
+            type: 'PUT',
+            data: options
+        })
+    }
 }
 
 class Domain {
-    constructor (name) {
+    constructor (name, ctrl) {
         this.name = name;
+        this.ctrl = ctrl;
         this.description = '';
         this.master = '';
         this.contact = '';
@@ -154,7 +168,12 @@ class Domain {
         this.description = values.description;
         this.master = values.master;
         this.contact = values.contact;
-        this.post();
+        var options = {
+            'description': this.description,
+            'master': this.master,
+            'contact': this.contact
+        }
+        this.ctrl.put(this.name, options);
     }
 
     post () {
@@ -168,9 +187,10 @@ class Domain {
 }
 
 class Domains {
-    constructor(domains) {
-        this.domains = domains;
-        this.active = domains[0].name;
+    constructor(ctrl) {
+        this.ctrl = ctrl;
+        this.domains = ctrl.get();
+        this.active = this.domains[0].name;
     }
 
     update(values) {
@@ -202,7 +222,6 @@ class Domains {
 
 $(function(){
     var domains_ctrl = new DomainsModelController();
-    var domains_dict = domains_ctrl.get()
-    var domains = new Domains(domains_dict);
+    var domains = new Domains(domains_ctrl);
     var listener = new DomainsViewListener(domains);
 });

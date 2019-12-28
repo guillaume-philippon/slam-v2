@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'slam',
     'slam_core',
-    # 'slam_hardware',
-    # 'slam_network',
+    'slam_hardware',
+    'slam_network',
     'slam_domain',
 ]
 
