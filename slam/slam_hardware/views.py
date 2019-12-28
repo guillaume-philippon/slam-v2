@@ -9,10 +9,12 @@ following nomenclature
  - *_view: a function that manage the web interface (per example domains_view manage web interface
  of domains, ...)
  - rest_api: a boolean which say if REST API is used. If not, HTML rendering will be used
- - options: a generic structure that represent arguments we send/receive to/from function
+ - options: a generic structure that represent arguments we send to function
+ - data: a generic structure that represent arguments we received from a function
  - result: a temporary structure that represent the output of the view
  - result_*: a temporary structure that represent a part of the output (per example result_entries)
  - uri_*: input retrieve from URI structure itself
+ - raw_*: a raw version of variable
 """
 from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
@@ -101,9 +103,15 @@ def hardware_view(request, uri_hardware):
                 'speed': interface.speed
             })
         result = {
-            'hardware': uri_hardware,
+            'name': uri_hardware,
             'description': hardware.description,
             'owner': hardware.owner,
             'interfaces': result_interfaces
         }
+    elif request.method == 'PUT':
+        raw_data = request.body
+        data = QueryDict(raw_data)
+        description = data.get('description')
+        owner = data.get('owner')
+
     return JsonResponse(result)

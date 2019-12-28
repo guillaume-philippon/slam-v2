@@ -7,12 +7,17 @@ following nomenclature
  - domains: a list of domain
  - entry: a name associated with a domain that represent a entry in DNS
  - entries: a list of entry
+
  - rest_api: a boolean which say if REST API is used. If not, HTML rendering will be used
  - options: a generic structure that represent arguments we send/receive to/from function
  - result: a temporary structure that represent the output of the view
  - result_*: a temporary structure that represent a part of the output (per example result_entries)
  - uri_*: input retrieve from URI structure itself
+
+ As django models are generic classes, pylint can't check if member of model Class exists, we must
+ disable pylint E1101 (no-member) test from this file
 """
+# pylint: disable=E1101
 from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required

@@ -1,3 +1,8 @@
+"""
+This module provide model for domains. There are 2 models
+ - Domain: which represent a DNS domain like example.com
+ - DomainEntry: which represent a named entry like www.example.com
+"""
 from django.db import models
 from django.utils import timezone
 
