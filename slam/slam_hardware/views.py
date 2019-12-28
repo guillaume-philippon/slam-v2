@@ -86,6 +86,11 @@ def hardware_view(request, uri_hardware):
     if request.method == 'POST':
         description = request.POST.get('description')
         owner = request.POST.get('owner')
+        vendor = request.POST.get('vendor')
+        model = request.POST.get('model')
+        serial_number = request.POST.get('serial-number')
+        inventory = request.POST.get('inventory')
+        warranty = request.POST.get('warranty')
         interface_address = request.POST.get('interface-mac-address')
         interface_speed = request.POST.get('interface-speed')
         interface_type = request.POST.get('interface-type')
@@ -99,6 +104,16 @@ def hardware_view(request, uri_hardware):
             options['description'] = description
         if owner is not None:
             options['owner'] = owner
+        if vendor is not None:
+            options['vendor'] = vendor
+        if model is not None:
+            options['model'] = model
+        if serial_number is not None:
+            options['serial-number'] = serial_number
+        if inventory is not None:
+            options['inventory'] = inventory
+        if warranty is not None:
+            options['warranty'] = warranty
         try:
             Hardware.objects.create(**options)
         except:
@@ -129,18 +144,40 @@ def hardware_view(request, uri_hardware):
             'name': uri_hardware,
             'description': hardware.description,
             'owner': hardware.owner,
+            'vendor': hardware.vendor,
+            'model': hardware.model,
+            'serial-number': hardware.serial_number,
+            'inventory': hardware.inventory,
+            'buying-date': hardware.buying_date,
+            'warranty': hardware.warranty,
             'interfaces': result_interfaces
         }
     elif request.method == 'PUT':
         raw_data = request.body
         data = QueryDict(raw_data)
+        print(data)
         description = data.get('description')
         owner = data.get('owner')
+        vendor = data.get('vendor')
+        model = data.get('model')
+        serial_number = data.get('serial-number')
+        inventory = data.get('inventory')
+        warranty = data.get('warranty')
         hardware = Hardware.objects.get(name=uri_hardware)
         if description is not None:
             hardware.description = description
         if owner is not None:
             hardware.owner = owner
+        if vendor is not None:
+            hardware.vendor = vendor
+        if model is not None:
+            hardware.model = model
+        if serial_number is not None:
+            hardware.serial_number = serial_number
+        if inventory is not None:
+            hardware.inventory = inventory
+        if warranty is not None:
+            hardware.warranty = warranty
         hardware.save()
         result = {
             'hardware': uri_hardware,

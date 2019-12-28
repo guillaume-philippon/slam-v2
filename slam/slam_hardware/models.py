@@ -10,6 +10,11 @@ class Hardware(models.Model):
     buying_date = models.DateField(default=timezone.now)
     description = models.CharField(max_length=150)
     owner = models.CharField(max_length=150)
+    vendor = models.CharField(max_length=150, default='')
+    model = models.CharField(max_length=150, default='')
+    serial_number = models.CharField(max_length=150, default='')
+    inventory = models.CharField(max_length=150, default='')
+    warranty = models.IntegerField(default=5)
 
 
 class Interface(models.Model):
