@@ -59,6 +59,8 @@ def network_view(request, uri_network):
             request.GET.get('format') == 'json':
         rest_api = True
     if request.method == 'GET':
+        # If we want to get (GET) information about a network, we're looking for it and send
+        # information
         network = Network.objects.get(name=uri_network)
         result = {
             'name': uri_network,
@@ -72,6 +74,8 @@ def network_view(request, uri_network):
             'dhcp': network.dhcp
         }
     elif request.method == 'POST':
+        # If we want to create (POST) a new network, we retrieve informations from POST and
+        # see if optional value are put into it. If not, we ignore them.
         description = request.POST.get('description')
         address = request.POST.get('address')
         prefix = request.POST.get('prefix')
@@ -101,6 +105,8 @@ def network_view(request, uri_network):
             'status': 'done'
         }
     elif request.method == 'PUT':
+        # If we want to update (PUT) information, we need to retrieve data from body (no
+        # request.PUT.get is available on django), and see which value should be updated.
         raw_data = request.body
         data = QueryDict(raw_data)
         description = data.get('description')
@@ -127,7 +133,16 @@ def network_view(request, uri_network):
             'network': uri_network,
             'status': 'done'
         }
+    elif request.method == 'DELETE':
+        # If we want to delete (DELETE) a network, we must find it and call delete method
+        network = Network.objects.get(name=uri_network)
+        network.delete()
+        result = {
+            'network': uri_network,
+            'status': 'done'
+        }
     else:
+        # We just support GET / POST / PUT / DELETE HTTP method, in other case, we send a error
         result = {
             'network': uri_network,
             'status': 'failed',
