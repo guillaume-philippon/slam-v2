@@ -22,7 +22,7 @@ class DomainEntry(models.Model):
     Domain entry is a name in domain like www.example.com
     """
     name = models.CharField(max_length=50)
-    domain = models.ForeignKey(Domain, on_delete=models.DO_NOTHING)
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     type = models.CharField(max_length=5, default='A')
     description = models.CharField(max_length=150, blank=True, default='', null=True)
     creation_date = models.DateField(default=timezone.now)

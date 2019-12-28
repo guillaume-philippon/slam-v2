@@ -63,6 +63,8 @@ def domain_view(request, uri_domain):
             request.GET.get('format') == 'json':
         rest_api = True
     if request.method == 'GET':
+        # If we just want to retrieve (GET) information for the domain. We're looking for
+        # domain and all entries associated to it.
         domain = Domain.objects.get(name=uri_domain)
         entries = DomainEntry.objects.filter(domain=domain)
         result_entries = []
@@ -80,6 +82,8 @@ def domain_view(request, uri_domain):
             'entries': result_entries
         }
     elif request.method == 'POST':
+        # If we want to create (POST) a new domain. We retrieve optional information and create
+        # a new object
         description = request.POST.get('description')
         master = request.POST.get('master')
         contact = request.POST.get('contact')
@@ -104,6 +108,7 @@ def domain_view(request, uri_domain):
                 'reason': 'IntegrityError'
             }
     elif request.method == 'PUT':
+        # If we want to update (PUT) a existing domain. We retrieve all mutable value and change it.
         raw_data = request.body
         data = QueryDict(raw_data)
         description = data.get('description')
@@ -121,11 +126,19 @@ def domain_view(request, uri_domain):
             'domain': uri_domain,
             'status': 'done'
         }
+    elif request.method == 'DELETE':
+        # If we want to delete (DELETE) a existing domain, we just do it.
+        domain = Domain.objects.get(name=uri_domain)
+        domain.delete()
+        result = {
+            'status': 'done'
+        }
     else:
+        # We just support GET / POST / PUT / DELETE HTTP method. If anything else arrived, we
+        # just drop it
         result = {
             'domain': uri_domain,
-            'status': 'failed',
-            'reason': '{} method is not supported'.format(request.method)
+            'status': '{} method is not supported'.format(request.method)
         }
     if rest_api:
         return JsonResponse(result)
@@ -151,6 +164,8 @@ def entry_view(request, uri_domain, uri_entry):
             request.GET.get('format') == 'json':
         rest_api = True
     if request.method == 'GET':
+        # If we want a list of entries, we need to retrieve domain and list all entries associated
+        # with it.
         domain = Domain.objects.get(name=uri_domain)
         entry = DomainEntry.objects.get(name=uri_entry, domain=domain)
         result = {
@@ -160,6 +175,8 @@ def entry_view(request, uri_domain, uri_entry):
             'type': entry.type
         }
     elif request.method == 'POST':
+        # If we want to create a new entry, we need to retrieve the domain and add the entry on
+        # this domain.
         domain = Domain.objects.get(name=uri_domain)
         options = {
             'name': uri_entry,
@@ -182,6 +199,15 @@ def entry_view(request, uri_domain, uri_entry):
                 'entry': uri_entry,
                 'status': '{}'.format(err),
             }
+    elif request.method == 'DELETE':
+        # If we want to remove a specific entry, we must retrieve the entry associated with the
+        # right domain and delete it.
+        domain = Domain.objects.get(name=uri_domain)
+        entry = DomainEntry.objects.get(name=uri_entry, domain=domain)
+        entry.delete()
+        result = {
+            'status': 'done'
+        }
     if rest_api:
         return JsonResponse(result)
     else:
