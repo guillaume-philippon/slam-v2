@@ -26,8 +26,8 @@ from slam_hardware.models import Hardware, Interface
 @login_required
 def inventory_view(request):
     """
-    This function manage interaction between user and SLAM for hardware management. URI is represented
-    by https://slam.example.com/hardware
+    This function manage interaction between user and SLAM for hardware management. URI is
+    represented by https://slam.example.com/hardware
 
     :param request: full HTTP request from user
     """
