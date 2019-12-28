@@ -3,7 +3,7 @@ This module provide different view to manage domain. To avoid shadow name declar
 following nomenclature
  - *_view: a function that manage the web interface (per example domains_view manage web interface
  of domains, ...)
- - domain: a specific domain (per example ijclab.in2p3.fr)
+ - domain: a specific domain (per example example.com)
  - domains: a list of domain
  - entry: a name associated with a domain that represent a entry in DNS
  - entries: a list of entry
@@ -16,6 +16,7 @@ following nomenclature
 from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
+
 from slam_domain.models import Domain, DomainEntry
 
 
@@ -52,7 +53,6 @@ def domain_view(request, uri_domain):
     :param uri_domain: the name of domain from URI (per example example.com is our URI)
     """
     rest_api = False
-    result = {}
     if request.headers['Accept'] == 'application/json' or \
             request.GET.get('format') == 'json':
         rest_api = True
@@ -107,6 +107,12 @@ def domain_view(request, uri_domain):
         result = {
             'domain': uri_domain,
             'status': 'done'
+        }
+    else:
+        result = {
+            'domain': uri_domain,
+            'status': 'failed',
+            'reason': '{} method is not supported'.format(request.method)
         }
     if rest_api:
         return JsonResponse(result)
