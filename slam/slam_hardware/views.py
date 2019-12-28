@@ -43,8 +43,30 @@ def inventory_view(request):
 
 
 @login_required
-def interfaces_view(request):
-    return JsonResponse({})
+def interface_view(request, uri_hardware, uri_interface):
+    result = dict()
+    if request.method == 'POST':
+        hardware = Hardware.objects.get(name=uri_hardware)
+        options = {
+            'mac_address': uri_interface,
+            'hardware': hardware
+        }
+        if request.POST.get('interface-type') is not None:
+            options['type'] = request.POST.get('interface-type')
+        if request.POST.get('interface-speed') is not None:
+            options['speed'] = request.POST.get('interface-speed')
+        Interface.objects.create(**options)
+        result = {
+            'hardware': uri_hardware,
+            'mac-address': options['mac_address'],
+            'status': 'done'
+        }
+    elif request.method == 'DELETE':
+        interface = Interface.objects.get(mac_address=uri_interface)
+        interface.delete()
+        result = {'interface': uri_interface,
+                  'status': 'done'}
+    return JsonResponse(result)
 
 
 @login_required
@@ -57,6 +79,7 @@ def hardware_view(request, uri_hardware):
     :param uri_hardware: the name of the hardware from URI
     """
     rest_api = False
+    result = dict()
     if request.headers['Accept'] == 'application/json' or \
             request.GET.get('format') == 'json':
         rest_api = True
@@ -113,5 +136,21 @@ def hardware_view(request, uri_hardware):
         data = QueryDict(raw_data)
         description = data.get('description')
         owner = data.get('owner')
-
+        hardware = Hardware.objects.get(name=uri_hardware)
+        if description is not None:
+            hardware.description = description
+        if owner is not None:
+            hardware.owner = owner
+        hardware.save()
+        result = {
+            'hardware': uri_hardware,
+            'status': 'done'
+        }
+    elif request.method == 'DELETE':
+        hardware = Hardware.objects.get(name=uri_hardware)
+        hardware.delete()
+        result = {
+            'hardware': uri_hardware,
+            'status': 'done'
+        }
     return JsonResponse(result)

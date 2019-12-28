@@ -25,5 +25,4 @@ class Interface(models.Model):
     mac_address = models.CharField(max_length=15, unique=True)
     type = models.CharField(max_length=8, choices=INTERFACE_TYPE, null=True, blank=True)
     speed = models.IntegerField(null=True, blank=True)
-    hardware = models.ForeignKey(Hardware, on_delete=models.DO_NOTHING, null=True, blank=True)
-
+    hardware = models.ForeignKey(Hardware, on_delete=models.CASCADE, null=True, blank=True)
