@@ -9,7 +9,7 @@ from django.utils import timezone
 
 class Domain(models.Model):
     """
-    Domain class represente a fqdn domain like example.com
+    Domain class represent a fqdn domain like example.com
     """
     name = models.CharField(max_length=50, unique=True)
     description = models.CharField(max_length=120, blank=True)
