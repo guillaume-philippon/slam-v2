@@ -21,6 +21,7 @@ following nomenclature
 from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
+from django.db.utils import IntegrityError
 
 from slam_domain.models import Domain, DomainEntry
 
@@ -90,11 +91,18 @@ def domain_view(request, uri_domain):
             options['dns_master'] = master
         if contact is not None:
             options['contact'] = contact
-        Domain.objects.create(**options)
-        result = {
-            'domain': uri_domain,
-            'status': 'done'
-        }
+        try:
+            Domain.objects.create(**options)
+            result = {
+                'domain': uri_domain,
+                'status': 'done'
+            }
+        except IntegrityError:
+            result = {
+                'domain': uri_domain,
+                'status': 'failed',
+                'reason': 'IntegrityError'
+            }
     elif request.method == 'PUT':
         raw_data = request.body
         data = QueryDict(raw_data)
@@ -161,12 +169,19 @@ def entry_view(request, uri_domain, uri_entry):
             options['type'] = request.POST.get('type')
         if request.POST.get('description') is not None:
             options['description'] = request.POST.get('description')
-        DomainEntry.objects.create(**options)
-        result = {
-            'domain': uri_domain,
-            'entry': uri_entry,
-            'status': 'done'
-        }
+        try:
+            DomainEntry.objects.create(**options)
+            result = {
+                'domain': uri_domain,
+                'entry': uri_entry,
+                'status': 'done'
+            }
+        except IntegrityError as err:
+            result = {
+                'domain': uri_domain,
+                'entry': uri_entry,
+                'status': '{}'.format(err),
+            }
     if rest_api:
         return JsonResponse(result)
     else:
