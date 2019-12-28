@@ -1,3 +1,18 @@
+"""
+This module provide different view to manage domain. To avoid shadow name declaration, we use those
+following nomenclature
+ - *_view: a function that manage the web interface (per example domains_view manage web interface
+ of domains, ...)
+ - domain: a specific domain (per example ijclab.in2p3.fr)
+ - domains: a list of domain
+ - entry: a name associated with a domain that represent a entry in DNS
+ - entries: a list of entry
+ - rest_api: a boolean which say if REST API is used. If not, HTML rendering will be used
+ - options: a generic structure that represent arguments we send/receive to/from function
+ - result: a temporary structure that represent the output of the view
+ - result_*: a temporary structure that represent a part of the output (per example result_entries)
+ - uri_*: input retrieve from URI structure itself
+"""
 from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
@@ -5,15 +20,21 @@ from slam_domain.models import Domain, DomainEntry
 
 
 @login_required
-def domains(request):
+def domains_view(request):
+    """
+    This function manage interaction between user and SLAM for all domains management. URI is
+    represented by https://slam.example.com/domains
+
+    :param request: full HTTP request from user
+    """
     result = []
-    data = Domain.objects.all()
-    for current_domain in data:
+    domains = Domain.objects.all()
+    for domain in domains:
         result.append({
-            'name': current_domain.name,
-            'description': current_domain.description,
-            'master': current_domain.dns_master,
-            'contact': current_domain.contact
+            'name': domain.name,
+            'description': domain.description,
+            'master': domain.dns_master,
+            'contact': domain.contact
         })
     if request.headers['Accept'] == 'application/json' or \
             request.GET.get('format') == 'json':
@@ -22,35 +43,42 @@ def domains(request):
 
 
 @login_required
-def domain(request, name):
+def domain_view(request, uri_domain):
+    """
+    This function manage interaction between user and SLAM for a specific domain management. URI
+    is represented by https://slam.example.com/domains/example.com
+
+    :param request: full HTTP request from user
+    :param uri_domain: the name of domain from URI (per example example.com is our URI)
+    """
     rest_api = False
     result = {}
     if request.headers['Accept'] == 'application/json' or \
             request.GET.get('format') == 'json':
         rest_api = True
     if request.method == 'GET':
-        ns_domain = Domain.objects.get(name=name)
-        ns_entry = DomainEntry.objects.filter(domain=ns_domain)
-        entries = []
-        for entry in ns_entry:
-            entries.append({
+        domain = Domain.objects.get(name=uri_domain)
+        entries = DomainEntry.objects.filter(domain=domain)
+        result_entries = []
+        for entry in entries:
+            result_entries.append({
                 'name': entry.name,
                 'type': entry.type,
                 'description': entry.description
             })
         result = {
-            'domain': name,
-            'description': ns_domain.description,
-            'contact': ns_domain.contact,
-            'master': ns_domain.dns_master,
-            'entries': entries
+            'domain': uri_domain,
+            'description': domain.description,
+            'contact': domain.contact,
+            'master': domain.dns_master,
+            'entries': result_entries
         }
     elif request.method == 'POST':
         description = request.POST.get('description')
         master = request.POST.get('master')
         contact = request.POST.get('contact')
         options = dict()
-        options['name'] = name
+        options['name'] = uri_domain
         if description is not None:
             options['description'] = description
         if master is not None:
@@ -59,7 +87,7 @@ def domain(request, name):
             options['contact'] = contact
         Domain.objects.create(**options)
         result = {
-            'domain': name,
+            'domain': uri_domain,
             'status': 'done'
         }
     elif request.method == 'PUT':
@@ -68,7 +96,7 @@ def domain(request, name):
         description = data.get('description')
         master = data.get('master')
         contact = data.get('contact')
-        item = Domain.objects.get(name=name)
+        item = Domain.objects.get(name=uri_domain)
         if description is not None:
             item.description = description
         if master is not None:
@@ -77,7 +105,7 @@ def domain(request, name):
             item.contact = contact
         item.save()
         result = {
-            'domain': name,
+            'domain': uri_domain,
             'status': 'done'
         }
     if rest_api:
@@ -88,23 +116,35 @@ def domain(request, name):
 
 
 @login_required
-def dns_entry(request, name, ns_entry):
+def entry_view(request, uri_domain, uri_entry):
+    """
+    This function manage interaction between user and SLAM for a specific domain management. URI
+    is represented by https://slam.example.com/domains/example.com/www if we want to represent
+    www.example.com
+
+    :param request: full HTTP request from user
+    :param uri_domain: the name of domain from URI (per example example.com in our URI)
+    :param uri_entry: the entry name in a domain (per example www.example.com in our URI)
+    """
     rest_api = False
     result = {}
     if request.headers['Accept'] == 'application/json' or \
             request.GET.get('format') == 'json':
         rest_api = True
     if request.method == 'GET':
+        domain = Domain.objects.get(name=uri_domain)
+        entry = DomainEntry.objects.get(name=uri_entry, domain=domain)
         result = {
-            'domain': 'ijclab.in2p3.fr',
-            'entry': 'www',
-            'type': 'A'
+            'domain': uri_domain,
+            'entry': uri_entry,
+            'fqdn': "{}.{}".format(uri_entry, uri_domain),  # TODO: Is it necessary ?
+            'type': entry.type
         }
     if request.method == 'POST':
-        ns_domain = Domain.objects.get(name=name)
+        domain = Domain.objects.get(name=uri_domain)
         options = {
-            'name': ns_entry,
-            'domain': ns_domain,
+            'name': uri_entry,
+            'domain': domain,
         }
         if request.POST.get('type') is not None:
             options['type'] = request.POST.get('type')
@@ -112,8 +152,8 @@ def dns_entry(request, name, ns_entry):
             options['description'] = request.POST.get('description')
         DomainEntry.objects.create(**options)
         result = {
-            'domain': name,
-            'entry': ns_entry,
+            'domain': uri_domain,
+            'entry': uri_entry,
             'status': 'done'
         }
     if rest_api:
