@@ -1,4 +1,7 @@
 from django.db import models
+from django.utils import timezone
+
+from slam_domain.models import DomainEntry
 
 
 class Network(models.Model):
@@ -14,3 +17,13 @@ class Network(models.Model):
     contact = models.EmailField(blank=True, null=True)
     dhcp = models.GenericIPAddressField(blank=True, null=True)
     vlan = models.IntegerField(default=1)
+
+
+# class Host(models.Model):
+#     """
+#     Host class represent link between DNS entry and IP
+#     """
+#     main_ns_entry = models.ForeignKey(DomainEntry, on_delete=models.DO_NOTHING)
+#     address = models.GenericIPAddressField(blank=True, null=True)
+#     network = models.ForeignKey(Network, on_delete=models.DO_NOTHING)
+#     creation_date = models.DateField(default=timezone.now)

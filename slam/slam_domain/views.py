@@ -146,7 +146,7 @@ def entry_view(request, uri_domain, uri_entry):
             'fqdn': "{}.{}".format(uri_entry, uri_domain),  # TODO: Is it necessary ?
             'type': entry.type
         }
-    if request.method == 'POST':
+    elif request.method == 'POST':
         domain = Domain.objects.get(name=uri_domain)
         options = {
             'name': uri_entry,

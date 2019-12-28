@@ -127,6 +127,12 @@ def network_view(request, uri_network):
             'network': uri_network,
             'status': 'done'
         }
+    else:
+        result = {
+            'network': uri_network,
+            'status': 'failed',
+            'reason': '{} method is not supported'.format(request.method)
+        }
     return JsonResponse(result, safe=False)
 
 
@@ -134,11 +140,20 @@ def network_view(request, uri_network):
 def host_view(request, uri_network, uri_host):
     """
     This function manage interaction between user and SLAM for a specific host. URI is represented
-    by https://slam.example.com/networks/network/host
+    by https://slam.example.com/networks/my-network
+
+    :param request: full HTTP request from user
+    :param uri_network: the name of the network from URI
+    :param uri_host: the name of the host from URI
     """
     rest_api = False
     result = {}
     if request.headers['Accept'] == 'application/json' or \
             request.GET.get('format') == 'json':
         rest_api = True
+    if request.method == 'POST':
+        network = Network.objects.get(name=uri_network)
+        options = {
+            'name': uri_host,
+        }
     return JsonResponse(result)

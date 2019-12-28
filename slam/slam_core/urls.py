@@ -8,5 +8,6 @@ urlpatterns = [
     path('login', views.login, name='login'),
     path('logout', views.logout, name='logout'),
     path('domains', include('slam_domain.urls')),
-    path('networks', include('slam_network.urls'))
+    path('networks', include('slam_network.urls')),
+    path('hardware', include('slam_hardware.urls'))
 ]
