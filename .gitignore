@@ -1,2 +1,3 @@
 venv/
-*migrations*
+*00*initial.py
+*_auto_*.py
