@@ -24,9 +24,10 @@ SECRET_KEY = 'vg!6d*o!tk252c4w-13%r9ps&4#abrzdy4(+hfg5$)-uteaq^1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+# DEBUG = False # For production
 
 ALLOWED_HOSTS = []
-
+# ALLOWED_HOST = [ 'Server-IP' ] # For production
 
 # Application definition
 
@@ -86,7 +87,9 @@ DATABASES = {
     }
     # 'default': {
     #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': os.path.join(BASE_DIR, 'conf/my.cnf'),
+    #     'OPTIONS': {
+    #         'read_default_file': os.path.join(BASE_DIR, 'my.cnf')
+    #     }
     # }
 }
 
