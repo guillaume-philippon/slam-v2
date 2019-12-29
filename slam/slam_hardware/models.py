@@ -7,6 +7,7 @@ import re
 def mac_address_validator(mac_address):
     """
     This function check if a mac-address have a good format (ie 00:11:22:33:44:55)
+
     :param mac_address: mac-address provided by user
     :return:
     """
