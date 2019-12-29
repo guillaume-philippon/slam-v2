@@ -116,4 +116,25 @@ def host_view(request, uri_host):
                 'host': uri_host,
                 'status': '{}'.format(err)
             }
+    elif request.method == 'GET':
+        try:
+            host = Host.objects.get(name=uri_host)
+            result = {
+                'name': host.name,
+            }
+            if host.dns_entry is not None:
+                result['dns_entry'] = host.dns_entry.name
+            if host.interface is not None:
+                result['interface'] = host.interface.mac_address
+            if host.network is not None:
+                result['network'] = {
+                    'name': host.network.name
+                }
+            if host.ip_address is not None:
+                result['network']['ip_address'] = host.ip_address
+        except ObjectDoesNotExist as err:
+            result = {
+                'host': uri_host,
+                'status': '{}'.format(err)
+            }
     return JsonResponse(result)
