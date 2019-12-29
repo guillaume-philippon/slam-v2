@@ -20,7 +20,6 @@ following nomenclature
  disable pylint E1101 (no-member) test from this file
 """
 # pylint: disable=E1101
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
@@ -30,10 +29,12 @@ from slam_hardware.models import Hardware, Interface
 
 @login_required
 def inventory_view(request):
+    # pylint: disable=W0613
     """
     This function manage interaction between user and SLAM for hardware management. URI is
     represented by https://slam.example.com/hardware
 
+    As we use django view that need request as argument but we not use it, we disable pylint.
     :param request: full HTTP request from user
     """
     result = []
@@ -95,11 +96,6 @@ def hardware_view(request, uri_hardware):
     :param request: full HTTP request from user
     :param uri_hardware: the name of the hardware from URI
     """
-    rest_api = False
-    result = dict()
-    if request.headers['Accept'] == 'application/json' or \
-            request.GET.get('format') == 'json':
-        rest_api = True
     if request.method == 'POST':
         description = request.POST.get('description')
         owner = request.POST.get('owner')
@@ -133,7 +129,7 @@ def hardware_view(request, uri_hardware):
             options['warranty'] = warranty
         try:
             Hardware.objects.create(**options)
-        except IntegrityError as err:
+        except IntegrityError:
             pass
         hardware = Hardware.objects.get(name=uri_hardware)
 

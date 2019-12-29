@@ -39,9 +39,7 @@ def domains_view(request):
     for domain in domains:
         result.append({
             'name': domain.name,
-            'description': domain.description,
-            'master': domain.dns_master,
-            'contact': domain.contact
+            'description': domain.description
         })
     if request.headers['Accept'] == 'application/json' or \
             request.GET.get('format') == 'json':
@@ -58,10 +56,6 @@ def domain_view(request, uri_domain):
     :param request: full HTTP request from user
     :param uri_domain: the name of domain from URI (per example example.com is our URI)
     """
-    rest_api = False
-    if request.headers['Accept'] == 'application/json' or \
-            request.GET.get('format') == 'json':
-        rest_api = True
     if request.method == 'GET':
         # If we just want to retrieve (GET) information for the domain. We're looking for
         # domain and all entries associated to it.
@@ -78,50 +72,36 @@ def domain_view(request, uri_domain):
             'domain': uri_domain,
             'description': domain.description,
             'contact': domain.contact,
-            'master': domain.dns_master,
+            'dns_master': domain.dns_master,
             'entries': result_entries
         }
     elif request.method == 'POST':
         # If we want to create (POST) a new domain. We retrieve optional information and create
         # a new object
-        description = request.POST.get('description')
-        master = request.POST.get('master')
-        contact = request.POST.get('contact')
-        options = dict()
-        options['name'] = uri_domain
-        if description is not None:
-            options['description'] = description
-        if master is not None:
-            options['dns_master'] = master
-        if contact is not None:
-            options['contact'] = contact
+        options = {
+            'name': uri_domain,
+        }
+        for args in request.POST:
+            options[args] = request.POST.get(args)
         try:
             Domain.objects.create(**options)
             result = {
                 'domain': uri_domain,
                 'status': 'done'
             }
-        except IntegrityError:
+        except IntegrityError as err:
             result = {
                 'domain': uri_domain,
-                'status': 'failed',
-                'reason': 'IntegrityError'
+                'status': '{}'.format(err)
             }
     elif request.method == 'PUT':
         # If we want to update (PUT) a existing domain. We retrieve all mutable value and change it.
         raw_data = request.body
         data = QueryDict(raw_data)
-        description = data.get('description')
-        master = data.get('master')
-        contact = data.get('contact')
-        item = Domain.objects.get(name=uri_domain)
-        if description is not None:
-            item.description = description
-        if master is not None:
-            item.master = master
-        if contact is not None:
-            item.contact = contact
-        item.save()
+        domain = Domain.objects.get(name=uri_domain)
+        for args in data:
+            setattr(domain, args, data.get(args))
+        domain.save()
         result = {
             'domain': uri_domain,
             'status': 'done'
@@ -131,6 +111,7 @@ def domain_view(request, uri_domain):
         domain = Domain.objects.get(name=uri_domain)
         domain.delete()
         result = {
+            'domain': uri_domain,
             'status': 'done'
         }
     else:
@@ -154,11 +135,6 @@ def entry_view(request, uri_domain, uri_entry):
     :param uri_domain: the name of domain from URI (per example example.com in our URI)
     :param uri_entry: the entry name in a domain (per example www.example.com in our URI)
     """
-    rest_api = False
-    result = {}
-    if request.headers['Accept'] == 'application/json' or \
-            request.GET.get('format') == 'json':
-        rest_api = True
     if request.method == 'GET':
         # If we want a list of entries, we need to retrieve domain and list all entries associated
         # with it.
@@ -178,6 +154,8 @@ def entry_view(request, uri_domain, uri_entry):
             'name': uri_entry,
             'domain': domain,
         }
+        # for args in request.POST:
+        #     options[args] = request.POST.get(args)
         if request.POST.get('type') is not None:
             options['type'] = request.POST.get('type')
         if request.POST.get('description') is not None:
