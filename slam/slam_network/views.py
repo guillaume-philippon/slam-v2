@@ -74,7 +74,7 @@ def network_view(request, uri_network):
             'dhcp': network.dhcp
         }
     elif request.method == 'POST':
-        # If we want to create (POST) a new network, we retrieve informations from POST and
+        # If we want to create (POST) a new network, we retrieve information from POST and
         # see if optional value are put into it. If not, we ignore them.
         description = request.POST.get('description')
         address = request.POST.get('address')

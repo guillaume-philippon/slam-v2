@@ -140,11 +140,7 @@ def domain_view(request, uri_domain):
             'domain': uri_domain,
             'status': '{} method is not supported'.format(request.method)
         }
-    if rest_api:
-        return JsonResponse(result)
-    else:
-        # TODO: Create a html view for the output
-        return JsonResponse(result)
+    return JsonResponse(result)
 
 
 @login_required
@@ -208,7 +204,4 @@ def entry_view(request, uri_domain, uri_entry):
         result = {
             'status': 'done'
         }
-    if rest_api:
-        return JsonResponse(result)
-    else:
-        return JsonResponse(result)
+    return JsonResponse(result)

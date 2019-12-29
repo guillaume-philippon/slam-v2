@@ -1,4 +1,5 @@
 from django.db import models
+import ipaddress
 
 
 class Network(models.Model):
@@ -14,3 +15,12 @@ class Network(models.Model):
     contact = models.EmailField(blank=True, null=True)
     dhcp = models.GenericIPAddressField(blank=True, null=True)
     vlan = models.IntegerField(default=1)
+
+    def is_include(self, ip):
+        if ipaddress.__version__ != ipaddress.ip_network('{}/{}'.format(self.address,
+                                                                        self.prefix)):
+            return False
+        if ipaddress.ip_address(ip) in ipaddress.ip_network('{}/{}'.format(self.address,
+                                                                           self.prefix)):
+            return True
+        return False

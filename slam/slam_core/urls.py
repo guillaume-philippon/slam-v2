@@ -8,6 +8,7 @@ This modules is the main URL dispatcher. There are 4 local routing and 3 apps ro
  - https://slam.example.com/domains: route to slam_domain app
  - https://slam.example.com/networks: route to slam_network app
  - https://slam.example.com/hardware: route to slam_hardware app
+ - https://slam.example.com/hosts: route to slam_host app
 
 urlpatterns do not respect pylint name style, so we disable C0103 (invalid-name) check on this file
 """
@@ -24,5 +25,6 @@ urlpatterns = [
 
     path('domains', include('slam_domain.urls')),
     path('networks', include('slam_network.urls')),
-    path('hardware', include('slam_hardware.urls'))
+    path('hardware', include('slam_hardware.urls')),
+    path('hosts', include('slam_host.urls')),
 ]

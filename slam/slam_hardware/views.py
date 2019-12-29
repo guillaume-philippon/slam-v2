@@ -15,8 +15,13 @@ following nomenclature
  - result_*: a temporary structure that represent a part of the output (per example result_entries)
  - uri_*: input retrieve from URI structure itself
  - raw_*: a raw version of variable
+
+ As django models are generic classes, pylint can't check if member of model Class exists, we must
+ disable pylint E1101 (no-member) test from this file
 """
-from django.shortcuts import render
+# pylint: disable=E1101
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.utils import IntegrityError
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
 
@@ -44,6 +49,16 @@ def inventory_view(request):
 
 @login_required
 def interface_view(request, uri_hardware, uri_interface):
+    """
+    This function manage interaction between user and SLAM interface for ethernet interface
+    management. URI is represented by
+    https://slam.example.com/hardware/my-computer/interfaces/00:11:22:33:44:55
+
+    :param request: full HTTP request from user
+    :param uri_hardware: the hardware where interface is attached
+    :param uri_interface: the ethernet interface
+    :return:
+    """
     result = dict()
     if request.method == 'POST':
         hardware = Hardware.objects.get(name=uri_hardware)
@@ -118,7 +133,7 @@ def hardware_view(request, uri_hardware):
             options['warranty'] = warranty
         try:
             Hardware.objects.create(**options)
-        except:
+        except IntegrityError as err:
             pass
         hardware = Hardware.objects.get(name=uri_hardware)
 

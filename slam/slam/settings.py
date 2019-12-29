@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'slam_hardware',
     'slam_network',
     'slam_domain',
+    'slam_host',
 ]
 
 MIDDLEWARE = [

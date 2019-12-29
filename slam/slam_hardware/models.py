@@ -1,7 +1,11 @@
+"""
+This is the model module for slam_hardware django app
+"""
+import re
+
 from django.db import models
 from django.utils import timezone
 from django.core.validators import ValidationError
-import re
 
 
 def mac_address_validator(mac_address):
