@@ -55,7 +55,9 @@ def interface_view(request, uri_hardware, uri_interface):
             options['type'] = request.POST.get('interface-type')
         if request.POST.get('interface-speed') is not None:
             options['speed'] = request.POST.get('interface-speed')
-        Interface.objects.create(**options)
+        interface = Interface(**options)
+        interface.clean_fields()
+        interface.save()
         result = {
             'hardware': uri_hardware,
             'mac-address': options['mac_address'],
@@ -125,7 +127,9 @@ def hardware_view(request, uri_hardware):
         if interface_speed is not None:
             options_interface['speed'] = interface_speed
         options_interface['hardware'] = hardware
-        Interface.objects.create(**options_interface)
+        interface = Interface(**options_interface)
+        interface.clean_fields()
+        interface.save()
         result = {
             'hardware': uri_hardware,
             'status': 'done'
