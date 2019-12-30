@@ -27,6 +27,7 @@ from slam_host.models import Host
 
 @login_required
 def hosts_view(request):
+    # pylint: disable=W0613
     """
     This function manage interaction between user and SLAM for hosts management. URI is
     represented by https://slam.example.com/hosts

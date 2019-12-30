@@ -1,3 +1,8 @@
+"""
+As we use django models.Model, pylint fail to find objects method. We must disable pylint
+test E1101 (no-member)
+"""
+# pylint: disable=E1101
 from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
@@ -8,6 +13,9 @@ from slam_domain.models import DomainEntry, Domain
 
 
 class Host(models.Model):
+    """
+    Host represent a association between hardware, network and domain name service
+    """
     name = models.CharField(max_length=150, unique=True)
     addresses = models.ManyToManyField(Address)
     interface = models.ForeignKey(Interface, on_delete=models.DO_NOTHING, null=True, blank=True)
@@ -90,7 +98,14 @@ class Host(models.Model):
             if dns_entry is not None:
                 domain_entry = Domain.objects.get(name=dns_entry['domain'])
                 host.dns_entry = DomainEntry.objects.get(name=dns_entry['ns'], domain=domain_entry)
-            host.full_clean()
+            try:
+                host.full_clean()
+            except ValidationError as err:
+                return {
+                    'host': name,
+                    'status': 'failed',
+                    'message': '{}'.format(err)
+                }
             host.save()
         except ObjectDoesNotExist as err:
             return {

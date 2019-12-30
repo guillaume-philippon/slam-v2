@@ -19,8 +19,6 @@ following nomenclature
  As django models are generic classes, pylint can't check if member of model Class exists, we must
  disable pylint E1101 (no-member) test from this file
 """
-# pylint: disable=E1101
-from django.db.utils import IntegrityError
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
 
@@ -37,14 +35,7 @@ def inventory_view(request):
     As we use django view that need request as argument but we not use it, we disable pylint.
     :param request: full HTTP request from user
     """
-    result = []
-    inventory = Hardware.objects.all()
-    for hardware in inventory:
-        result.append({
-            'name': hardware.name,
-            'description': hardware.description,
-            'owner': hardware.owner
-        })
+    result = Hardware.search()
     return JsonResponse(result, safe=False)
 
 
@@ -62,33 +53,23 @@ def interface_view(request, uri_hardware, uri_interface):
     """
     result = dict()
     if request.method == 'POST':
-        hardware = Hardware.objects.get(name=uri_hardware)
         options = {
             'mac_address': uri_interface,
-            'hardware': hardware
+            'hardware': uri_hardware
         }
-        if request.POST.get('interface-type') is not None:
-            options['type'] = request.POST.get('interface-type')
-        if request.POST.get('interface-speed') is not None:
-            options['speed'] = request.POST.get('interface-speed')
-        interface = Interface(**options)
-        interface.clean_fields()
-        interface.save()
-        result = {
-            'hardware': uri_hardware,
-            'mac-address': options['mac_address'],
-            'status': 'done'
-        }
+        if request.POST.get('interface_type') is not None:
+            options['type'] = request.POST.get('interface_type')
+        if request.POST.get('interface_speed') is not None:
+            options['speed'] = request.POST.get('interface_speed')
+        result = Interface.create(**options)
     elif request.method == 'DELETE':
-        interface = Interface.objects.get(mac_address=uri_interface)
-        interface.delete()
-        result = {'interface': uri_interface,
-                  'status': 'done'}
+        result = Interface.remove(uri_interface)
     return JsonResponse(result)
 
 
 @login_required
 def hardware_view(request, uri_hardware):
+    # pylint: disable=R0912
     """
     This view manage interaction with hardware. A hardware is a representation of a real machine.
     URI is represented by https://slam.example.com/hardware/my-machine
@@ -97,112 +78,61 @@ def hardware_view(request, uri_hardware):
     :param uri_hardware: the name of the hardware from URI
     """
     if request.method == 'POST':
-        description = request.POST.get('description')
-        owner = request.POST.get('owner')
-        vendor = request.POST.get('vendor')
-        model = request.POST.get('model')
-        serial_number = request.POST.get('serial-number')
-        inventory = request.POST.get('inventory')
-        warranty = request.POST.get('warranty')
-        interface_address = request.POST.get('interface-mac-address')
-        interface_speed = request.POST.get('interface-speed')
-        interface_type = request.POST.get('interface-type')
-        options_interface = {
-            'mac_address': interface_address
-        }
         options = {
             'name': uri_hardware
         }
-        if description is not None:
-            options['description'] = description
-        if owner is not None:
-            options['owner'] = owner
-        if vendor is not None:
-            options['vendor'] = vendor
-        if model is not None:
-            options['model'] = model
-        if serial_number is not None:
-            options['serial-number'] = serial_number
-        if inventory is not None:
-            options['inventory'] = inventory
-        if warranty is not None:
-            options['warranty'] = warranty
-        try:
-            Hardware.objects.create(**options)
-        except IntegrityError:
-            pass
-        hardware = Hardware.objects.get(name=uri_hardware)
-
-        if interface_type is not None:
-            options_interface['type'] = interface_type
-        if interface_speed is not None:
-            options_interface['speed'] = interface_speed
-        options_interface['hardware'] = hardware
-        interface = Interface(**options_interface)
-        interface.clean_fields()
-        interface.save()
-        result = {
-            'hardware': uri_hardware,
-            'status': 'done'
+        # We start w/ hardware
+        if request.POST.get('description') is not None:
+            options['description'] = request.POST.get('description')
+        if request.POST.get('owner') is not None:
+            options['owner'] = request.POST.get('owner')
+        if request.POST.get('vendor') is not None:
+            options['vendor'] = request.POST.get('vendor')
+        if request.POST.get('model') is not None:
+            options['model'] = request.POST.get('model')
+        if request.POST.get('serial_number') is not None:
+            options['serial_number'] = request.POST.get('serial_number')
+        if request.POST.get('inventory') is not None:
+            options['inventory'] = request.POST.get('inventory')
+        if request.POST.get('warranty') is not None:
+            options['warranty'] = request.POST.get('warranty')
+        # Now we look at interface options
+        options_interface = {
+            'mac_address': request.POST.get('interface_mac_address')
         }
+        if request.POST.get('interface_speed'):
+            options_interface['speed'] = request.POST.get('interface_speed')
+        if request.POST.get('interface-type'):
+            options_interface['type'] = request.POST.get('interface-type')
+        options['interfaces'] = [
+            options_interface
+        ]
+        result = Hardware.create(**options)
     elif request.method == 'GET':
-        hardware = Hardware.objects.get(name=uri_hardware)
-        interfaces = Interface.objects.filter(hardware=hardware)
-        result_interfaces = []
-        for interface in interfaces:
-            result_interfaces.append({
-                'mac-address': interface.mac_address,
-                'type': interface.type,
-                'speed': interface.speed
-            })
-        result = {
-            'name': uri_hardware,
-            'description': hardware.description,
-            'owner': hardware.owner,
-            'vendor': hardware.vendor,
-            'model': hardware.model,
-            'serial-number': hardware.serial_number,
-            'inventory': hardware.inventory,
-            'buying-date': hardware.buying_date,
-            'warranty': hardware.warranty,
-            'interfaces': result_interfaces
-        }
+        result = Hardware.get(uri_hardware)
     elif request.method == 'PUT':
         raw_data = request.body
         data = QueryDict(raw_data)
-        print(data)
-        description = data.get('description')
-        owner = data.get('owner')
-        vendor = data.get('vendor')
-        model = data.get('model')
-        serial_number = data.get('serial-number')
-        inventory = data.get('inventory')
-        warranty = data.get('warranty')
-        hardware = Hardware.objects.get(name=uri_hardware)
-        if description is not None:
-            hardware.description = description
-        if owner is not None:
-            hardware.owner = owner
-        if vendor is not None:
-            hardware.vendor = vendor
-        if model is not None:
-            hardware.model = model
-        if serial_number is not None:
-            hardware.serial_number = serial_number
-        if inventory is not None:
-            hardware.inventory = inventory
-        if warranty is not None:
-            hardware.warranty = warranty
-        hardware.save()
-        result = {
-            'hardware': uri_hardware,
-            'status': 'done'
+        options = {
+            'name': uri_hardware
         }
+        if data.get('buying_date') is not None:
+            options['buying_date'] = data.get('buying_date')
+        if data.get('description') is not None:
+            options['description'] = data.get('description')
+        if data.get('owner') is not None:
+            options['owner'] = data.get('owner')
+        if data.get('vendor') is not None:
+            options['vendor'] = data.get('vendor')
+        if data.get('model') is not None:
+            options['model'] = data.get('model')
+        if data.get('serial_number') is not None:
+            options['serial_number'] = data.get('serial_number')
+        if data.get('inventory') is not None:
+            options['inventory'] = data.get('inventory')
+        if data.get('warranty') is not None:
+            options['warranty'] = data.get('warranty')
+        result = Hardware.update(**options)
     elif request.method == 'DELETE':
-        hardware = Hardware.objects.get(name=uri_hardware)
-        hardware.delete()
-        result = {
-            'hardware': uri_hardware,
-            'status': 'done'
-        }
+        result = Hardware.remove(uri_hardware)
     return JsonResponse(result)

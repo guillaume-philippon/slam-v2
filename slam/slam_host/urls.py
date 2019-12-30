@@ -1,3 +1,11 @@
+"""
+This modules is the URL dispatcher for hosts. We have 2 different route
+ - https://slam.example.com/hosts: to act on all hosts
+ - https://slam.example.com/hosts/fqdn: to act on fqdn
+
+urlpatterns do not respect pylint name style, so we disable C0103 (invalid-name) check on this file
+"""
+# pylint: disable=C0103
 from django.urls import path, re_path
 from . import views
 

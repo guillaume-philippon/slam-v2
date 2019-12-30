@@ -6,6 +6,7 @@ from slam_host.models import Host
 
 import ipaddress
 
+
 def get_network_from(ip):
     """
     This function will return a the Network model object associated with the ip.

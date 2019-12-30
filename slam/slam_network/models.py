@@ -2,11 +2,16 @@
 This module provide model for networks. There are 2 models
  - Network: which represent a IPv6 or IPv4 network
  - Address: which represent a IPv6 or IPv5
+
+As we use django models.Model, pylint fail to find objects method. We must disable pylint
+test E1101 (no-member)
 """
+# pylint: disable=E1101
+import ipaddress
+
 from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
-import ipaddress
 
 from slam_domain.models import DomainEntry, Domain
 
@@ -35,6 +40,11 @@ class Network(models.Model):
     contact = models.EmailField(blank=True, null=True)
 
     def is_include(self, ip):
+        """
+        This method check if ip is included on a network
+        :param ip: IP address
+        :return:
+        """
         if ipaddress.ip_address(ip) in ipaddress.ip_network('{}/{}'.format(self.address,
                                                                            self.prefix)):
             return True
@@ -55,6 +65,7 @@ class Network(models.Model):
     @staticmethod
     def create(name, address, prefix, description='A short description', gateway=None,
                dns_master=None, dhcp=None, vlan=1, contact=None):
+        # pylint: disable=R0913
         """
         This is a custom way to create a network
         :param name: human reading name of the network
@@ -95,6 +106,7 @@ class Network(models.Model):
     @staticmethod
     def update(name, description=None, gateway=None, dns_master=None, dhcp=None, vlan=None,
                contact=None):
+        # pylint: disable=R0913
         """
         This is a custom method to update value on a existing network
         :param name: human reading name of the network
@@ -292,7 +304,7 @@ class Address(models.Model):
         ns = fqdn[0]
         domain = fqdn[1]
         try:
-            network_entry = Network.objects.get(name=network)
+            # network_entry = Network.objects.get(name=network)
             address_entry = Address.objects.get(ip=ip)
             domain_entry = Domain.objects.get(name=domain)
             ns_entry_entry = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)
@@ -322,7 +334,7 @@ class Address(models.Model):
         ns = fqdn[0]
         domain_entry = fqdn[1]
         try:
-            network_entry = Network.objects.get(name=network)
+            # network_entry = Network.objects.get(name=network)
             address_entry = Address.objects.get(ip=ip)
             domain_entry = Domain.objects.get(name=domain_entry)
             ns_entry_entry = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)

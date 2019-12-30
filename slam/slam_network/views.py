@@ -20,6 +20,7 @@ from slam_network.models import Network, Address
 
 @login_required
 def networks_view(request):
+    # pylint: disable=W0613
     """
     This function manage interaction between user and SLAM for all network management. URI is
     represented by https://slam.example.com/networks
@@ -139,7 +140,7 @@ def entry_view(request, uri_network, uri_address, uri_entry):
     if request.method == 'POST':
         if request.POST.get('ns_type') is not None:
             result = Address.include(uri_address, uri_network, uri_entry,
-                                    request.POST.get('ns_type'))
+                                     request.POST.get('ns_type'))
         else:
             result = Address.include(uri_address, uri_network, uri_entry)
     elif request.method == 'DELETE':
