@@ -116,4 +116,12 @@ def entry_view(request, uri_domain, uri_entry):
             result = DomainEntry.remove(uri_entry, uri_domain, ns_type=data.get('type'))
         else:
             result = DomainEntry.remove(uri_entry, uri_domain)
+    else:
+        # We just support GET / POST / PUT / DELETE HTTP method. If anything else arrived, we
+        # just drop it.
+        result = {
+            'entry': '{}.{}'.format(uri_entry, uri_domain),
+            'status': 'failed',
+            'message': '{} method is not supported'.format(request.method)
+        }
     return JsonResponse(result)

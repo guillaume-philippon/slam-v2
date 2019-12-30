@@ -20,17 +20,9 @@ following nomenclature
  - uri_*: input retrieve from URI structure itself
  - raw_*: a raw version of variable
 """
-from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
-from django.db.utils import IntegrityError
-from django.core.exceptions import ObjectDoesNotExist
-
-from slam_hardware.models import Interface
-from slam_network.models import Network
-from slam_domain.models import DomainEntry, Domain
 from slam_host.models import Host
-from slam_host.networks import get_network_from, get_free_ip_from
 
 
 @login_required
