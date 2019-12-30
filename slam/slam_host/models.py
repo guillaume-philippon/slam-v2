@@ -3,13 +3,13 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
 from slam_hardware.models import Interface
-from slam_network.models import Network
+from slam_network.models import Network, Address
 from slam_domain.models import DomainEntry, Domain
 
 
 class Host(models.Model):
     name = models.CharField(max_length=150, unique=True)
-    ip_address = models.GenericIPAddressField(unique=True, null=True, blank=True)
+    addresses = models.ManyToManyField(Address)
     interface = models.ForeignKey(Interface, on_delete=models.DO_NOTHING, null=True, blank=True)
     network = models.ForeignKey(Network, on_delete=models.DO_NOTHING, null=True, blank=True)
     dns_entry = models.ForeignKey(DomainEntry, on_delete=models.DO_NOTHING, null=True, blank=True)
