@@ -27,20 +27,7 @@ def networks_view(request):
 
     :param request: full HTTP request from user
     """
-    result = []
-    rest_api = False
-    networks = Network.objects.all()
-    for network in networks:
-        result.append({
-            'name': network.name,
-            'description': network.description,
-            'address': network.address,
-            'prefix': network.prefix,
-            'gateway': network.gateway,
-            'dns-master': network.dns_master,
-            'vlan': network.vlan,
-            'dhcp': network.dhcp
-        })
+    result = Network.search()
     return JsonResponse(result, safe=False)
 
 
@@ -53,94 +40,49 @@ def network_view(request, uri_network):
     :param request: full HTTP request from user
     :param uri_network: the network name
     """
-    rest_api = False
-    result = {}
-    if request.headers['Accept'] == 'application/json' or \
-            request.GET.get('format') == 'json':
-        rest_api = True
     if request.method == 'GET':
         # If we want to get (GET) information about a network, we're looking for it and send
         # information
-        network = Network.objects.get(name=uri_network)
-        result = {
-            'name': uri_network,
-            'description': network.description,
-            'contact': network.contact,
-            'address': network.address,
-            'prefix': network.prefix,
-            'gateway': network.gateway,
-            'dns-master': network.dns_master,
-            'vlan': network.vlan,
-            'dhcp': network.dhcp
-        }
+        result = Network.get(name=uri_network)
     elif request.method == 'POST':
         # If we want to create (POST) a new network, we retrieve information from POST and
         # see if optional value are put into it. If not, we ignore them.
-        description = request.POST.get('description')
-        address = request.POST.get('address')
-        prefix = request.POST.get('prefix')
-        gateway = request.POST.get('gateway')
-        dns_master = request.POST.get('dns-master')
-        contact = request.POST.get('contact')
-        dhcp = request.POST.get('dhcp')
-        vlan = request.POST.get('vlan')
         options = {
             'name': uri_network,
-            'address': address,
-            'prefix': prefix,
         }
-        if description is not None:
-            options['description'] = description
-        if contact is not None:
-            options['contact'] = contact
-        if gateway is not None:
-            options['dns_master'] = dns_master
-        if dhcp is not None:
-            options['dhcp'] = dhcp
-        if vlan is not None:
-            options['vlan'] = vlan
-        Network.objects.create(**options)
-        result = {
-            'network': uri_network,
-            'status': 'done'
-        }
+        for arg in request.POST:
+            # We don't care about saintly of options as Network.create take care of it.
+            options[arg] = request.POST.get(arg)
+        try:
+            result = Network.create(**options)
+        except TypeError as err:
+            result = {
+                'network': uri_network,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
     elif request.method == 'PUT':
         # If we want to update (PUT) information, we need to retrieve data from body (no
         # request.PUT.get is available on django), and see which value should be updated.
         raw_data = request.body
         data = QueryDict(raw_data)
-        description = data.get('description')
-        contact = data.get('contact')
-        gateway = data.get('gateway')
-        dns_master = data.get('dns-master')
-        dhcp = data.get('dhcp')
-        vlan = data.get('vlan')
-        network = Network.objects.get(name=uri_network)
-        if description is not None:
-            network.description = description
-        if contact is not None:
-            network.contact = contact
-        if gateway is not None:
-            network.gateway = gateway
-        if dns_master is not None:
-            network.dns_master = dns_master
-        if dhcp is not None:
-            network.dhcp = dhcp
-        if vlan is not None:
-            network.vlan = vlan
-        network.save()
-        result = {
-            'network': uri_network,
-            'status': 'done'
+        options = {
+            'name': uri_network,
         }
+        for arg in data:
+            # We don't care about saintly of options as Network.update take care of it.
+            options[arg] = data.get(arg)
+        try:
+            result = Network.update(**options)
+        except TypeError as err:
+            result = {
+                'network': uri_network,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
     elif request.method == 'DELETE':
         # If we want to delete (DELETE) a network, we must find it and call delete method
-        network = Network.objects.get(name=uri_network)
-        network.delete()
-        result = {
-            'network': uri_network,
-            'status': 'done'
-        }
+        result = Network.remove(name=uri_network)
     else:
         # We just support GET / POST / PUT / DELETE HTTP method, in other case, we send a error
         result = {

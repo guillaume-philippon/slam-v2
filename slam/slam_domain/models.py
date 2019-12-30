@@ -49,7 +49,7 @@ class Domain(models.Model):
                 'status': 'failed',
                 'message': '{}'.format(err)
             }
-        except ValidationError as err:  # In case of some validation issue with the field
+        except ValidationError as err:  # In case of some validation issue w/ fields
             return {
                 'domain': name,
                 'status': 'failed',
