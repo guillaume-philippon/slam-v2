@@ -58,8 +58,7 @@ class Domain(models.Model):
         domain.save()
         return {
             'domain': domain.name,
-            'status': 'done',
-            'message': ''
+            'status': 'done'
         }
 
     @staticmethod

@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 import ipaddress
 
-from slam_domain.models import DomainEntry
+from slam_domain.models import DomainEntry, Domain
 
 
 class Network(models.Model):
@@ -39,6 +39,18 @@ class Network(models.Model):
                                                                            self.prefix)):
             return True
         return False
+
+    def addresses(self):
+        """
+        This method return all addresses which are in the current network.
+        :return:
+        """
+        addresses = Address.objects.all()
+        result = []
+        for address in addresses:
+            if self.is_include(address.ip):
+                result.append(address)
+        return result
 
     @staticmethod
     def create(name, address, prefix, description='A short description', gateway=None,
@@ -73,6 +85,7 @@ class Network(models.Model):
                 'status': 'failed',
                 'message': '{}'.format(err)
             }
+        network.full_clean()
         network.save()
         return {
             'network': network.name,
@@ -168,6 +181,13 @@ class Network(models.Model):
                 'status': 'failed',
                 'message': '{}'.format(err)
             }
+        addresses = network.addresses()
+        result_addresses = []
+        for address in addresses:
+            result_addresses.append({
+                'ip': address.ip
+            })
+        result['addresses'] = result_addresses
         return result
 
     @staticmethod
@@ -191,24 +211,92 @@ class Network(models.Model):
             })
         return result
 
-# class Address(models.Model):
-#     """
-#     Address class represent a specific address on a network.
-#      - ip: IPv4 or IPv6 address
-#      - ns_entry: main NS entry (used to be the reverse DNS name)
-#      - additional_entries: all other NS entries for this IP (CNAME, A, ...)
-#     """
-#     ip = models.GenericIPAddressField(unique=True)
-#     ns_entry = models.ForeignKey(DomainEntry, on_delete=models.DO_NOTHING)
-#     additional_entries = models.ManyToManyField(DomainEntry)
-#
-#     def network(self):
-#         """
-#         This method return the network associated with the address
-#         :return:
-#         """
-#         networks = Network.objects.all()
-#         for network in networks:
-#             if network.is_include(self.ip):
-#                 return network
-#         return None
+
+class Address(models.Model):
+    """
+    Address class represent a specific address on a network.
+     - ip: IPv4 or IPv6 address
+     - ns_entries: all other NS entries for this IP (CNAME, A, ...)
+    """
+    ip = models.GenericIPAddressField(unique=True)
+    ns_entries = models.ManyToManyField(DomainEntry)
+
+    @staticmethod
+    def create(ip, network, ns_entries=None):
+        """
+        This is a custom method to create a Address.
+        :return:
+        """
+        try:
+            try:
+                network_address = Network.objects.get(name=network)
+            except ObjectDoesNotExist:
+                network_address = None
+            if network is not None and not network_address.is_include(ip):
+                return {
+                    'address': ip,
+                    'status': 'failed',
+                    'message': 'Address {} not in Network {}/{}'.format(ip, network_address.address,
+                                                                        network_address.prefix)
+                }
+            address = Address(ip=ip)
+            if ns_entries is not None:
+                for ns_entry in ns_entries:
+                    try:
+                        domain = Domain.objects.get(name=ns_entry['domain'])
+                        entry = DomainEntry.objects.get(name=ns_entry['ns'], domain=domain)
+                        address.ns_entries.add(entry)
+                    except ObjectDoesNotExist as err:
+                        return {
+                            'address': ip,
+                            'status': 'failed',
+                            'message': '{}'.format(err)
+                        }
+        except IntegrityError as err:
+            return {
+                'address': ip,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
+        except ValidationError as err:
+            return {
+                'address': ip,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
+        try:
+            address.full_clean()
+        except ValidationError as err:
+            return {
+                'address': ip,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
+        address.save()
+        return {
+            'address': address.ip,
+            'status': 'done'
+        }
+
+    @staticmethod
+    def update():
+        pass
+
+    @staticmethod
+    def remove():
+        pass
+
+    @staticmethod
+    def get():
+        pass
+
+    def network(self):
+        """
+        This method return the network associated with the address
+        :return:
+        """
+        networks = Network.objects.all()
+        for network in networks:
+            if network.is_include(self.ip):
+                return network
+        return None

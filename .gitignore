@@ -1,4 +1,5 @@
 venv/
+*00*address.py
 *00*initial.py
 *_auto_*.py
 *_host_ip_address.py

@@ -16,7 +16,7 @@ from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
 
-from slam_network.models import Network
+from slam_network.models import Network, Address
 
 
 @login_required
@@ -94,23 +94,24 @@ def network_view(request, uri_network):
 
 
 @login_required
-def host_view(request, uri_network, uri_host):
+def address_view(request, uri_network, uri_address):
     """
     This function manage interaction between user and SLAM for a specific host. URI is represented
-    by https://slam.example.com/networks/my-network
+    by https://slam.example.com/networks/192.168.0.1
 
     :param request: full HTTP request from user
     :param uri_network: the name of the network from URI
-    :param uri_host: the name of the host from URI
+    :param uri_address: the IP address from URI
     """
-    rest_api = False
-    result = {}
-    if request.headers['Accept'] == 'application/json' or \
-            request.GET.get('format') == 'json':
-        rest_api = True
+    result = {
+        'address': uri_address,
+        'status': 'failed',
+        'message': 'This is a test'
+    }
     if request.method == 'POST':
-        network = Network.objects.get(name=uri_network)
         options = {
-            'name': uri_host,
+            'ip': uri_address,
+            'network': uri_network
         }
+        result = Address.create(**options)
     return JsonResponse(result)
