@@ -41,100 +41,57 @@ def hosts_view(request):
     :param request: full HTTP request from user
     :return:
     """
-    result = []
-    hosts = Host.objects.all()
-    for host in hosts:
-        result.append({
-            'name': host.name,
-            'ip-address': host.ip_address
-        })
+    result = Host.search()
     return JsonResponse(result, safe=False)
 
 
 @login_required
 def host_view(request, uri_host):
     """
-
-    :param request:
-    :param uri_host:
+    This function manage interaction between user and SLAM for host management. URI is
+    represented by https://slam.example.com/hosts/host.example.com
+    :param request: full HTTP request from user
+    :param uri_host: host name from URI
     :return:
     """
     result = {
         'status': 'done'
     }
     if request.method == 'POST':
-        # interface = None
-        # network = None
-        # ns = None
-        try:
-            if request.POST.get('interface') is not None:
-                interface = Interface.objects.get(mac_address=request.POST.get('interface'))
-            if request.POST.get('network') is not None:
-                network = Network.objects.get(name=request.POST.get('network'))
-                ip_address = get_free_ip_from(network)
-            if request.POST.get('ns') is not None and \
-                    request.POST.get('domain') is not None:
-                domain = Domain.objects.get(name=request.POST.get('domain'))
-                ns = DomainEntry.objects.get(name=request.POST.get('ns'), domain=domain)
-            if request.POST.get('ip-address') is not None:
-                ip_address = request.POST.get('ip-address')
-                network = get_network_from(ip_address)
-            options = {
-                'interface': interface,
-                'network': network,
-                'name': uri_host,
-                'ip_address': ip_address,
-                'dns_entry': ns
+        options = {
+            'name': uri_host,
+        }
+        if request.POST.get('interface') is not None:
+            options['interface'] = request.POST.get('interface')
+        if request.POST.get('network') is not None:
+            options['network'] = request.POST.get('network')
+        if request.POST.get('ns') is not None and \
+                request.POST.get('domain') is not None:
+            options['dns_entry'] = {
+                'name': request.POST.get('ns'),
+                'domain': request.POST.get('domain')
             }
-            host = Host(**options)
-            host.clean_fields()
-            host.save()
-            result = {
-                'status': 'done',
-                'host': uri_host
-            }
-        except IntegrityError as err:
-            result = {
-                'host': uri_host,
-                'status': '{}'.format(err)
-            }
-        except ObjectDoesNotExist as err:
-            result = {
-                'host': uri_host,
-                'status': '{}'.format(err)
-            }
+        if request.POST.get('ip-address') is not None:
+            options['ip_address'] = request.POST.get('ip-address')
+        result = Host.create(**options)
     elif request.method == 'DELETE':
-        try:
-            host = Host.objects.get(name=uri_host)
-            host.delete()
-            result = {
-                'host': uri_host,
-                'status': 'done'
-            }
-        except ObjectDoesNotExist as err:
-            result = {
-                'host': uri_host,
-                'status': '{}'.format(err)
-            }
+        result = Host.remove(uri_host)
     elif request.method == 'GET':
-        try:
-            host = Host.objects.get(name=uri_host)
-            result = {
-                'name': host.name,
-            }
-            if host.dns_entry is not None:
-                result['dns_entry'] = host.dns_entry.name
-            if host.interface is not None:
-                result['interface'] = host.interface.mac_address
-            if host.network is not None:
-                result['network'] = {
-                    'name': host.network.name
-                }
-            if host.ip_address is not None:
-                result['network']['ip_address'] = host.ip_address
-        except ObjectDoesNotExist as err:
-            result = {
-                'host': uri_host,
-                'status': '{}'.format(err)
-            }
+        result = Host.get(uri_host)
+    elif request.method == 'PUT':
+        raw_data = request.body
+        data = QueryDict(raw_data)
+        options = dict()
+        for args in data:
+            # We don't care about the saintly of options as Host.update take care of it.
+            options[args] = data.get(args)
+        result = Host.update(uri_host, **options)
+    else:
+        # We just support GET / POST / PUT / DELETE HTTP method. If anything else arrived, we
+        # just drop it.
+        result = {
+            'host': uri_host,
+            'status': 'failed',
+            'message': '{} method is not supported'.format(request.method)
+        }
     return JsonResponse(result)

@@ -151,11 +151,11 @@ class Domain(models.Model):
     @staticmethod
     def search(filters=None):
         """
-        Return all domains match the filters
+        This is a custom way to get all domains that match the filters
         :param filters: a dict of field / regex
         :return:
         """
-        if filters is not None:
+        if filters is None:
             domains = Domain.objects.all()
         else:  # We suppose filters as been construct outside models class.
             domains = Domain.objects.filter(**filters)
