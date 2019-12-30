@@ -279,16 +279,131 @@ class Address(models.Model):
         }
 
     @staticmethod
-    def update():
-        pass
+    def include(ip, network, ns_entry, ns_type='A'):
+        """
+        This is a custom method to add a entry in a address
+        :param ip: IP address
+        :param network: network
+        :param ns_entry: NS entry
+        :param ns_type: NS entry type
+        :return:
+        """
+        fqdn = ns_entry.split('.', 1)
+        ns = fqdn[0]
+        domain = fqdn[1]
+        try:
+            network_entry = Network.objects.get(name=network)
+            address_entry = Address.objects.get(ip=ip)
+            domain_entry = Domain.objects.get(name=domain)
+            ns_entry_entry = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)
+        except ObjectDoesNotExist as err:
+            return {
+                'entry': ns_entry,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
+        address_entry.ns_entries.add(ns_entry_entry)
+        return {
+            'entry': ns_entry,
+            'status': 'done'
+        }
 
     @staticmethod
-    def remove():
-        pass
+    def exclude(ip, network, ns_entry, ns_type='A'):
+        """
+        This is a custom method to remove a NS entry from address
+        :param ip: IP address
+        :param network: network
+        :param ns_entry: NS entry
+        :param ns_type: NS type
+        :return:
+        """
+        fqdn = ns_entry.split('.', 1)
+        ns = fqdn[0]
+        domain_entry = fqdn[1]
+        try:
+            network_entry = Network.objects.get(name=network)
+            address_entry = Address.objects.get(ip=ip)
+            domain_entry = Domain.objects.get(name=domain_entry)
+            ns_entry_entry = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)
+        except ObjectDoesNotExist as err:
+            return {
+                'entry': ns_entry,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
+        address_entry.ns_entries.remove(ns_entry_entry)
+        return {
+            'entry': ns_entry,
+            'status': 'done'
+        }
 
     @staticmethod
-    def get():
-        pass
+    def remove(ip, network):
+        """
+        This is a custom method to delete Address
+        :param ip: The IP address we will delete
+        :param network: The network name
+        :return:
+        """
+        try:
+            try:
+                network_address = Network.objects.get(name=network)
+            except ObjectDoesNotExist:
+                network_address = None
+            if network_address is not None and not network_address.is_include(ip):
+                return {
+                    'address': ip,
+                    'status': 'failed',
+                    'message': 'Address {} not in Network {}/{}'.format(ip, network_address.address,
+                                                                        network_address.prefix)
+                }
+            address = Address.objects.get(ip=ip)
+        except ObjectDoesNotExist as err:
+            return {
+                'address': ip,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
+        address.delete()
+        return {
+            'address': ip,
+            'status': 'done'
+        }
+
+    @staticmethod
+    def get(ip, network):
+        """
+        This is a custom method to get information about a address
+        :param ip: IP address
+        :param network: Network
+        :return:
+        """
+        try:
+            network = Network.objects.get(name=network)
+        except ObjectDoesNotExist as err:
+            network = None
+        try:
+            address = Address.objects.get(ip=ip)
+        except ObjectDoesNotExist as err:
+            return {
+                'address': ip,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
+        result = {
+            'address': address.ip
+        }
+        result_entries = []
+        if address.ns_entries is not None:
+            for entry in address.ns_entries.all():
+                result_entries.append({
+                    'ns': entry.name,
+                    'domain': entry.domain.name,
+                    'type': entry.type
+                })
+        result['entries'] = result_entries
+        return result
 
     def network(self):
         """

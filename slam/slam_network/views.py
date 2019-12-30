@@ -12,7 +12,6 @@ following nomenclature
  - result_*: a temporary structure that represent a part of the output (per example result_entries)
  - uri_*: input retrieve from URI structure itself
 """
-from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
 
@@ -114,4 +113,41 @@ def address_view(request, uri_network, uri_address):
             'network': uri_network
         }
         result = Address.create(**options)
+    elif request.method == 'DELETE':
+        result = Address.remove(uri_address, uri_network)
+    elif request.method == 'GET':
+        result = Address.get(uri_address, uri_network)
+    return JsonResponse(result)
+
+
+@login_required
+def entry_view(request, uri_network, uri_address, uri_entry):
+    """
+    This function manage interaction between user and SLAM for specific address. URI is represented
+    by https://slam.example.com/networks/192.168.0.1/www.example.com
+    :param request: full HTTP request from user
+    :param uri_network: the name of the network from URI
+    :param uri_address: the IP address from URI
+    :param uri_entry: the NS entry from URI
+    :return:
+    """
+    result = {
+        'entry': uri_entry,
+        'status': 'failed',
+        'message': 'This is a test'
+    }
+    if request.method == 'POST':
+        if request.POST.get('ns_type') is not None:
+            result = Address.include(uri_address, uri_network, uri_entry,
+                                    request.POST.get('ns_type'))
+        else:
+            result = Address.include(uri_address, uri_network, uri_entry)
+    elif request.method == 'DELETE':
+        raw_data = request.body
+        data = QueryDict(raw_data)
+        if data.get('ns_type') is not None:
+            result = Address.exclude(uri_address, uri_network, uri_entry,
+                                     data.get('ns_type'))
+        else:
+            result = Address.exclude(uri_address, uri_network, uri_entry)
     return JsonResponse(result)
