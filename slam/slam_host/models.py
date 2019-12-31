@@ -41,7 +41,9 @@ class Host(models.Model):
                 interface_host = Interface.objects.get(mac_address=interface)
             except ObjectDoesNotExist:
                 # If the interface not exist, we create a new one
-                Interface.create(mac_address=interface, hardware=name)
+                result = Interface.create(mac_address=interface, hardware=name)
+                if result['status'] != 'done':
+                    return result
                 interface_host = Interface.objects.get(mac_address=interface)
         if network is not None:
             try:
@@ -68,8 +70,10 @@ class Host(models.Model):
                                                              type=dns_entry['ns_type'])
                 except ObjectDoesNotExist:
                     # If dns_entry not exist, we create a new one
-                    DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'],
-                                       type=dns_entry['ns_type'])
+                    result = DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'],
+                                                type=dns_entry['ns_type'])
+                    if result['status'] != 'done':
+                        return result
                     dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
                                                              domain=domain_entry,
                                                              type=dns_entry['ns_type'])
@@ -79,7 +83,9 @@ class Host(models.Model):
                                                              domain=domain_entry)
                 except ObjectDoesNotExist:
                     # If dns_entry not exist, we create a new one
-                    DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'])
+                    result = DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'])
+                    if result['status'] != 'done':
+                        return result
                     dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
                                                              domain=domain_entry)
         if address is not None:
@@ -89,9 +95,14 @@ class Host(models.Model):
                 # If address not exist, we create it
                 network_host = Address.network(address)
                 if dns_entry is not None:
-                    Address.create(ip=address, network=network_host.name, ns_entries=[dns_entry])
+                    result = Address.create(ip=address, network=network_host.name,
+                                            ns_entries=[dns_entry])
+                    if result['status'] != 'done':
+                        return result
                 else:
-                    Address.create(ip=address, network=network_host.name)
+                    result = Address.create(ip=address, network=network_host.name)
+                    if result['status'] != 'done':
+                        return result
                 address_host = Address.objects.get(ip=address)
         options = {
             'name': name,
@@ -167,12 +178,18 @@ class Host(models.Model):
         }
 
     @staticmethod
-    def remove(name):
+    def remove(name, addresses=True, hardware=False, dns_entry=True):
         """
         This method is a custom way to delete a host.
         :param name: name of host to delete
+        :param addresses: if set to True, we also delete all addresses (default: True)
+        :param hardware: if set to True, we also delete hardware (default: False)
+        :param dns_entry: if set to True, we also delete dns_entry (default: True)
         :return:
         """
+        addresses_host = None
+        hardware_host = None
+        dns_entry_host = None
         try:
             host = Host.objects.get(name=name)
         except ObjectDoesNotExist as err:
@@ -181,7 +198,48 @@ class Host(models.Model):
                 'status': 'failed',
                 'message': '{}'.format(err)
             }
-        host.delete()
+        if addresses:
+            addresses_host = host.addresses.all()
+        if hardware:
+            hardware_host = host.interface.hardware
+        if dns_entry:
+            dns_entry_host = host.dns_entry
+        try:
+            host.delete()
+        except IntegrityError as err:
+            return {
+                'host': name,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
+        if addresses_host is not None:
+            for address in addresses_host:
+                try:
+                    address.delete()
+                except IntegrityError as err:
+                    return {
+                        'host': name,
+                        'status': 'failed',
+                        'message': '{}'.format(err)
+                    }
+        if hardware_host is not None:
+            try:
+                host.interface.hardware.delete()
+            except IntegrityError as err:
+                return {
+                    'host': name,
+                    'status': 'failed',
+                    'message': '{}'.format(err)
+                }
+        if dns_entry_host is not None:
+            try:
+                host.dns_entry.delete()
+            except IntegrityError as err:
+                return {
+                    'host': name,
+                    'status': 'failed',
+                    'message': '{}'.format(err)
+                }
         return {
             'host': name,
             'status': 'done'
