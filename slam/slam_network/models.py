@@ -252,18 +252,6 @@ class Address(models.Model):
                                                                         network_address.prefix)
                 }
             address = Address(ip=ip)
-            if ns_entries is not None:
-                for ns_entry in ns_entries:
-                    try:
-                        domain = Domain.objects.get(name=ns_entry['domain'])
-                        entry = DomainEntry.objects.get(name=ns_entry['ns'], domain=domain)
-                        address.ns_entries.add(entry)
-                    except ObjectDoesNotExist as err:
-                        return {
-                            'address': ip,
-                            'status': 'failed',
-                            'message': '{}'.format(err)
-                        }
         except IntegrityError as err:
             return {
                 'address': ip,
@@ -285,6 +273,18 @@ class Address(models.Model):
                 'message': '{}'.format(err)
             }
         address.save()
+        if ns_entries is not None:
+            for ns_entry in ns_entries:
+                try:
+                    domain = Domain.objects.get(name=ns_entry['domain'])
+                    entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain)
+                    address.ns_entries.add(entry)
+                except ObjectDoesNotExist as err:
+                    return {
+                        'address': ip,
+                        'status': 'failed',
+                        'message': '{}'.format(err)
+                    }
         return {
             'address': address.ip,
             'status': 'done'
@@ -417,13 +417,14 @@ class Address(models.Model):
         result['entries'] = result_entries
         return result
 
-    def network(self):
+    @staticmethod
+    def network(ip):
         """
         This method return the network associated with the address
         :return:
         """
         networks = Network.objects.all()
         for network in networks:
-            if network.is_include(self.ip):
+            if network.is_include(ip):
                 return network
         return None

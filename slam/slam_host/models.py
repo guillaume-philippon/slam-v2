@@ -7,7 +7,7 @@ from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
-from slam_hardware.models import Interface
+from slam_hardware.models import Interface, Hardware
 from slam_network.models import Network, Address
 from slam_domain.models import DomainEntry, Domain
 
@@ -23,11 +23,11 @@ class Host(models.Model):
     dns_entry = models.ForeignKey(DomainEntry, on_delete=models.DO_NOTHING, null=True, blank=True)
 
     @staticmethod
-    def create(name, ip_address=None, interface=None, network=None, dns_entry=None):
+    def create(name, address=None, interface=None, network=None, dns_entry=None):
         """
         This is a custom way to create a host
         :param name: name of the host
-        :param ip_address: IP address for the host
+        :param address: IP address for the host
         :param interface: interface to bind
         :param network: network to bind (if ip is fixed, ip must be in this network)
         :param dns_entry: DNS name of the host
@@ -36,28 +36,70 @@ class Host(models.Model):
         interface_host = None
         network_host = None
         dns_entry_host = None
-        try:
-            if interface is not None:
+        if interface is not None:
+            try:
                 interface_host = Interface.objects.get(mac_address=interface)
-            if network is not None:
+            except ObjectDoesNotExist:
+                # If the interface not exist, we create a new one
+                Interface.create(mac_address=interface, hardware=name)
+                interface_host = Interface.objects.get(mac_address=interface)
+        if network is not None:
+            try:
                 network_host = Network.objects.get(name=network)
-            if dns_entry is not None:
+            except ObjectDoesNotExist as err:
+                return {
+                    'host': name,
+                    'status': 'failed',
+                    'message': '{}'.format(err)
+                }
+        if dns_entry is not None:
+            try:
                 domain_entry = Domain.objects.get(name=dns_entry['domain'])
-                if 'ns_type' in dns_entry:
+            except ObjectDoesNotExist as err:
+                return {
+                    'host': name,
+                    'status': 'failed',
+                    'message': '{}'.format(err)
+                }
+            if 'ns_type' in dns_entry:
+                try:
                     dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
                                                              domain=domain_entry,
                                                              type=dns_entry['ns_type'])
-                else:
+                except ObjectDoesNotExist:
+                    # If dns_entry not exist, we create a new one
+                    DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'],
+                                       type=dns_entry['ns_type'])
+                    dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
+                                                             domain=domain_entry,
+                                                             type=dns_entry['ns_type'])
+            else:
+                try:
                     dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
                                                              domain=domain_entry)
-            options = {
-                'name': name,
-                'ip_address': ip_address,
-                'interface': interface_host,
-                'network': network_host,
-                'dns_entry': dns_entry_host
-            }
-            print(options)
+                except ObjectDoesNotExist:
+                    # If dns_entry not exist, we create a new one
+                    DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'])
+                    dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
+                                                             domain=domain_entry)
+        if address is not None:
+            try:
+                address_host = Address.objects.get(ip=address)
+            except ObjectDoesNotExist:
+                # If address not exist, we create it
+                network_host = Address.network(address)
+                if dns_entry is not None:
+                    Address.create(ip=address, network=network_host.name, ns_entries=[dns_entry])
+                else:
+                    Address.create(ip=address, network=network_host.name)
+                address_host = Address.objects.get(ip=address)
+        options = {
+            'name': name,
+            'interface': interface_host,
+            'network': network_host,
+            'dns_entry': dns_entry_host
+        }
+        try:
             host = Host(**options)
             host.full_clean()
             host.save()
@@ -77,13 +119,19 @@ class Host(models.Model):
                 'status': 'failed',
                 'message': '{}'.format(err)
             }
+        except ValidationError as err:
+            return {
+                'host': name,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
 
     @staticmethod
-    def update(name, ip_address=None, interface=None, network=None, dns_entry=None):
+    def update(name, addresses=None, interface=None, network=None, dns_entry=None):
         """
         This is a custom method to update a host
         :param name: name of the host
-        :param ip_address: IP address of the host
+        :param addresses: IP address of the host
         :param interface: mac-address of the host
         :param network: network of the host
         :param dns_entry: DNS entry of the host
@@ -186,7 +234,7 @@ class Host(models.Model):
         for host in hosts:
             result_host = {
                 'name': host.name,
-                'ip-address': host.ip_address,
+                # 'ip-address': host.ip_address,
             }
             result.append(result_host)
         return result

@@ -65,7 +65,7 @@ def host_view(request, uri_host):
                 'domain': request.POST.get('domain')
             }
         if request.POST.get('ip-address') is not None:
-            options['ip_address'] = request.POST.get('ip-address')
+            options['address'] = request.POST.get('ip-address')
         result = Host.create(**options)
     elif request.method == 'DELETE':
         result = Host.remove(uri_host)

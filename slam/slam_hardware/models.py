@@ -87,24 +87,25 @@ class Hardware(models.Model):
                 'message': '{}'.format(err)
             }
         hardware.save()
-        for interface in interfaces:
-            try:
-                interface['hardware'] = hardware
-                interface_hw = Interface(**interface)
-                interface_hw.full_clean()
-            except IntegrityError as err:
-                return {
-                    'interface': interface['mac_address'],
-                    'status': 'failed',
-                    'message': '{}'.format(err)
-                }
-            except ValidationError as err:
-                return {
-                    'interface': interface['mac_address'],
-                    'status': 'failed',
-                    'message': '{}'.format(err)
-                }
-            interface_hw.save()
+        if interfaces is not None:
+            for interface in interfaces:
+                try:
+                    interface['hardware'] = hardware
+                    interface_hw = Interface(**interface)
+                    interface_hw.full_clean()
+                except IntegrityError as err:
+                    return {
+                        'interface': interface['mac_address'],
+                        'status': 'failed',
+                        'message': '{}'.format(err)
+                    }
+                except ValidationError as err:
+                    return {
+                        'interface': interface['mac_address'],
+                        'status': 'failed',
+                        'message': '{}'.format(err)
+                    }
+                interface_hw.save()
         return {
             'hardware': hardware.name,
             'status': 'done'
@@ -179,7 +180,14 @@ class Hardware(models.Model):
                 'status': 'failed',
                 'message': '{}'.format(err)
             }
-        hardware.delete()
+        try:
+            hardware.delete()
+        except IntegrityError as err:
+            return {
+                'hardware': name,
+                'status': 'failed',
+                'message': '{}'.format(err)
+            }
         return {
             'hardware': name,
             'status': 'done'
@@ -256,7 +264,7 @@ class Interface(models.Model):
                                    validators=[mac_address_validator])
     type = models.CharField(max_length=8, choices=INTERFACE_TYPE, null=True, blank=True)
     speed = models.IntegerField(null=True, blank=True)
-    hardware = models.ForeignKey(Hardware, on_delete=models.CASCADE, null=True, blank=True)
+    hardware = models.ForeignKey(Hardware, on_delete=models.CASCADE)
 
     @staticmethod
     def create(mac_address, hardware, int_type=None, speed=None):
@@ -271,11 +279,9 @@ class Interface(models.Model):
         try:
             hardware = Hardware.objects.get(name=hardware)
         except ObjectDoesNotExist as err:
-            return {
-                'interface': mac_address,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            # If hardware not exist, we create it
+            Hardware.create(name=hardware)
+            hardware = Hardware.objects.get(name=hardware)
         options = {
             'mac_address': mac_address,
             'hardware': hardware,

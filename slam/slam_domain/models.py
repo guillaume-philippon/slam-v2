@@ -140,10 +140,15 @@ class Domain(models.Model):
         entries = DomainEntry.objects.filter(domain=domain)
         result['entries'] = []
         for entry in entries:
+            addresses = entry.address_set.all()
+            result_entries = []
+            for address in addresses:
+                result_entries.append(address.ip)
             result['entries'].append({
                 'name': entry.name,
                 'type': entry.type,
-                'description': entry.description
+                'description': entry.description,
+                'addresses': result_entries
             })
         return result
 
