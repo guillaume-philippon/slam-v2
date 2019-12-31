@@ -47,9 +47,6 @@ def host_view(request, uri_host):
     :param uri_host: host name from URI
     :return:
     """
-    result = {
-        'status': 'done'
-    }
     if request.method == 'POST':
         options = {
             'name': uri_host,
@@ -87,4 +84,16 @@ def host_view(request, uri_host):
             'status': 'failed',
             'message': '{} method is not supported'.format(request.method)
         }
+    return JsonResponse(result)
+
+
+@login_required
+def address_view(request, uri_host, uri_address):
+    result = {
+        'address': uri_address,
+        'status': 'failed',
+        'message': 'This is a test'
+    }
+    if request.method == 'POST':
+        result = Host.add(uri_host, uri_address)
     return JsonResponse(result)

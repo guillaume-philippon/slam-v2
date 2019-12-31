@@ -11,8 +11,7 @@ from . import views
 
 urlpatterns = [
     path('', views.hosts_view, name='hosts'),
-    # re_path(r'(?P<uri_hardware>[\w\.\-]+)/(?P<uri_interface>[\w:]+)$',
-    #        views.host_view,
-    #        name='host'),
+    re_path(r'(?P<uri_host>[\w\.\-]+)/(?P<uri_address>[\w\:\.]+)$', views.address_view,
+            name='address'),
     re_path(r'(?P<uri_host>[\w\.\-:]+)$', views.host_view, name='host'),
 ]

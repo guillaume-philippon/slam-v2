@@ -163,6 +163,40 @@ class Host(models.Model):
         }
 
     @staticmethod
+    def add(name, address):
+        """
+        This is a custom method to add address in a host
+        :param name: the host name
+        :param address: IP address
+        :return:
+        """
+        print('add')
+        fqdn = name.split('.', 1)
+        ns = fqdn[0]
+        domain = fqdn[1]
+        ns_entry = {
+            'name': ns,
+            'domain': domain
+        }
+        try:
+            host = Host.objects.get(name=name)
+        except ObjectDoesNotExist as err:
+            error_message('host', name, err)
+        try:
+            address = Address.objects.get(ip=address)
+        except ObjectDoesNotExist:
+            network = Address.network(ip=address)
+            result = Address.create(address, network.name, ns_entry)
+            if result['status'] != 'done':
+                return result
+            address = Address.objects.get(ip=address)
+        host.addresses.add(address)
+        return {
+            'status': 'done',
+            'host': name
+        }
+
+    @staticmethod
     def get(name):
         """
         This is a custom method to get a specific host

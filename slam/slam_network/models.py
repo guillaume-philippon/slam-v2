@@ -46,8 +46,9 @@ class Network(models.Model):
         :param ip: IP address
         :return:
         """
-        if ipaddress.ip_address(ip) in ipaddress.ip_network('{}/{}'.format(self.address,
-                                                                           self.prefix)):
+        address = ipaddress.ip_address(ip)
+        network = ipaddress.ip_network('{}/{}'.format(self.address, self.prefix))
+        if address.version == network.version and address in network:
             return True
         return False
 
@@ -253,18 +254,23 @@ class Address(models.Model):
             except ObjectDoesNotExist as err:
                 return error_message('address', ip, err)
             try:
-                entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain)
+                entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain, type='A')
             except ObjectDoesNotExist as err:
                 # If NS entry not exist, we create it.
                 result = DomainEntry.create(name=ns_entry['name'], domain=ns_entry['domain'])
-                entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain)
+                entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain, type='A')
                 if result['status'] != 'done':
                     return result
-            result = DomainEntry.create(name=ns_entry['name'], domain=ns_entry['domain'],
-                                        ns_type='PTR')
-            if result['status'] != 'done':
-                return result
-            entry_ptr = DomainEntry.objects.get(name=ns_entry['name'], domain=domain, type='PTR')
+            try:
+                entry_ptr = DomainEntry.objects.get(name=ns_entry['name'], domain=domain,
+                                                    type='PTR')
+            except ObjectDoesNotExist:
+                result = DomainEntry.create(name=ns_entry['name'], domain=ns_entry['domain'],
+                                            ns_type='PTR')
+                if result['status'] != 'done':
+                    return result
+                entry_ptr = DomainEntry.objects.get(name=ns_entry['name'], domain=domain,
+                                                    type='PTR')
             address.ns_entries.add(entry)
             address.ns_entries.add(entry_ptr)
         return {
@@ -336,6 +342,7 @@ class Address(models.Model):
         :param ns_entry: If true, we also remove PTR and A resolution name (default True)
         :return:
         """
+        print('YEAHHHH')
         try:
             try:
                 network_address = Network.objects.get(name=network)
