@@ -7,6 +7,7 @@ from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
+from slam_core.utils import error_message
 from slam_hardware.models import Interface, Hardware
 from slam_network.models import Network, Address
 from slam_domain.models import DomainEntry, Domain
@@ -20,7 +21,6 @@ class Host(models.Model):
     addresses = models.ManyToManyField(Address)
     interface = models.ForeignKey(Interface, on_delete=models.DO_NOTHING, null=True, blank=True)
     network = models.ForeignKey(Network, on_delete=models.DO_NOTHING, null=True, blank=True)
-    dns_entry = models.ForeignKey(DomainEntry, on_delete=models.DO_NOTHING, null=True, blank=True)
 
     @staticmethod
     def create(name, address=None, interface=None, network=None, dns_entry=None):
@@ -35,7 +35,7 @@ class Host(models.Model):
         """
         interface_host = None
         network_host = None
-        dns_entry_host = None
+        address_host = None
         if interface is not None:
             try:
                 interface_host = Interface.objects.get(mac_address=interface)
@@ -54,40 +54,40 @@ class Host(models.Model):
                     'status': 'failed',
                     'message': '{}'.format(err)
                 }
-        if dns_entry is not None:
-            try:
-                domain_entry = Domain.objects.get(name=dns_entry['domain'])
-            except ObjectDoesNotExist as err:
-                return {
-                    'host': name,
-                    'status': 'failed',
-                    'message': '{}'.format(err)
-                }
-            if 'ns_type' in dns_entry:
-                try:
-                    dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
-                                                             domain=domain_entry,
-                                                             type=dns_entry['ns_type'])
-                except ObjectDoesNotExist:
-                    # If dns_entry not exist, we create a new one
-                    result = DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'],
-                                                type=dns_entry['ns_type'])
-                    if result['status'] != 'done':
-                        return result
-                    dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
-                                                             domain=domain_entry,
-                                                             type=dns_entry['ns_type'])
-            else:
-                try:
-                    dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
-                                                             domain=domain_entry)
-                except ObjectDoesNotExist:
-                    # If dns_entry not exist, we create a new one
-                    result = DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'])
-                    if result['status'] != 'done':
-                        return result
-                    dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
-                                                             domain=domain_entry)
+        # if dns_entry is not None:
+        #     try:
+        #         domain_entry = Domain.objects.get(name=dns_entry['domain'])
+        #     except ObjectDoesNotExist as err:
+        #         return {
+        #             'host': name,
+        #             'status': 'failed',
+        #             'message': '{}'.format(err)
+        #         }
+        #     if 'ns_type' in dns_entry:
+        #         try:
+        #             dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
+        #                                                      domain=domain_entry,
+        #                                                      type=dns_entry['ns_type'])
+        #         except ObjectDoesNotExist:
+        #             # If dns_entry not exist, we create a new one
+        #             result = DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'],
+        #                                         type=dns_entry['ns_type'])
+        #             if result['status'] != 'done':
+        #                 return result
+        #             dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
+        #                                                      domain=domain_entry,
+        #                                                      type=dns_entry['ns_type'])
+        #     else:
+        #         try:
+        #             dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
+        #                                                      domain=domain_entry)
+        #         except ObjectDoesNotExist:
+        #             # If dns_entry not exist, we create a new one
+        #             result = DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'])
+        #             if result['status'] != 'done':
+        #                 return result
+        #             dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
+        #                                                      domain=domain_entry)
         if address is not None:
             try:
                 address_host = Address.objects.get(ip=address)
@@ -108,34 +108,20 @@ class Host(models.Model):
             'name': name,
             'interface': interface_host,
             'network': network_host,
-            'dns_entry': dns_entry_host
+            # 'dns_entry': dns_entry_host
         }
         try:
             host = Host(**options)
             host.full_clean()
             host.save()
+            if address_host is not None:
+                host.addresses.add(address_host)
             return {
                 'host': name,
                 'status': 'done'
             }
-        except ObjectDoesNotExist as err:
-            return {
-                'host': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        except IntegrityError as err:
-            return {
-                'host': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        except ValidationError as err:
-            return {
-                'host': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+        except (ObjectDoesNotExist, IntegrityError, ValidationError) as err:
+            return error_message('host', name, err)
 
     @staticmethod
     def update(name, addresses=None, interface=None, network=None, dns_entry=None):
@@ -160,25 +146,17 @@ class Host(models.Model):
             try:
                 host.full_clean()
             except ValidationError as err:
-                return {
-                    'host': name,
-                    'status': 'failed',
-                    'message': '{}'.format(err)
-                }
+                return error_message('host', name, err)
             host.save()
         except ObjectDoesNotExist as err:
-            return {
-                'host': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('host', name, err)
         return {
             'host': name,
             'status': 'done'
         }
 
     @staticmethod
-    def remove(name, addresses=True, hardware=False, dns_entry=True):
+    def remove(name, addresses=True, hardware=False):
         """
         This method is a custom way to delete a host.
         :param name: name of host to delete
@@ -189,57 +167,30 @@ class Host(models.Model):
         """
         addresses_host = None
         hardware_host = None
-        dns_entry_host = None
+        # dns_entry_host = None
         try:
             host = Host.objects.get(name=name)
         except ObjectDoesNotExist as err:
-            return {
-                'host': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('host', name, err)
         if addresses:
             addresses_host = host.addresses.all()
         if hardware:
             hardware_host = host.interface.hardware
-        if dns_entry:
-            dns_entry_host = host.dns_entry
         try:
             host.delete()
         except IntegrityError as err:
-            return {
-                'host': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('host', name, err)
         if addresses_host is not None:
             for address in addresses_host:
                 try:
                     address.delete()
                 except IntegrityError as err:
-                    return {
-                        'host': name,
-                        'status': 'failed',
-                        'message': '{}'.format(err)
-                    }
+                    return error_message('host', name, err)
         if hardware_host is not None:
             try:
                 host.interface.hardware.delete()
             except IntegrityError as err:
-                return {
-                    'host': name,
-                    'status': 'failed',
-                    'message': '{}'.format(err)
-                }
-        if dns_entry_host is not None:
-            try:
-                host.dns_entry.delete()
-            except IntegrityError as err:
-                return {
-                    'host': name,
-                    'status': 'failed',
-                    'message': '{}'.format(err)
-                }
+                return error_message('host', name, err)
         return {
             'host': name,
             'status': 'done'
@@ -258,11 +209,7 @@ class Host(models.Model):
         try:
             host = Host.objects.get(name=name)
         except ObjectDoesNotExist as err:
-            return {
-                'host': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('host', name, err)
         result_addresses = []
         for address in host.addresses.all():
             result_addresses.append(address.ip)

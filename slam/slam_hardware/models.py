@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
+from slam_core.utils import error_message
 
 def mac_address_validator(mac_address):
     """
@@ -74,18 +75,8 @@ class Hardware(models.Model):
             if warranty is not None:
                 hardware.warranty = warranty
             hardware.full_clean()
-        except IntegrityError as err:
-            return {
-                'hardware': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        except ValidationError as err:
-            return {
-                'hardware': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+        except (IntegrityError, ValidationError) as err:
+            return error_message('hardware', name, err)
         hardware.save()
         if interfaces is not None:
             for interface in interfaces:
@@ -93,18 +84,8 @@ class Hardware(models.Model):
                     interface['hardware'] = hardware
                     interface_hw = Interface(**interface)
                     interface_hw.full_clean()
-                except IntegrityError as err:
-                    return {
-                        'interface': interface['mac_address'],
-                        'status': 'failed',
-                        'message': '{}'.format(err)
-                    }
-                except ValidationError as err:
-                    return {
-                        'interface': interface['mac_address'],
-                        'status': 'failed',
-                        'message': '{}'.format(err)
-                    }
+                except (IntegrityError, ValidationError) as err:
+                    return error_message('interface', interface['mac_address'], err)
                 interface_hw.save()
         return {
             'hardware': hardware.name,
@@ -131,11 +112,7 @@ class Hardware(models.Model):
         try:
             hardware = Hardware.objects.get(name=name)
         except ObjectDoesNotExist as err:
-            return {
-                'hardware': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('hardware', name, err)
         if buying_date is not None:
             hardware.buying_date = buying_date
         if description is not None:
@@ -154,12 +131,8 @@ class Hardware(models.Model):
             hardware.warranty = warranty
         try:
             hardware.full_clean()
-        except ValidationError as err:
-            return {
-                'hardware': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+        except (IntegrityError, ValidationError) as err:
+            return error_message('hardware', name, err)
         hardware.save()
         return {
             'hardware': name,
@@ -175,19 +148,11 @@ class Hardware(models.Model):
         try:
             hardware = Hardware.objects.get(name=name)
         except ObjectDoesNotExist as err:
-            return {
-                'hardware': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('hardware', name, err)
         try:
             hardware.delete()
         except IntegrityError as err:
-            return {
-                'hardware': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('hardware', name, err)
         return {
             'hardware': name,
             'status': 'done'
@@ -204,11 +169,7 @@ class Hardware(models.Model):
             hardware = Hardware.objects.get(name=name)
             interfaces = Interface.objects.filter(hardware=hardware)
         except ObjectDoesNotExist as err:
-            return {
-                'hardware': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('hardware', name, err)
         result_interfaces = []
         for interface in interfaces:
             result_interfaces.append({
@@ -293,18 +254,8 @@ class Interface(models.Model):
         try:
             interface = Interface(**options)
             interface.full_clean()
-        except IntegrityError as err:
-            return {
-                'interface': mac_address,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        except ValidationError as err:
-            return {
-                'interface': mac_address,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+        except (IntegrityError, ValidationError) as err:
+            return error_message('interface', mac_address, err)
         interface.save()
         return {
             'interface': mac_address,
@@ -320,11 +271,7 @@ class Interface(models.Model):
         try:
             interface = Interface.objects.get(mac_address=name)
         except ObjectDoesNotExist as err:
-            return {
-                'interface': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('interface', mac_address, err)
         interface.delete()
         return {
             'interface': name,

@@ -13,6 +13,7 @@ from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
+from slam_core.utils import error_message
 from slam_domain.models import DomainEntry, Domain
 
 
@@ -84,18 +85,8 @@ class Network(models.Model):
                               gateway=gateway, dns_master=dns_master, dhcp=dhcp, vlan=vlan,
                               contact=contact)
             network.full_clean()
-        except IntegrityError as err:  # In case network already exist
-            return {
-                'network': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        except ValidationError as err:  # In case of some validation issue w/ fields
-            return {
-                'network': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+        except (IntegrityError, ValidationError) as err:  # In case network already exist
+            return error_message('network', name, err)
         network.full_clean()
         network.save()
         return {
@@ -121,11 +112,7 @@ class Network(models.Model):
         try:
             network = Network.objects.get(name=name)
         except ObjectDoesNotExist as err:
-            return {
-                'network': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('network', name, err)
         if description is not None:
             network.description = description
         if gateway is not None:
@@ -138,7 +125,10 @@ class Network(models.Model):
             network.vlan = vlan
         if contact is not None:
             network.contact = contact
-        network.full_clean()
+        try:
+            network.full_clean()
+        except ValidationError as err:
+            return error_message('network', name, err)
         network.save()
         return {
             'network': name,
@@ -155,13 +145,9 @@ class Network(models.Model):
         """
         try:
             network = Network.objects.get(name=name)
-        except ObjectDoesNotExist as err:
-            return {
-                'network': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        network.delete()
+            network.delete()
+        except (ObjectDoesNotExist, IntegrityError) as err:
+            return error_message('network', name, err)
         return {
             'network': name,
             'status': 'done'
@@ -188,11 +174,7 @@ class Network(models.Model):
             result['vlan'] = network.vlan
             result['contact'] = network.contact
         except ObjectDoesNotExist as err:
-            return {
-                'network': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('network', name, err)
         addresses = network.addresses()
         result_addresses = []
         for address in addresses:
@@ -234,57 +216,48 @@ class Address(models.Model):
     ns_entries = models.ManyToManyField(DomainEntry)
 
     @staticmethod
-    def create(ip, network, ns_entries=None):
+    def create(ip, network, ns_entry=None):
         """
         This is a custom method to create a Address.
+
+        :param ip:
+        :param network:
+        :param ns_entry:
         :return:
         """
         try:
             try:
                 network_address = Network.objects.get(name=network)
-            except ObjectDoesNotExist:
-                network_address = None
+            except ObjectDoesNotExist as err:
+                return error_message('address', ip, err)
             if network_address is not None and not network_address.is_include(ip):
-                return {
-                    'address': ip,
-                    'status': 'failed',
-                    'message': 'Address {} not in Network {}/{}'.format(ip, network_address.address,
-                                                                        network_address.prefix)
-                }
+                return error_message('address', ip, 'Address {} not in Network {}/{}'.format(
+                    ip, network_address.address, network_address.prefix))
             address = Address(ip=ip)
-        except IntegrityError as err:
-            return {
-                'address': ip,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        except ValidationError as err:
-            return {
-                'address': ip,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        try:
             address.full_clean()
-        except ValidationError as err:
-            return {
-                'address': ip,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+        except (IntegrityError, ValueError, ValidationError) as err:
+            return error_message('address', ip, err)
         address.save()
-        if ns_entries is not None:
-            for ns_entry in ns_entries:
-                try:
-                    domain = Domain.objects.get(name=ns_entry['domain'])
-                    entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain)
-                    address.ns_entries.add(entry)
-                except ObjectDoesNotExist as err:
-                    return {
-                        'address': ip,
-                        'status': 'failed',
-                        'message': '{}'.format(err)
-                    }
+        if ns_entry is not None:
+            try:
+                domain = Domain.objects.get(name=ns_entry['domain'])
+            except ObjectDoesNotExist as err:
+                return error_message('address', ip, err)
+            try:
+                entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain)
+            except ObjectDoesNotExist as err:
+                # If NS entry not exist, we create it.
+                result = DomainEntry.create(name=ns_entry['name'], domain=ns_entry['domain'])
+                entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain)
+                if result['status'] != 'done':
+                    return result
+            result = DomainEntry.create(name=ns_entry['name'], domain=ns_entry['domain'],
+                                        ns_type='PTR')
+            if result['status'] != 'done':
+                return result
+            entry_ptr = DomainEntry.objects.get(name=ns_entry['name'], domain=domain, type='PTR')
+            address.ns_entries.add(entry)
+            address.ns_entries.add(entry_ptr)
         return {
             'address': address.ip,
             'status': 'done'
@@ -304,16 +277,15 @@ class Address(models.Model):
         ns = fqdn[0]
         domain = fqdn[1]
         try:
-            # network_entry = Network.objects.get(name=network)
+            network_entry = Network.objects.get(name=network)
+            if network_entry is not None and not network_entry.is_include(ip):
+                return error_message('entry', ns_entry, 'Address {} not in Network {}/{}'.format(
+                    ip, network_entry.address, network_entry.prefix))
             address_entry = Address.objects.get(ip=ip)
             domain_entry = Domain.objects.get(name=domain)
             ns_entry_entry = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)
         except ObjectDoesNotExist as err:
-            return {
-                'entry': ns_entry,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('entry', ns_entry, err)
         address_entry.ns_entries.add(ns_entry_entry)
         return {
             'entry': ns_entry,
@@ -339,11 +311,7 @@ class Address(models.Model):
             domain_entry = Domain.objects.get(name=domain_entry)
             ns_entry_entry = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)
         except ObjectDoesNotExist as err:
-            return {
-                'entry': ns_entry,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('entry', ns_entry, err)
         address_entry.ns_entries.remove(ns_entry_entry)
         return {
             'entry': ns_entry,
@@ -364,19 +332,11 @@ class Address(models.Model):
             except ObjectDoesNotExist:
                 network_address = None
             if network_address is not None and not network_address.is_include(ip):
-                return {
-                    'address': ip,
-                    'status': 'failed',
-                    'message': 'Address {} not in Network {}/{}'.format(ip, network_address.address,
-                                                                        network_address.prefix)
-                }
+                return error_message('address', ip, 'Address {} not in Network {}/{}'.format(
+                    ip, network_address.address, network_address.prefix))
             address = Address.objects.get(ip=ip)
         except ObjectDoesNotExist as err:
-            return {
-                'address': ip,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('address', ip, err)
         address.delete()
         return {
             'address': ip,
@@ -398,11 +358,7 @@ class Address(models.Model):
         try:
             address = Address.objects.get(ip=ip)
         except ObjectDoesNotExist as err:
-            return {
-                'address': ip,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('address', ip, err)
         result = {
             'address': address.ip
         }

@@ -14,6 +14,8 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
+from slam_core.utils import error_message
+
 
 class Domain(models.Model):
     """
@@ -43,18 +45,8 @@ class Domain(models.Model):
             domain = Domain(name=name, dns_master=dns_master, description=description,
                             contact=contact)
             domain.full_clean()
-        except IntegrityError as err:  # In case the domain already exist
-            return {
-                'domain': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        except ValidationError as err:  # In case of some validation issue w/ fields
-            return {
-                'domain': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+        except (IntegrityError, ValidationError) as err:
+            return error_message('domain', name, err)
         domain.save()
         return {
             'domain': domain.name,
@@ -75,18 +67,17 @@ class Domain(models.Model):
         try:
             domain = Domain.objects.get(name=name)
         except ObjectDoesNotExist as err:
-            return {
-                'domain': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('domain', name, err)
         if dns_master is not None:
             domain.dns_master = dns_master
         if description is not None:
             domain.description = description
         if contact is not None:
             domain.contact = contact
-        domain.full_clean()
+        try:
+            domain.full_clean()
+        except (ValidationError, IntegrityError) as err:
+            error_message('domain', name, err)
         domain.save()
         return {
             'domain': name,
@@ -105,11 +96,7 @@ class Domain(models.Model):
         try:
             domain = Domain.objects.get(name=name)
         except ObjectDoesNotExist as err:
-            return {
-                'domain': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('domain', name, err)
         domain.delete()
         return {
             'domain': name,
@@ -132,11 +119,7 @@ class Domain(models.Model):
             result['dns_master'] = domain.dns_master
             result['contact'] = domain.contact
         except ObjectDoesNotExist as err:
-            return {
-                'domain': name,
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('domain', name, err)
         entries = DomainEntry.objects.filter(domain=domain)
         result['entries'] = []
         for entry in entries:
@@ -203,27 +186,13 @@ class DomainEntry(models.Model):
         try:
             entry_domain = Domain.objects.get(name=domain)
         except ObjectDoesNotExist as err:
-            return {
-                'entry': '{}.{} {}'.format(name, domain, ns_type),
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         try:
             entry = DomainEntry(name=name, domain=entry_domain, type=ns_type,
                                 description=description)
             entry.full_clean()
-        except IntegrityError as err:
-            return {
-                'entry': '{}.{} {}'.format(name, domain, ns_type),
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
-        except ValidationError as err:
-            return {
-                'entry': '{}.{} {}'.format(name, domain, ns_type),
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+        except (IntegrityError, ValidationError) as err:
+            return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         entry.save()
         return {
             'entry': '{}.{} {}'.format(name, domain, ns_type),
@@ -245,11 +214,7 @@ class DomainEntry(models.Model):
             entry_domain = Domain.objects.get(name=domain)
             entry = DomainEntry.objects.get(name=name, domain=entry_domain, type=ns_type)
         except ObjectDoesNotExist as err:
-            return {
-                'entry': '{}.{} {}'.format(name, domain, ns_type),
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         entry.delete()
         return {
             'entry': '{}.{} {}'.format(name, domain, ns_type),
@@ -268,19 +233,11 @@ class DomainEntry(models.Model):
         try:
             domain_entry = Domain.objects.get(name=domain)
         except ObjectDoesNotExist as err:
-            return {
-                'entry': '{}.{} {}'.format(name, domain, ns_type),
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         try:
             entry = DomainEntry.objects.get(name=name, domain=domain_entry, type=ns_type)
         except ObjectDoesNotExist as err:
-            return {
-                'entry': '{}.{} {}'.format(name, domain, ns_type),
-                'status': 'failed',
-                'message': '{}'.format(err)
-            }
+            return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         return {
             'name': entry.name,
             'domain': entry.domain.name,
