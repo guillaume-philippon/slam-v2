@@ -205,8 +205,11 @@ class Host(models.Model):
                 'status': 'failed',
                 'message': '{}'.format(err)
             }
+        result_addresses = []
+        for address in host.addresses.all():
+            result_addresses.append(address.ip)
         result['network'] = {
-            'ip-address': host.ip_address
+            'addresses': result_addresses
         }
         if host.interface is not None:
             result['interface'] = host.interface.mac_address
@@ -234,7 +237,9 @@ class Host(models.Model):
         for host in hosts:
             result_host = {
                 'name': host.name,
-                # 'ip-address': host.ip_address,
+                # 'network': host.network.name,
             }
+            if host.network is not None:
+                result_host['network'] = host.network.name
             result.append(result_host)
         return result
