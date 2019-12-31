@@ -244,7 +244,7 @@ class Address(models.Model):
                 network_address = Network.objects.get(name=network)
             except ObjectDoesNotExist:
                 network_address = None
-            if network is not None and not network_address.is_include(ip):
+            if network_address is not None and not network_address.is_include(ip):
                 return {
                     'address': ip,
                     'status': 'failed',
