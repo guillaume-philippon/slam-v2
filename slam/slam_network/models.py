@@ -178,8 +178,17 @@ class Network(models.Model):
         addresses = network.addresses()
         result_addresses = []
         for address in addresses:
+            try:
+                result_address_entry = address.ns_entries.get(type='PTR')
+            except ObjectDoesNotExist:
+                result_address_entry = None
+            if result_address_entry is not None:
+                fqdn = '{}.{}'.format(result_address_entry.name, result_address_entry.domain.name)
+            else:
+                fqdn = ''
             result_addresses.append({
-                'ip': address.ip
+                'ip': address.ip,
+                'fqdn': fqdn
             })
         result['addresses'] = result_addresses
         return result
@@ -319,11 +328,12 @@ class Address(models.Model):
         }
 
     @staticmethod
-    def remove(ip, network):
+    def remove(ip, network, ns_entry=True):
         """
         This is a custom method to delete Address
         :param ip: The IP address we will delete
         :param network: The network name
+        :param ns_entry: If true, we also remove PTR and A resolution name (default True)
         :return:
         """
         try:
@@ -335,9 +345,28 @@ class Address(models.Model):
                 return error_message('address', ip, 'Address {} not in Network {}/{}'.format(
                     ip, network_address.address, network_address.prefix))
             address = Address.objects.get(ip=ip)
-        except ObjectDoesNotExist as err:
+            try:
+                entry_ptr = address.ns_entries.get(type='PTR')
+            except ObjectDoesNotExist as err:
+                entry_ptr = None
+            try:
+                entry_a = address.ns_entries.get(type='A')
+            except ObjectDoesNotExist as err:
+                entry_a = None
+            address.delete()
+        except (ObjectDoesNotExist, IntegrityError) as err:
             return error_message('address', ip, err)
-        address.delete()
+        if ns_entry:
+            if entry_ptr is not None:
+                try:
+                    entry_ptr.delete()
+                except (IntegrityError, ObjectDoesNotExist) as err:
+                    return error_message('address', ip, err)
+            if entry_a is not None:
+                try:
+                    entry_a.delete()
+                except (IntegrityError, ObjectDoesNotExist) as err:
+                    return error_message('address', ip, err)
         return {
             'address': ip,
             'status': 'done'

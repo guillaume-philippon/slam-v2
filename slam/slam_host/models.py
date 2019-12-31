@@ -54,40 +54,6 @@ class Host(models.Model):
                     'status': 'failed',
                     'message': '{}'.format(err)
                 }
-        # if dns_entry is not None:
-        #     try:
-        #         domain_entry = Domain.objects.get(name=dns_entry['domain'])
-        #     except ObjectDoesNotExist as err:
-        #         return {
-        #             'host': name,
-        #             'status': 'failed',
-        #             'message': '{}'.format(err)
-        #         }
-        #     if 'ns_type' in dns_entry:
-        #         try:
-        #             dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
-        #                                                      domain=domain_entry,
-        #                                                      type=dns_entry['ns_type'])
-        #         except ObjectDoesNotExist:
-        #             # If dns_entry not exist, we create a new one
-        #             result = DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'],
-        #                                         type=dns_entry['ns_type'])
-        #             if result['status'] != 'done':
-        #                 return result
-        #             dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
-        #                                                      domain=domain_entry,
-        #                                                      type=dns_entry['ns_type'])
-        #     else:
-        #         try:
-        #             dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
-        #                                                      domain=domain_entry)
-        #         except ObjectDoesNotExist:
-        #             # If dns_entry not exist, we create a new one
-        #             result = DomainEntry.create(name=dns_entry['name'], domain=dns_entry['domain'])
-        #             if result['status'] != 'done':
-        #                 return result
-        #             dns_entry_host = DomainEntry.objects.get(name=dns_entry['name'],
-        #                                                      domain=domain_entry)
         if address is not None:
             try:
                 address_host = Address.objects.get(ip=address)
@@ -96,7 +62,7 @@ class Host(models.Model):
                 network_host = Address.network(address)
                 if dns_entry is not None:
                     result = Address.create(ip=address, network=network_host.name,
-                                            ns_entries=[dns_entry])
+                                            ns_entry=dns_entry)
                     if result['status'] != 'done':
                         return result
                 else:
@@ -205,6 +171,8 @@ class Host(models.Model):
         """
         result = {
             'host': name,
+            'network': dict(),
+            'hardware': dict()
         }
         try:
             host = Host.objects.get(name=name)
@@ -213,17 +181,12 @@ class Host(models.Model):
         result_addresses = []
         for address in host.addresses.all():
             result_addresses.append(address.ip)
-        result['network'] = {
-            'addresses': result_addresses
-        }
-        if host.interface is not None:
-            result['interface'] = host.interface.mac_address
+        result['network']['addresses'] = result_addresses
         if host.network is not None:
             result['network']['name'] = host.network.name
-        if host.dns_entry is not None:
-            result['dns-entry'] = '{}.{} {}'.format(host.dns_entry.name,
-                                                    host.dns_entry.domain.name,
-                                                    host.dns_entry.type)
+        if host.interface is not None:
+            result['hardware']['interface'] = host.interface.mac_address
+            result['hardware']['name'] = host.interface.hardware.name
         return result
 
     @staticmethod

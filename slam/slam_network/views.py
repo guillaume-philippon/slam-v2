@@ -117,7 +117,7 @@ def address_view(request, uri_network, uri_address):
         if request.POST.get('name') is not None:
             options_entry['name'] = request.POST.get('name')
             options_entry['domain'] = request.POST.get('domain')
-        options['ns_entry'] = options_entry
+            options['ns_entry'] = options_entry
         result = Address.create(**options)
     elif request.method == 'DELETE':
         result = Address.remove(uri_address, uri_network)
