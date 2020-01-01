@@ -14,6 +14,7 @@ from django.db.utils import IntegrityError
 
 from slam_core.utils import error_message
 
+
 def mac_address_validator(mac_address):
     """
     This function check if a mac-address have a good format (ie 00:11:22:33:44:55)
@@ -178,7 +179,7 @@ class Hardware(models.Model):
                 'speed': interface.speed
             })
         return {
-            'hardware': name,
+            'name': name,
             'buying_date': hardware.buying_date,
             'description': hardware.description,
             'owner': hardware.owner,
@@ -205,8 +206,14 @@ class Hardware(models.Model):
         for hardware in inventory:
             result.append({
                 'name': hardware.name,
+                'buying_date': hardware.name,
+                'description': hardware.description,
                 'owner': hardware.owner,
-                'description': hardware.description
+                'vendor': hardware.owner,
+                'model': hardware.owner,
+                'serial_number': hardware.owner,
+                'inventory': hardware.owner,
+                'warranty': hardware.owner,
             })
         return result
 
@@ -223,7 +230,7 @@ class Interface(models.Model):
     )
     mac_address = models.CharField(max_length=17, unique=True,
                                    validators=[mac_address_validator])
-    type = models.CharField(max_length=8, choices=INTERFACE_TYPE, null=True, blank=True)
+    type = models.CharField(max_length=8, choices=INTERFACE_TYPE, null=True, default='copper')
     speed = models.IntegerField(null=True, blank=True)
     hardware = models.ForeignKey(Hardware, on_delete=models.CASCADE)
 
@@ -263,17 +270,51 @@ class Interface(models.Model):
         }
 
     @staticmethod
-    def remove(name):
+    def remove(mac_address):
         """
         This is a custom method to delete a interface
         :return:
         """
         try:
-            interface = Interface.objects.get(mac_address=name)
+            interface = Interface.objects.get(mac_address=mac_address)
         except ObjectDoesNotExist as err:
             return error_message('interface', mac_address, err)
         interface.delete()
         return {
-            'interface': name,
+            'interface': mac_address,
             'status': 'done'
         }
+
+    @staticmethod
+    def get(mac_address):
+        try:
+            interface = Interface.objects.get(mac_address=mac_address)
+        except ObjectDoesNotExist as err:
+            return error_message('interface', mac_address, err)
+        return {
+            'mac_address': interface.mac_address,
+            'type': interface.type,
+            'speed': interface.speed,
+            'hardware': interface.hardware.name
+        }
+
+    @staticmethod
+    def search(filters=None):
+        """
+        This is a custom way to get all hardware match the filter
+        :param filters:
+        :return:
+        """
+        if filters is None:
+            interface = Interface.objects.all()
+        else:
+            interface = Interface.objects.filter(**filters)
+        result = []
+        for interface in interface:
+            result.append({
+                'mac_address': interface.mac_address,
+                'buying_date': interface.type,
+                'description': interface.speed,
+                'hardware': interface.hardware.name,
+            })
+        return result

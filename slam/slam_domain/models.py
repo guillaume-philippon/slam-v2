@@ -111,7 +111,7 @@ class Domain(models.Model):
         :return:
         """
         result = {
-            'domain': name,
+            'name': name,
         }
         try:
             domain = Domain.objects.get(name=name)
@@ -245,3 +245,25 @@ class DomainEntry(models.Model):
             'description': entry.description,
             'created': entry.creation_date
         }
+
+    @staticmethod
+    def search(filters=None):
+        """
+        This is a custom method to get all entries
+        :param filters: the filter we will use
+        :return:
+        """
+        result = []
+        if filters is None:
+            entries = DomainEntry.objects.all()
+        else:
+            entries = DomainEntry.objects.filter(**filters)
+        for entry in entries:
+            result.append({
+                'name': entry.name,
+                'domain': entry.domain.name,
+                'description': entry.description,
+                'type': entry.type,
+                'creation_date': entry.creation_date
+            })
+        return result

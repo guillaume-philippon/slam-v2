@@ -64,6 +64,8 @@ def interface_view(request, uri_hardware, uri_interface):
         result = Interface.create(**options)
     elif request.method == 'DELETE':
         result = Interface.remove(uri_interface)
+    elif request.method == 'GET':
+        result = Interface.get(uri_interface)
     return JsonResponse(result)
 
 

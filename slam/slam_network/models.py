@@ -162,7 +162,7 @@ class Network(models.Model):
         :return:
         """
         result = {
-            'network': name,
+            'name': name,
         }
         try:
             network = Network.objects.get(name=name)
@@ -204,14 +204,19 @@ class Network(models.Model):
         if filters is None:
             networks = Network.objects.all()
         else:
-            network = Network.objects.filter(**filters)
+            networks = Network.objects.filter(**filters)
         result = []
         for network in networks:
             result.append({
-                'network': network.name,
+                'name': network.name,
                 'address': network.address,
                 'prefix': network.prefix,
-                'description': network.description
+                'description': network.description,
+                'gateway': network.gateway,
+                'dns_master': network.dns_master,
+                'dhcp': network.dhcp,
+                'vlan': network.vlan,
+                'contact': network.contact
             })
         return result
 
@@ -410,6 +415,24 @@ class Address(models.Model):
                     'type': entry.type
                 })
         result['entries'] = result_entries
+        return result
+
+    @staticmethod
+    def search(filters=None):
+        """
+        This is a custom method to get all networks that match the filters
+        :param filters: a dict of field / regex
+        :return:
+        """
+        if filters is None:
+            addresses = Address.objects.all()
+        else:
+            addresses = Address.objects.filter(**filters)
+        result = []
+        for address in addresses:
+            result.append({
+                'ip': address.ip,
+            })
         return result
 
     @staticmethod

@@ -5,8 +5,14 @@ each django's App (slam_*) provide it's own view
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import auth
-from django.http import JsonResponse
+from django.http import JsonResponse, QueryDict
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.core.exceptions import FieldError
+
+from slam_domain.models import Domain, DomainEntry
+from slam_network.models import Network, Address
+from slam_hardware.models import Hardware, Interface
+from slam_host.models import Host
 
 
 @login_required
@@ -44,7 +50,7 @@ def csrf(request):
     :param request: full HTTP request from user
     """
     # pylint: disable=W0613
-    return JsonResponse({})
+    return JsonResponse(dict())
 
 
 @login_required
@@ -54,3 +60,57 @@ def logout(request):
     """
     auth.logout(request)
     return HttpResponseRedirect('/')
+
+
+@login_required
+def search(request):
+    """
+    This function will return a list of objects that match the filter
+    :param request: full HTTP request from user
+    :return:
+    """
+    data = request.GET.dict()
+    options = dict()
+    # if not data:
+    #     return JsonResponse(dict())
+    for item in data:
+        options['{}__contains'.format(item)] = data[item]
+    try:
+        domains = Domain.search(options)
+    except FieldError:
+        domains = []
+    try:
+        entries = DomainEntry.search(options)
+    except FieldError:
+        entries = []
+    try:
+        networks = Network.search(options)
+    except FieldError:
+        networks = []
+    try:
+        addresses = Address.search(options)
+    except FieldError:
+        addresses = []
+    try:
+        hardware = Hardware.search(options)
+    except FieldError:
+        hardware = []
+    try:
+        interface = Interface.search(options)
+    except FieldError:
+        interface = []
+    try:
+        hosts = Host.search(options)
+    except FieldError:
+        hosts = []
+
+    result = {
+        'domains': domains,
+        'entries': entries,
+        'networks': networks,
+        'addresses': addresses,
+        'hardware': hardware,
+        'interface': interface,
+        'hosts': hosts
+    }
+    return JsonResponse(result, safe=False)

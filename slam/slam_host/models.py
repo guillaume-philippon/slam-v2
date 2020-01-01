@@ -210,7 +210,7 @@ class Host(models.Model):
         :return:
         """
         result = {
-            'host': name,
+            'name': name,
             'network': dict(),
             'hardware': dict()
         }
@@ -243,9 +243,15 @@ class Host(models.Model):
             hosts = Host.objects.filter(**filters)
         result = []
         for host in hosts:
+            addresses = host.addresses.all()
+            result_addresses = []
+            for address in addresses:
+                result_addresses.append(address.ip)
             result_host = {
                 'name': host.name,
-                # 'network': host.network.name,
+                'addresses': result_addresses,
+                'interface': host.interface.mac_address,
+                'network': host.network.name,
             }
             if host.network is not None:
                 result_host['network'] = host.network.name
