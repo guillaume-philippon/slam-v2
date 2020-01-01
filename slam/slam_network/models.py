@@ -342,7 +342,6 @@ class Address(models.Model):
         :param ns_entry: If true, we also remove PTR and A resolution name (default True)
         :return:
         """
-        print('YEAHHHH')
         try:
             try:
                 network_address = Network.objects.get(name=network)
@@ -366,12 +365,16 @@ class Address(models.Model):
         if ns_entry:
             if entry_ptr is not None:
                 try:
-                    entry_ptr.delete()
+                    if len(entry_ptr.address_set.all()) == 0:
+                        # We only delete PTR if no other address use it. (ie it s a orphan entry)
+                        entry_ptr.delete()
                 except (IntegrityError, ObjectDoesNotExist) as err:
                     return error_message('address', ip, err)
             if entry_a is not None:
                 try:
-                    entry_a.delete()
+                    if len(entry_a.address_set.all()) == 0:
+                        # We only delete A if no other address use it. (ie it s a orphan entry)
+                        entry_a.delete()
                 except (IntegrityError, ObjectDoesNotExist) as err:
                     return error_message('address', ip, err)
         return {

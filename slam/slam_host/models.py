@@ -122,7 +122,7 @@ class Host(models.Model):
         }
 
     @staticmethod
-    def remove(name, addresses=True, hardware=False):
+    def remove(name, addresses=True, hardware=False, dns_entry=True):
         """
         This method is a custom way to delete a host.
         :param name: name of host to delete
@@ -140,18 +140,24 @@ class Host(models.Model):
             return error_message('host', name, err)
         if addresses:
             addresses_host = host.addresses.all()
+            addresses_delete = []
+            for address in addresses_host:
+                addresses_delete.append({
+                    'ip': address.ip,
+                    'network': Address.network(address.ip),
+                    'ns_entry': dns_entry
+                })
         if hardware:
             hardware_host = host.interface.hardware
         try:
             host.delete()
         except IntegrityError as err:
             return error_message('host', name, err)
-        if addresses_host is not None:
-            for address in addresses_host:
-                try:
-                    address.delete()
-                except IntegrityError as err:
-                    return error_message('host', name, err)
+        if addresses_delete is not None:
+            for address in addresses_delete:
+                result = Address.remove(**address)
+                if result['status'] != 'done':
+                    return result
         if hardware_host is not None:
             try:
                 host.interface.hardware.delete()
