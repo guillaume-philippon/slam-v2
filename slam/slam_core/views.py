@@ -2,10 +2,14 @@
 This module provide HTTP view for SLAM. slam_core just provide basic view like home, login, logout.
 each django's App (slam_*) provide it's own view
 """
+import tempfile
+import fcntl
+import sys
+
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import auth
-from django.http import JsonResponse, QueryDict
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import FieldError
 
@@ -13,6 +17,8 @@ from slam_domain.models import Domain, DomainEntry
 from slam_network.models import Network, Address
 from slam_hardware.models import Hardware, Interface
 from slam_host.models import Host
+
+from slam_core.utils import bind_domain, bind_network, write_file, update_soa
 
 
 @login_required
@@ -114,3 +120,30 @@ def search(request):
         'hosts': hosts
     }
     return JsonResponse(result, safe=False)
+
+
+@login_required
+def commit(request):
+    """
+    Commit is creating configuration file for DNS / DHCP / freeradius
+    :param request: full HTTP request from user
+    :return:
+    """
+    result = ''
+    options = {
+        'domains': Domain.search(),
+        'entries': DomainEntry.search(),
+        'networks': Network.search(),
+        'addresses': Address.search()
+    }
+    bind_dir = '/tmp/bind'
+    for domain in options['domains']:
+        result_domain = bind_domain(domain['name'], options)
+        write_file('{}/{}.db'.format(bind_dir, domain['name']), result_domain)
+        update_soa('{}/{}.soa.db'.format(bind_dir, domain['name']))
+        result = result + result_domain
+    for network in options['networks']:
+        result_network = bind_network(network['name'], options)
+        write_file('{}/{}.db'.format(bind_dir, network['name']), result_network)
+        result = result + result_network
+    return HttpResponse(result, content_type="text/plain")

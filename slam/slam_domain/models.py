@@ -125,13 +125,17 @@ class Domain(models.Model):
         for entry in entries:
             addresses = entry.address_set.all()
             result_entries = []
+            result_sub_entries = []
+            for sub_entry in entry.entries.all():
+                result_sub_entries.append('{}.{}'.format(sub_entry.name, sub_entry.domain.name))
             for address in addresses:
                 result_entries.append(address.ip)
             result['entries'].append({
                 'name': entry.name,
                 'type': entry.type,
                 'description': entry.description,
-                'addresses': result_entries
+                'addresses': result_entries,
+                'entries': result_sub_entries
             })
         return result
 
@@ -158,10 +162,17 @@ class Domain(models.Model):
 class DomainEntry(models.Model):
     """
     Domain entry is a name in domain like www.example.com
+    - name: the name of the entry
+    - domain: the domain associated (fqdn is name.domain)
+    - type: the DNS entry type (A, CNAME, NS, ...). AAAA entries are marked as A type
+    - entries: In some cases (CNAME, NS, ...) entry refered to another entry
+    - description: a short description of the entry
+    - creation_date: when entry as been created
     """
     name = models.CharField(max_length=50)
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     type = models.CharField(max_length=5, default='A')
+    entries = models.ManyToManyField('self')
     description = models.CharField(max_length=150, blank=True, default='', null=True)
     creation_date = models.DateField(default=timezone.now)
 
@@ -173,13 +184,14 @@ class DomainEntry(models.Model):
         unique_together = ('name', 'domain', 'type')
 
     @staticmethod
-    def create(name, domain, ns_type='A', description=None):
+    def create(name, domain, ns_type='A', sub_entry=None, description=None):
         """
         This method is a custom way to create NS entry.
 
         :param name: the name of the entry
         :param domain: the domain
         :param ns_type: the NS type of the entry
+        :param sub_entry:
         :param description: A short description of the entry
         :return:
         """
@@ -194,6 +206,61 @@ class DomainEntry(models.Model):
         except (IntegrityError, ValidationError) as err:
             return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         entry.save()
+        if sub_entry is not None:
+            sub_entry_domain = Domain.objects.get(name=sub_entry['domain'])
+            sub_entry_obj = DomainEntry.objects.get(name=sub_entry['name'],
+                                                    domain=sub_entry_domain,
+                                                    type=sub_entry['type'])
+            entry.entries.add(sub_entry_obj)
+        return {
+            'entry': '{}.{} {}'.format(name, domain, ns_type),
+            'status': 'done'
+        }
+
+    @staticmethod
+    def update(name, domain, ns_type='A', sub_entry=None, description=None):
+        """
+
+        :param name:
+        :param domain:
+        :param ns_type:
+        :param sub_entry:
+        :param description:
+        :return:
+        """
+        try:
+            entry = DomainEntry(name=name, domain=domain, type=ns_type)
+        except ObjectDoesNotExist as err:
+            error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
+        if description is not None:
+            entry.description = description
+        if sub_entry is not None:
+            sub_entry_obj = DomainEntry(name=sub_entry['name'], domain=sub_entry['domain'],
+                                        type=sub_entry['type'])
+            entry.entries.add(sub_entry)
+        return {
+            'entry': '{}.{} {}'.format(name, domain, ns_type),
+            'status': 'done'
+        }
+
+    @staticmethod
+    def exclude(name, domain, ns_type='A', sub_entry=None):
+        """
+
+        :param name:
+        :param domain:
+        :param ns_type:
+        :param sub_entry:
+        :return:
+        """
+        try:
+            entry = DomainEntry(name=name, domain=domain, type=ns_type)
+        except ObjectDoesNotExist as err:
+            error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
+        if sub_entry is not None:
+            sub_entry_obj = DomainEntry(name=sub_entry['name'], domain=sub_entry['domain'],
+                                        type=sub_entry['type'])
+            entry.entries.remove(sub_entry)
         return {
             'entry': '{}.{} {}'.format(name, domain, ns_type),
             'status': 'done'
@@ -238,10 +305,18 @@ class DomainEntry(models.Model):
             entry = DomainEntry.objects.get(name=name, domain=domain_entry, type=ns_type)
         except ObjectDoesNotExist as err:
             return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
+        result_entries = []
+        for sub_entry in entry.entries.all():
+            result_entries.append({
+                'name': sub_entry.name,
+                'domain': sub_entry.domain.name,
+                'type': sub_entry.type
+            })
         return {
             'name': entry.name,
             'domain': entry.domain.name,
             'type': entry.type,
+            'entries': result_entries,
             'description': entry.description,
             'created': entry.creation_date
         }
@@ -259,11 +334,19 @@ class DomainEntry(models.Model):
         else:
             entries = DomainEntry.objects.filter(**filters)
         for entry in entries:
+            result_entry = []
+            for sub_entry in entry.entries.all():
+                result_entry.append({
+                    'name': sub_entry.name,
+                    'domain': sub_entry.domain.name,
+                    'type': sub_entry.type
+                })
             result.append({
                 'name': entry.name,
                 'domain': entry.domain.name,
                 'description': entry.description,
                 'type': entry.type,
+                'entries': result_entry,
                 'creation_date': entry.creation_date
             })
         return result

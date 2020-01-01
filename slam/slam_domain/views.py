@@ -104,8 +104,15 @@ def entry_view(request, uri_domain, uri_entry):
             'name': uri_entry,
             'domain': uri_domain,
         }
-        for args in request.POST:
-            options[args] = request.POST.get(args)
+        if request.POST.get('ns_type') is not None:
+            options['ns_type'] = request.POST.get('ns_type')
+        if request.POST.get('sub_entry_name') is not None:
+            options['sub_entry'] = {
+                'name': request.POST.get('sub_entry_name'),
+                'domain': request.POST.get('sub_entry_domain'),
+                'type': request.POST.get('sub_entry_type')
+            }
+        print(options)
         result = DomainEntry.create(**options)
     elif request.method == 'DELETE':
         # If we want to remove a specific entry, we must retrieve the entry associated with the
@@ -116,6 +123,22 @@ def entry_view(request, uri_domain, uri_entry):
             result = DomainEntry.remove(uri_entry, uri_domain, ns_type=data.get('type'))
         else:
             result = DomainEntry.remove(uri_entry, uri_domain)
+    elif request.method == 'PUT':
+        raw_data = request.body
+        data = QueryDict(raw_data)
+        options = {
+            'name': uri_entry,
+            'domain': uri_domain,
+        }
+        if data.get('type') is not None:
+            options['ns_type'] = data.get('type')
+        if data.get('sub_entry_name') is not None:
+            options['sub_entry'] = {
+                'name': data.get('sub_entry_name'),
+                'domain': data.get('sub_entry_domain')
+            }
+        print(options)
+        result = DomainEntry.update(**options)
     else:
         # We just support GET / POST / PUT / DELETE HTTP method. If anything else arrived, we
         # just drop it.

@@ -430,8 +430,19 @@ class Address(models.Model):
             addresses = Address.objects.filter(**filters)
         result = []
         for address in addresses:
+            result_entries = []
+            network = Address.network(address.ip)
+            for entry in address.ns_entries.all():
+                result_entries.append({
+                    'name': entry.name,
+                    'domain': entry.domain.name,
+                    'type': entry.type
+                })
             result.append({
                 'ip': address.ip,
+                'network': network.name,
+                'type': ipaddress.ip_address(address.ip).version,
+                'ns_entries': result_entries
             })
         return result
 
