@@ -10,7 +10,6 @@ E1101 (no-member)
 """
 # pylint: disable=R0903, E1101
 from django.db import models
-from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
@@ -29,6 +28,42 @@ class Domain(models.Model):
     description = models.CharField(max_length=120, blank=True, null=True)
     dns_master = models.GenericIPAddressField()
     contact = models.EmailField(blank=True, null=True)
+    creation_date = models.DateTimeField(auto_now_add=True, null=True)
+
+    def show(self, key=False, short=False):
+        """
+
+        :param key:
+        :param short:
+        :return:
+        """
+        if key:
+            result = {
+                'name': self.name
+            }
+        elif short:
+            result_entries = []
+            entries = DomainEntry.objects.filter(domain=self)
+            for entry in entries:
+                result_entries.append(entry.show(key=True))
+            result = {
+                'name': self.name,
+                'description': self.description,
+                'entries': result_entries
+            }
+        else:
+            result_entries = []
+            entries = DomainEntry.objects.filter(domain=self)
+            for entry in entries:
+                result_entries.append(entry.show(key=True))
+            result = {
+                'name': self.name,
+                'description': self.description,
+                'contact': self.contact,
+                'creation_date': self.creation_date,
+                'entries': result_entries
+            }
+        return result
 
     @staticmethod
     def create(name, dns_master, description=None, contact=None):
@@ -104,39 +139,17 @@ class Domain(models.Model):
         }
 
     @staticmethod
-    def get(name):
+    def get(name, short=False):
         """
         A custom way to get a domain.
         :param name: the name of the domain
         :return:
         """
-        result = {
-            'name': name,
-        }
         try:
             domain = Domain.objects.get(name=name)
-            result['description'] = domain.description
-            result['dns_master'] = domain.dns_master
-            result['contact'] = domain.contact
         except ObjectDoesNotExist as err:
             return error_message('domain', name, err)
-        entries = DomainEntry.objects.filter(domain=domain)
-        result['entries'] = []
-        for entry in entries:
-            addresses = entry.address_set.all()
-            result_entries = []
-            result_sub_entries = []
-            for sub_entry in entry.entries.all():
-                result_sub_entries.append('{}.{}'.format(sub_entry.name, sub_entry.domain.name))
-            for address in addresses:
-                result_entries.append(address.ip)
-            result['entries'].append({
-                'name': entry.name,
-                'type': entry.type,
-                'description': entry.description,
-                'addresses': result_entries,
-                'entries': result_sub_entries
-            })
+        result = domain.show(short=short)
         return result
 
     @staticmethod
@@ -152,10 +165,7 @@ class Domain(models.Model):
             domains = Domain.objects.filter(**filters)
         result = []
         for domain in domains:
-            result.append({
-                'name': domain.name,
-                'description': domain.description
-            })
+            result.append(domain.show(short=True))
         return result
 
 
@@ -174,7 +184,7 @@ class DomainEntry(models.Model):
     type = models.CharField(max_length=5, default='A')
     entries = models.ManyToManyField('self')
     description = models.CharField(max_length=150, blank=True, default='', null=True)
-    creation_date = models.DateField(default=timezone.now)
+    creation_date = models.DateField(auto_now_add=True, null=True)
 
     class Meta:
         """
@@ -182,6 +192,57 @@ class DomainEntry(models.Model):
         we can have www.example.org)
         """
         unique_together = ('name', 'domain', 'type')
+
+    def show(self, key=False, short=False):
+        """
+
+        :param key:
+        :param short:
+        :return:
+        """
+        if key:
+            result_addresses = []
+            for address in self.address_set.all():
+                result_addresses.append(address.show(key=True))
+            result = {
+                'name': self.name,
+                'domain': self.domain.show(key=True),
+                'type': self.type,
+                'addresses': result_addresses
+            }
+        elif short:
+            result_entries = []
+            result_addresses = []
+            for sub_entry in self.entries.all():
+                result_entries.append(sub_entry.show(key=True))
+            for address in self.address_set.all():
+                result_addresses.append(address.show(key=True))
+            result = {
+                'name': self.name,
+                'domain': self.domain.show(key=True),
+                'type': self.type,
+                'description': self.description,
+                'creation_date': self.creation_date,
+                'entries': result_entries,
+                'addresses': result_addresses
+            }
+        else:
+            result_entries = []
+            result_addresses = []
+            for sub_entry in self.entries.all():
+                result_entries.append(sub_entry.show(short=True))
+            for address in self.addresses_set.all():
+                result_addresses.append(address.show(key=True))
+            result = {
+                'name': self.name,
+                'domain': self.domain.show(short=True),
+                'type': self.type,
+                'description': self.description,
+                'creation_date': self.creation_date,
+                'entries': result_entries,
+                'addresses': result_addresses
+            }
+        return result
 
     @staticmethod
     def create(name, domain, ns_type='A', sub_entry=None, description=None):
@@ -305,21 +366,7 @@ class DomainEntry(models.Model):
             entry = DomainEntry.objects.get(name=name, domain=domain_entry, type=ns_type)
         except ObjectDoesNotExist as err:
             return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
-        result_entries = []
-        for sub_entry in entry.entries.all():
-            result_entries.append({
-                'name': sub_entry.name,
-                'domain': sub_entry.domain.name,
-                'type': sub_entry.type
-            })
-        return {
-            'name': entry.name,
-            'domain': entry.domain.name,
-            'type': entry.type,
-            'entries': result_entries,
-            'description': entry.description,
-            'created': entry.creation_date
-        }
+        return entry.show()
 
     @staticmethod
     def search(filters=None):
@@ -334,19 +381,5 @@ class DomainEntry(models.Model):
         else:
             entries = DomainEntry.objects.filter(**filters)
         for entry in entries:
-            result_entry = []
-            for sub_entry in entry.entries.all():
-                result_entry.append({
-                    'name': sub_entry.name,
-                    'domain': sub_entry.domain.name,
-                    'type': sub_entry.type
-                })
-            result.append({
-                'name': entry.name,
-                'domain': entry.domain.name,
-                'description': entry.description,
-                'type': entry.type,
-                'entries': result_entry,
-                'creation_date': entry.creation_date
-            })
+            result.append(entry.show(short=True))
         return result

@@ -15,6 +15,7 @@ from django.db.utils import IntegrityError
 
 from slam_core.utils import error_message
 from slam_domain.models import DomainEntry, Domain
+from slam_network.exceptions import NetworkFull
 
 
 class Network(models.Model):
@@ -40,6 +41,42 @@ class Network(models.Model):
     vlan = models.IntegerField(default=1)
     contact = models.EmailField(blank=True, null=True)
 
+    def show(self, key=False, short=False):
+        if key:
+            result = {
+                'name': self.name
+            }
+        elif short:
+            result_addresses = []
+            for address in self.addresses():
+                result_addresses.append(address.show(key=True))
+            result = {
+                'name': self.name,
+                'address': self.address,
+                'prefix': self.prefix,
+                'version': ipaddress.ip_address(self.address).version,
+                'description': self.description,
+                'addresses': result_addresses
+            }
+        else:
+            result_addresses = []
+            for address in self.addresses():
+                result_addresses.append(address.show(short=True))
+            result = {
+                'name': self.name,
+                'address': self.address,
+                'prefix': self.prefix,
+                'version': ipaddress.ip_address(self.address).version,
+                'description': self.description,
+                'gateway': self.gateway,
+                'dns_master': self.dns_master,
+                'dhcp': self.dhcp,
+                'vlan': self.vlan,
+                'contact': self.contact,
+                'addresses': result_addresses
+            }
+        return result
+
     def is_include(self, ip):
         """
         This method check if ip is included on a network
@@ -63,6 +100,20 @@ class Network(models.Model):
             if self.is_include(address.ip):
                 result.append(address)
         return result
+
+    def get_free_ip(self):
+        """
+
+        :return:
+        """
+        network = ipaddress.ip_network('{}/{}'.format(self.address, self.prefix))
+        addresses = []
+        for address in self.addresses():
+            addresses.append(ipaddress.ip_address(address.ip))
+        for result_address in network.hosts():
+            if result_address not in addresses:
+                return result_address
+        raise NetworkFull()
 
     @staticmethod
     def create(name, address, prefix, description='A short description', gateway=None,
@@ -161,37 +212,11 @@ class Network(models.Model):
         :param name: name of the network
         :return:
         """
-        result = {
-            'name': name,
-        }
         try:
             network = Network.objects.get(name=name)
-            result['address'] = network.address
-            result['prefix'] = network.prefix
-            result['description'] = network.description
-            result['gateway'] = network.gateway
-            result['dns_master'] = network.dns_master
-            result['dhcp'] = network.dhcp
-            result['vlan'] = network.vlan
-            result['contact'] = network.contact
         except ObjectDoesNotExist as err:
             return error_message('network', name, err)
-        addresses = network.addresses()
-        result_addresses = []
-        for address in addresses:
-            try:
-                result_address_entry = address.ns_entries.get(type='PTR')
-            except ObjectDoesNotExist:
-                result_address_entry = None
-            if result_address_entry is not None:
-                fqdn = '{}.{}'.format(result_address_entry.name, result_address_entry.domain.name)
-            else:
-                fqdn = ''
-            result_addresses.append({
-                'ip': address.ip,
-                'fqdn': fqdn
-            })
-        result['addresses'] = result_addresses
+        result = network.show()
         return result
 
     @staticmethod
@@ -207,17 +232,7 @@ class Network(models.Model):
             networks = Network.objects.filter(**filters)
         result = []
         for network in networks:
-            result.append({
-                'name': network.name,
-                'address': network.address,
-                'prefix': network.prefix,
-                'description': network.description,
-                'gateway': network.gateway,
-                'dns_master': network.dns_master,
-                'dhcp': network.dhcp,
-                'vlan': network.vlan,
-                'contact': network.contact
-            })
+            result.append(network.show(short=True))
         return result
 
 
@@ -229,6 +244,42 @@ class Address(models.Model):
     """
     ip = models.GenericIPAddressField(unique=True)
     ns_entries = models.ManyToManyField(DomainEntry)
+    creation_date = models.DateTimeField(auto_now_add=True, null=True)
+
+    def show(self, key=False, short=True):
+        """
+
+        :param key:
+        :param short:
+        :return:
+        """
+        if key:
+            result = {
+                'ip': self.ip,
+            }
+        elif short:
+            result_entries = []
+            for entry in self.ns_entries.all():
+                result_entries.append(entry.show(key=True))
+            network = Address.network(self.ip)
+            result = {
+                'ip': self.ip,
+                'ns_entries': result_entries,
+                'creation_date': self.creation_date,
+                'network': network.show(key=True)
+            }
+        else:
+            result_entries = []
+            for entry in self.ns_entries.all():
+                result_entries.append(entry.show(short=True))
+            network = Address.network(self.ip)
+            result = {
+                'ip': self.ip,
+                'ns_entries': result_entries,
+                'creation_date': self.creation_date,
+                'network': network.show(short=True)
+            }
+        return result
 
     @staticmethod
     def create(ip, network, ns_entry=None):
@@ -403,18 +454,7 @@ class Address(models.Model):
             address = Address.objects.get(ip=ip)
         except ObjectDoesNotExist as err:
             return error_message('address', ip, err)
-        result = {
-            'address': address.ip
-        }
-        result_entries = []
-        if address.ns_entries is not None:
-            for entry in address.ns_entries.all():
-                result_entries.append({
-                    'ns': entry.name,
-                    'domain': entry.domain.name,
-                    'type': entry.type
-                })
-        result['entries'] = result_entries
+        result = address.show()
         return result
 
     @staticmethod
@@ -430,20 +470,7 @@ class Address(models.Model):
             addresses = Address.objects.filter(**filters)
         result = []
         for address in addresses:
-            result_entries = []
-            network = Address.network(address.ip)
-            for entry in address.ns_entries.all():
-                result_entries.append({
-                    'name': entry.name,
-                    'domain': entry.domain.name,
-                    'type': entry.type
-                })
-            result.append({
-                'ip': address.ip,
-                'network': network.name,
-                'type': ipaddress.ip_address(address.ip).version,
-                'ns_entries': result_entries
-            })
+            result.append(address.show(short=True))
         return result
 
     @staticmethod

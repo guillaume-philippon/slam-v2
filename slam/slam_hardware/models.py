@@ -42,6 +42,51 @@ class Hardware(models.Model):
     inventory = models.CharField(max_length=150, default='', blank=True)
     warranty = models.IntegerField(default=5)
 
+    def interfaces(self):
+        """
+
+        :return:
+        """
+        return Interface.objects.filter(hardware=self)
+
+    def show(self, key=False, short=False):
+        """
+        A method to return a dict
+        :return:
+        """
+        if key:
+            result = {
+                'name': self.name
+            }
+        elif short:
+            result_interfaces = []
+            for interface in self.interfaces():
+                result_interfaces.append(interface.show(key=True))
+            result = {
+                'name': self.name,
+                'buying_date': self.buying_date,
+                'description': self.description,
+                'owner': self.owner,
+                'interfaces': result_interfaces
+            }
+        else:
+            result_interfaces = []
+            for interface in self.interfaces():
+                result_interfaces.append(interface.show(short=True))
+            result = {
+                'name': self.name,
+                'buying_date': self.buying_date,
+                'description': self.description,
+                'owner': self.owner,
+                'vendor': self.vendor,
+                'model': self.model,
+                'serial_number': self.serial_number,
+                'inventory': self.inventory,
+                'warranty': self.warranty,
+                'interfaces': result_interfaces
+            }
+        return result
+
     @staticmethod
     def create(name, description=None, owner=None, vendor=None, model=None, serial_number=None,
                inventory=None, warranty=None, interfaces=None):
@@ -160,7 +205,7 @@ class Hardware(models.Model):
         }
 
     @staticmethod
-    def get(name):
+    def get(name, short=False):
         """
         This is a custom method to get hardware information
         :param name: name of the hardware
@@ -168,28 +213,9 @@ class Hardware(models.Model):
         """
         try:
             hardware = Hardware.objects.get(name=name)
-            interfaces = Interface.objects.filter(hardware=hardware)
         except ObjectDoesNotExist as err:
             return error_message('hardware', name, err)
-        result_interfaces = []
-        for interface in interfaces:
-            result_interfaces.append({
-                'mac_address': interface.mac_address,
-                'type': interface.type,
-                'speed': interface.speed
-            })
-        return {
-            'name': name,
-            'buying_date': hardware.buying_date,
-            'description': hardware.description,
-            'owner': hardware.owner,
-            'vendor': hardware.vendor,
-            'model': hardware.model,
-            'serial_number': hardware.serial_number,
-            'inventory': hardware.inventory,
-            'warranty': hardware.warranty,
-            'interfaces': result_interfaces
-        }
+        return hardware.show(short)
 
     @staticmethod
     def search(filters=None):
@@ -204,17 +230,7 @@ class Hardware(models.Model):
             inventory = Hardware.objects.filter(**filters)
         result = []
         for hardware in inventory:
-            result.append({
-                'name': hardware.name,
-                'buying_date': hardware.name,
-                'description': hardware.description,
-                'owner': hardware.owner,
-                'vendor': hardware.owner,
-                'model': hardware.owner,
-                'serial_number': hardware.owner,
-                'inventory': hardware.owner,
-                'warranty': hardware.owner,
-            })
+            result.append(hardware.show(short=True))
         return result
 
 
@@ -233,6 +249,30 @@ class Interface(models.Model):
     type = models.CharField(max_length=8, choices=INTERFACE_TYPE, null=True, default='copper')
     speed = models.IntegerField(null=True, blank=True)
     hardware = models.ForeignKey(Hardware, on_delete=models.CASCADE)
+
+    def show(self, key=False, short=False):
+        """
+        Return a dict for Interface
+        :param short: if True, we
+        :return:
+        """
+        if key:
+            result = {
+                'mac_address': self.mac_address
+            }
+        elif short:
+            result = {
+                'mac_address': self.mac_address,
+                'hardware': self.hardware.show(key=True)
+            }
+        else:
+            result = {
+                'mac_address': self.mac_address,
+                'type': self.type,
+                'speed': self.speed,
+                'hardware': self.hardware.show(short=True)
+            }
+        return result
 
     @staticmethod
     def create(mac_address, hardware, int_type=None, speed=None):
@@ -286,17 +326,12 @@ class Interface(models.Model):
         }
 
     @staticmethod
-    def get(mac_address):
+    def get(mac_address, short=False):
         try:
             interface = Interface.objects.get(mac_address=mac_address)
         except ObjectDoesNotExist as err:
             return error_message('interface', mac_address, err)
-        return {
-            'mac_address': interface.mac_address,
-            'type': interface.type,
-            'speed': interface.speed,
-            'hardware': interface.hardware.name
-        }
+        return interface.show(short)
 
     @staticmethod
     def search(filters=None):
@@ -311,10 +346,5 @@ class Interface(models.Model):
             interface = Interface.objects.filter(**filters)
         result = []
         for interface in interface:
-            result.append({
-                'mac_address': interface.mac_address,
-                'buying_date': interface.type,
-                'description': interface.speed,
-                'hardware': interface.hardware.name,
-            })
+            result.append(interface.show(short=True))
         return result

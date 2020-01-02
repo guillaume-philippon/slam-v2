@@ -18,7 +18,7 @@ from slam_network.models import Network, Address
 from slam_hardware.models import Hardware, Interface
 from slam_host.models import Host
 
-from slam_core.utils import bind_domain, bind_network, write_file, update_soa
+from slam_core.utils import bind_domain, bind_network, write_file, update_soa, isc_dhcp
 
 
 @login_required
@@ -134,16 +134,24 @@ def commit(request):
         'domains': Domain.search(),
         'entries': DomainEntry.search(),
         'networks': Network.search(),
-        'addresses': Address.search()
+        'addresses': Address.search(),
+        'inventory': Hardware.search(),
+        'interfaces': Interface.search(),
+        'hosts': Host.search()
     }
     bind_dir = '/tmp/bind'
+    dhcp_dir = '/tmp/dhcp'
     for domain in options['domains']:
         result_domain = bind_domain(domain['name'], options)
         write_file('{}/{}.db'.format(bind_dir, domain['name']), result_domain)
         update_soa('{}/{}.soa.db'.format(bind_dir, domain['name']))
         result = result + result_domain
     for network in options['networks']:
-        result_network = bind_network(network['name'], options)
-        write_file('{}/{}.db'.format(bind_dir, network['name']), result_network)
-        result = result + result_network
+        result_bind_network = bind_network(network['name'], options)
+        write_file('{}/{}.db'.format(bind_dir, network['name']), result_bind_network)
+        # update_soa('{}/{}.soa.db'.format(bind_dir, network['name']))
+
+        result_dhcp_network = isc_dhcp(network['name'], options)
+        write_file('{}/{}.conf'.format(dhcp_dir, network['name']), result_dhcp_network)
+        result += result_bind_network + result_dhcp_network
     return HttpResponse(result, content_type="text/plain")

@@ -12,6 +12,8 @@ from slam_hardware.models import Interface, Hardware
 from slam_network.models import Network, Address
 from slam_domain.models import DomainEntry, Domain
 
+from slam_network.exceptions import NetworkFull
+
 
 class Host(models.Model):
     """
@@ -21,9 +23,44 @@ class Host(models.Model):
     addresses = models.ManyToManyField(Address)
     interface = models.ForeignKey(Interface, on_delete=models.DO_NOTHING, null=True, blank=True)
     network = models.ForeignKey(Network, on_delete=models.DO_NOTHING, null=True, blank=True)
+    creation_date = models.DateTimeField(auto_now_add=True, null=True)
+
+    def show(self, short=False, key=False):
+        """
+
+        :param short:
+        :param key:
+        :return:
+        """
+        if key:
+            result = {
+                'name': self.name
+            }
+        elif short:
+            result_address = []
+            for address in self.addresses.all():
+                result_address.append(address.show(key=True))
+            result = {
+                'name': self.name,
+                'interface': self.interface.show(key=True),
+                'addresses': result_address,
+                'network': self.network.show(key=True),
+            }
+        else:
+            result_address = []
+            for address in self.addresses.all():
+                result_address.append(address.show(short=True))
+            result = {
+                'name': self.name,
+                'interface': self.interface.show(short=True),
+                'addresses': result_address,
+                'network': self.network.show(short=True),
+                'creation_date': self.creation_date
+            }
+        return result
 
     @staticmethod
-    def create(name, address=None, interface=None, network=None, dns_entry=None):
+    def create(name, address=None, interface=None, network=None, dns_entry=None, options=None):
         """
         This is a custom way to create a host
         :param name: name of the host
@@ -36,12 +73,18 @@ class Host(models.Model):
         interface_host = None
         network_host = None
         address_host = None
+        if network is None and address is None:
+            return {
+                'host': name,
+                'status': 'Integrity error Address or Network should be provide'
+            }
         if interface is not None:
             try:
                 interface_host = Interface.objects.get(mac_address=interface)
             except ObjectDoesNotExist:
                 # If the interface not exist, we create a new one
-                result = Interface.create(mac_address=interface, hardware=name)
+                hardware_name = '{}-{}'.format(name.split('.', 1)[0], interface)
+                result = Interface.create(mac_address=interface, hardware=hardware_name)
                 if result['status'] != 'done':
                     return result
                 interface_host = Interface.objects.get(mac_address=interface)
@@ -49,13 +92,17 @@ class Host(models.Model):
             try:
                 network_host = Network.objects.get(name=network)
             except ObjectDoesNotExist as err:
-                return {
-                    'host': name,
-                    'status': 'failed',
-                    'message': '{}'.format(err)
-                }
+                return error_message('host', name, err)
+        if address is None and\
+                network is not None and\
+                not options['no_ip']:
+            try:
+                address = str(network_host.get_free_ip())
+            except NetworkFull:
+                return error_message('host', name, 'Network have not usued IP address')
         if address is not None:
             try:
+                print(address)
                 address_host = Address.objects.get(ip=address)
             except ObjectDoesNotExist:
                 # If address not exist, we create it
@@ -63,6 +110,7 @@ class Host(models.Model):
                 if dns_entry is not None:
                     result = Address.create(ip=address, network=network_host.name,
                                             ns_entry=dns_entry)
+                    print(result)
                     if result['status'] != 'done':
                         return result
                 else:
@@ -70,6 +118,7 @@ class Host(models.Model):
                     if result['status'] != 'done':
                         return result
                 address_host = Address.objects.get(ip=address)
+            print(address_host)
         options = {
             'name': name,
             'interface': interface_host,
@@ -147,6 +196,7 @@ class Host(models.Model):
                     'network': Address.network(address.ip),
                     'ns_entry': dns_entry
                 })
+            print(addresses_delete)
         if hardware:
             hardware_host = host.interface.hardware
         try:
@@ -209,24 +259,25 @@ class Host(models.Model):
         :param name: name of the host
         :return:
         """
-        result = {
-            'name': name,
-            'network': dict(),
-            'hardware': dict()
-        }
+        # result = {
+        #     'name': name,
+        #     'network': dict(),
+        #     'hardware': dict()
+        # }
         try:
             host = Host.objects.get(name=name)
         except ObjectDoesNotExist as err:
             return error_message('host', name, err)
-        result_addresses = []
-        for address in host.addresses.all():
-            result_addresses.append(address.ip)
-        result['network']['addresses'] = result_addresses
-        if host.network is not None:
-            result['network']['name'] = host.network.name
-        if host.interface is not None:
-            result['hardware']['interface'] = host.interface.mac_address
-            result['hardware']['name'] = host.interface.hardware.name
+        result = host.show()
+        # result_addresses = []
+        # for address in host.addresses.all():
+        #     result_addresses.append(address.ip)
+        # result['network']['addresses'] = result_addresses
+        # if host.network is not None:
+        #     result['network']['name'] = host.network.name
+        # if host.interface is not None:
+        #     result['hardware']['interface'] = host.interface.mac_address
+        #     result['hardware']['name'] = host.interface.hardware.name
         return result
 
     @staticmethod
@@ -243,17 +294,22 @@ class Host(models.Model):
             hosts = Host.objects.filter(**filters)
         result = []
         for host in hosts:
-            addresses = host.addresses.all()
-            result_addresses = []
-            for address in addresses:
-                result_addresses.append(address.ip)
-            result_host = {
-                'name': host.name,
-                'addresses': result_addresses,
-                'interface': host.interface.mac_address,
-                'network': host.network.name,
-            }
-            if host.network is not None:
-                result_host['network'] = host.network.name
-            result.append(result_host)
+            result.append(host.show(short=True))
+            # addresses = host.addresses.all()
+            # result_addresses = []
+            # for address in addresses:
+            #     result_addresses.append(address.ip)
+            # if host.interface is not None:
+            #     result_interface = host.interface.mac_address
+            # else:
+            #     result_interface = ''
+            # result_host = {
+            #     'name': host.name,
+            #     'addresses': result_addresses,
+            #     'interface': result_interface,
+            #     'network': host.network.name,
+            # }
+            # if host.network is not None:
+            #     result_host['network'] = host.network.name
+            # result.append(result_host)
         return result

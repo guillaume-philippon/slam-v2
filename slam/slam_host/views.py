@@ -20,6 +20,7 @@ following nomenclature
  - uri_*: input retrieve from URI structure itself
  - raw_*: a raw version of variable
 """
+from distutils.util import strtobool
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
 from slam_host.models import Host
@@ -50,6 +51,7 @@ def host_view(request, uri_host):
     if request.method == 'POST':
         options = {
             'name': uri_host,
+            'options': dict()
         }
         if request.POST.get('interface') is not None:
             options['interface'] = request.POST.get('interface')
@@ -63,6 +65,10 @@ def host_view(request, uri_host):
             }
         if request.POST.get('ip_address') is not None:
             options['address'] = request.POST.get('ip_address')
+        if request.POST.get('no_ip') is not None:
+            options['options']['no_ip'] = strtobool(request.POST.get('no_ip'))
+        else:
+            options['options']['no_ip'] = False
         result = Host.create(**options)
     elif request.method == 'DELETE':
         result = Host.remove(uri_host)
