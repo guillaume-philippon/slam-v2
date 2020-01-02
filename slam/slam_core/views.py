@@ -139,8 +139,8 @@ def commit(request):
         'interfaces': Interface.search(),
         'hosts': Host.search()
     }
-    bind_dir = '/tmp/bind'
-    dhcp_dir = '/tmp/dhcp'
+    bind_dir = './build/bind'
+    isc_dhcp_dir = './build/isc-dhcp'
     for domain in options['domains']:
         result_domain = bind_domain(domain['name'], options)
         write_file('{}/{}.db'.format(bind_dir, domain['name']), result_domain)
@@ -149,9 +149,9 @@ def commit(request):
     for network in options['networks']:
         result_bind_network = bind_network(network['name'], options)
         write_file('{}/{}.db'.format(bind_dir, network['name']), result_bind_network)
-        # update_soa('{}/{}.soa.db'.format(bind_dir, network['name']))
+        update_soa('{}/{}.soa.db'.format(bind_dir, network['name']))
 
         result_dhcp_network = isc_dhcp(network['name'], options)
-        write_file('{}/{}.conf'.format(dhcp_dir, network['name']), result_dhcp_network)
+        write_file('{}/{}.conf'.format(isc_dhcp_dir, network['name']), result_dhcp_network)
         result += result_bind_network + result_dhcp_network
     return HttpResponse(result, content_type="text/plain")

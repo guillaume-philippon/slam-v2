@@ -40,21 +40,37 @@ class Host(models.Model):
             result_address = []
             for address in self.addresses.all():
                 result_address.append(address.show(key=True))
+            if self.interface is None:
+                result_interface = dict()
+            else:
+                result_interface = self.interface.show(key=True)
+            if self.interface is None:
+                result_network = dict()
+            else:
+                result_network = self.network.show(key=True)
             result = {
                 'name': self.name,
-                'interface': self.interface.show(key=True),
+                'interface': result_interface,
                 'addresses': result_address,
-                'network': self.network.show(key=True),
+                'network': result_network,
             }
         else:
             result_address = []
             for address in self.addresses.all():
                 result_address.append(address.show(short=True))
+            if self.interface is None:
+                result_interface = dict()
+            else:
+                result_interface = self.interface.show(short=True)
+            if self.interface is None:
+                result_network = dict()
+            else:
+                result_network = self.network.show(short=True)
             result = {
                 'name': self.name,
-                'interface': self.interface.show(short=True),
+                'interface': result_interface,
                 'addresses': result_address,
-                'network': self.network.show(short=True),
+                'network': result_network,
                 'creation_date': self.creation_date
             }
         return result

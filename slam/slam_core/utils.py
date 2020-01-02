@@ -6,6 +6,9 @@ import ipaddress
 from django.core.files import locks
 import os
 
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.core.files import File
 
 def error_message(plugin, value, message):
     """
@@ -36,7 +39,7 @@ def write_file(filename, contents):
         lock_file.close()
 
 
-def bind_domain(domain, data):
+def bind_domain(domain_name, data):
     """
     Generate DNS bind9 file
 
@@ -44,37 +47,34 @@ def bind_domain(domain, data):
     :param data:
     :return:
     """
-    result = '; SLAM generated file for domain {}. {}\n\n'.format(domain, datetime.now())
-    for entry in data['entries']:
-        if entry['domain'] == domain and entry['type'] != 'PTR':
-            addresses = data['addresses']
-            for address in addresses:
-                if address['version'] == 6 and entry['type'] == 'A':
-                    ns_type = 'AAAA'
-                else:
-                    ns_type = entry['type']
-                address_entry = {
-                    'name': entry['name'],
-                    'domain': entry['domain'],
-                    'type': entry['type']
-                }
-                if address_entry in address['ns_entries']:
-                    result = result + '{}    IN {}    {} ; {}\n'.format(entry['name'], ns_type,
-                                                                        address['ip'],
-                                                                        entry['description'])
-            if entry['type'] == 'CNAME':
-                pass
-                for sub_entry in entry['entries']:
-                    result += '{}    IN {}    {}.{}. ; {}\n'.format(entry['name'],
-                                                                    ns_type,
-                                                                    sub_entry['name'],
-                                                                    sub_entry['domain'],
-                                                                    entry['description'])
-
+    result = '; BEGIN SLAM generated file for domain {}. {}\n\n'.format(domain_name, datetime.now())
+    for domain in data['domains']:
+        if domain_name == domain['name']:
+            for record in domain['entries']:
+                if record['type'] == 'CNAME':
+                    for sub_entry in record['entries']:
+                        result_record = '{}    IN {}    {}.\n'.format(
+                            record['name'],
+                            record['type'],
+                            sub_entry['name']
+                        )
+                elif record['type'] == 'A':
+                    for address in record['addresses']:
+                        if ipaddress.ip_address(address['ip']).version == 6:
+                            ns_type = 'AAAA'
+                        else:
+                            ns_type = record['type']
+                        result_record = '{}    IN {}    {}\n'.format(
+                            record['name'],
+                            ns_type,
+                            address['ip'],
+                        )
+                result += result_record
+    result += '; END SLAM generated file for domain {}. {}\n\n'.format(domain_name, datetime.now())
     return result + '\n\n'
 
 
-def bind_network(network, data):
+def bind_network(network_name, data):
     """
     Generate DNS bind9 reverse
 
@@ -82,13 +82,21 @@ def bind_network(network, data):
     :param data:
     :return:
     """
-    result = '; SLAM generated file for network {}. {}\n\n'.format(network, datetime.now())
-    for address in data['addresses']:
-        for entry in address['ns_entries']:
-            if entry['type'] == 'PTR' and address['network'] == network:
-                result_address = ipaddress.ip_address(address['ip']).reverse_pointer
-                result = result + '{}   IN {}    {}.{}.\n'.format(result_address, entry['type'],
-                                                                  entry['name'], entry['domain'])
+    result = '; SLAM generated file for network {}. {}\n\n'.format(network_name, datetime.now())
+    for network in data['networks']:
+        if network['name'] == network_name:
+            print(network)
+            for address in network['addresses']:
+                for ip_address in data['addresses']:
+                    if address['ip'] == ip_address['ip']:
+                        for record in ip_address['ns_entries']:
+                            if record['type'] == 'PTR':
+                                result_record = '{}    IN {}    {}\n'.format(
+                                    ipaddress.ip_address(address['ip']),
+                                    record['type'],
+                                    record['name']
+                                )
+                                result += result_record
     return result + '\n\n'
 
 
@@ -98,9 +106,11 @@ def update_soa(filename):
     :param filename:
     :return:
     """
-    backup_filename =  '{}.{}'.format(filename, datetime.now())
+    current_date = datetime.now()
+    backup_filename = '{}.old.{}'.format(filename, current_date)
+    new_filename = '{}.new.{}'.format(filename, current_date)
     os.rename(filename, backup_filename)
-    updated_file = open(filename, 'w')
+    updated_file = open(new_filename, 'w')
     source_file = open(backup_filename, 'r')
     for line in source_file.readlines():
         if 'Serial' in line:
@@ -109,9 +119,10 @@ def update_soa(filename):
             updated_file.write(line.replace(item[0], str(new_serial)))
         else:
             updated_file.write(line)
+    os.rename(new_filename, filename)
 
 
-def isc_dhcp(network, data):
+def isc_dhcp(network_name, data):
     """
     Create DHCP entry
     :param network:
@@ -119,24 +130,15 @@ def isc_dhcp(network, data):
     :return:
     """
     for network_data in data['networks']:
-        if network_data['name'] == network and network_data['version'] == 6:
+        if network_data['name'] == network_name and network_data['version'] == 6:
             return ''
-    result = '# ISC-DHCP configuration for {}. {}\n'.format(network, datetime.now())
+    result = '# ISC-DHCP configuration for {}. {}\n'.format(network_name, datetime.now())
     for host in data['hosts']:
         # host host { hardware ethernet 00:11:22:33:44:55; fixed-address host; }
-        if host['interface'] != '' and host['network'] == network:
-            for interface in data['interfaces']:
-                if host['interface'] == interface['mac_address']:
-                    interface_host = interface
-                    break
-            for hardware in data['inventory']:
-                if hardware['name'] == interface_host['hardware']:
-                    hardware_host = hardware
-                    break
-            result += '# Buying Date: {}\n'.format(hardware_host['buying_date'])
-            result += '# Owner: {}\n'.format(hardware_host['owner'])
-            result += 'host {} {{\n'.format(host['name'])
-            result += '    hardware ethernet {};\n'.format(host['interface'])
-            result += '    fixed-address {};\n'.format(host['name'])
-            result += '}}\n'
-    return result
+        if len(host['interface']) != 0:
+            result_host = 'host {} {{\n'.format(host['name'])
+            result_host += '    hardware ethernet {};\n'.format(host['interface']['mac_address'])
+            result_host += '    fixed-address {};\n'.format(host['name'])
+            result_host += '}}\n'
+        result += result_host
+    return result + '\n\n'

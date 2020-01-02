@@ -200,19 +200,23 @@ class DomainEntry(models.Model):
         :param short:
         :return:
         """
+        result_entries = []
+        result_addresses = []
         if key:
-            result_addresses = []
+            for sub_entry in self.entries.all():
+                result_entries.append({
+                    'name': '{}.{}'.format(sub_entry.name, sub_entry.domain.name)
+                })
             for address in self.address_set.all():
                 result_addresses.append(address.show(key=True))
             result = {
                 'name': self.name,
                 'domain': self.domain.show(key=True),
                 'type': self.type,
+                'entries': result_entries,
                 'addresses': result_addresses
             }
         elif short:
-            result_entries = []
-            result_addresses = []
             for sub_entry in self.entries.all():
                 result_entries.append(sub_entry.show(key=True))
             for address in self.address_set.all():
@@ -227,8 +231,6 @@ class DomainEntry(models.Model):
                 'addresses': result_addresses
             }
         else:
-            result_entries = []
-            result_addresses = []
             for sub_entry in self.entries.all():
                 result_entries.append(sub_entry.show(short=True))
             for address in self.addresses_set.all():
