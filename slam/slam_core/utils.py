@@ -120,6 +120,7 @@ def update_soa(filename):
         else:
             updated_file.write(line)
     os.rename(new_filename, filename)
+    os.remove(backup_filename)
 
 
 def isc_dhcp(network_name, data):
