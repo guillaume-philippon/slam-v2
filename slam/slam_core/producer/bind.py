@@ -56,11 +56,11 @@ class Bind:
         :return:
         """
         now = datetime.now()
-        backup_filename = '{}/{}.{}.old'.format(self.dir, self.domain.name,
-                                                now)
-        new_filename = '{}/{}.{}.new'.format(self.dir, self.domain.name,
-                                             now)
-        filename = '{}/{}.db'.format(self.dir, self.domain.name)
+        backup_filename = '{}/{}.soa.{}.old'.format(self.dir, self.domain.name,
+                                                    now)
+        new_filename = '{}/{}.soa.{}.new'.format(self.dir, self.domain.name,
+                                                 now)
+        filename = '{}/{}.soa.db'.format(self.dir, self.domain.name)
         os.rename(filename, backup_filename)
         new_file = open(new_filename, 'w')
         backup_file = open(backup_filename, 'r')
