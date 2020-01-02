@@ -119,44 +119,25 @@ def search(request):
 
 
 @login_required
+def diff(request):
+    """
+    Commit is creating configuration file for DNS / DHCP / freeradius
+    :param request: full HTTP request from user
+    :return:
+    """
+    result = utils.diff()
+    return JsonResponse(result)
+
+
+@login_required
 def commit(request):
     """
     Commit is creating configuration file for DNS / DHCP / freeradius
     :param request: full HTTP request from user
     :return:
     """
-    # options = {
-    #     'domains': Domain.search(),
-    #     'entries': DomainEntry.search(),
-    #     'networks': Network.search(),
-    #     'addresses': Address.search(),
-    #     'inventory': Hardware.search(),
-    #     'interfaces': Interface.search(),
-    #     'hosts': Host.search()
-    # }
-    # bind_dir = './build/bind'
-    # isc_dhcp_dir = './build/isc-dhcp'
-    # for domain in options['domains']:
-    #     result_domain = bind_domain(domain['name'], options)
-    #     write_file('{}/{}.db'.format(bind_dir, domain['name']), result_domain)
-    #     update_soa('{}/{}.soa.db'.format(bind_dir, domain['name']))
-    #
-    # for network in options['networks']:
-    #     result_bind_network = bind_network(network['name'], options)
-    #     write_file('{}/{}.db'.format(bind_dir, network['name']), result_bind_network)
-    #     update_soa('{}/{}.soa.db'.format(bind_dir, network['name']))
-    #
-    #     result_dhcp_network = isc_dhcp(network['name'], options)
-    #     write_file('{}/{}.conf'.format(isc_dhcp_dir, network['name']), result_dhcp_network)
-    #
-    # repo = git.Repo('./build')
-    # result = repo.git.diff()
-    # bind = Bind('lal.in2p3.fr')
-    # rev = BindReverse('grid-ipv6')
-    # result = bind.show()
-    # result += rev.show()
     result = utils.commit()
-    return HttpResponse(result, content_type="text/plain")
+    return JsonResponse(result)
 
 
 @login_required
@@ -167,4 +148,4 @@ def publish(request):
     :return:
     """
     result = utils.publish()
-    return HttpResponse(result, content_type="text/plain")
+    return JsonResponse(result)

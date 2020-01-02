@@ -115,6 +115,13 @@ class Network(models.Model):
                 return result_address
         raise NetworkFull()
 
+    def version(self):
+        """
+
+        :return:
+        """
+        return ipaddress.ip_network('{}/{}'.format(self.address, self.prefix)).version
+
     @staticmethod
     def create(name, address, prefix, description='A short description', gateway=None,
                dns_master=None, dhcp=None, vlan=1, contact=None):
