@@ -5,7 +5,7 @@ each django's App (slam_*) provide it's own view
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import auth
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import FieldError
 
