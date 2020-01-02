@@ -24,6 +24,7 @@ urlpatterns = [
     path('logout', views.logout, name='logout'),
     path('search', views.search, name='search'),
     path('commit', views.commit, name='commit'),
+    path('publish', views.publish, name='publish'),
 
     path('domains', include('slam_domain.urls')),
     path('networks', include('slam_network.urls')),

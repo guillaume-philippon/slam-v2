@@ -281,6 +281,13 @@ class Address(models.Model):
             }
         return result
 
+    def version(self):
+        """
+
+        :return:
+        """
+        return ipaddress.ip_address(self.ip).version
+
     @staticmethod
     def create(ip, network, ns_entry=None):
         """
