@@ -50,9 +50,7 @@ def publish(message='This is the default comment'):
 
     :return:
     """
-    ssh_cmd = 'ssh -i conf/id_rsa'
     build_repo = git.Repo(PRODUCER_DIRECTORY)
-    build_repo.git.custom_environment(GIT_SSH_COMMAND=ssh_cmd)
     build_repo.git.add('.')
     build_repo.git.commit(m=message)
     build_repo.git.push()
