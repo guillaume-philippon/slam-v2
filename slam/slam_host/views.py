@@ -70,6 +70,10 @@ def host_view(request, uri_host):
             options['options']['no_ip'] = strtobool(request.POST.get('no_ip'))
         else:
             options['options']['no_ip'] = False
+        if request.POST.get('dhcp') is not None:
+            options['options']['dhcp'] = strtobool(request.POST.get('dhcp'))
+        else:
+            options['options']['dhcp'] = True
         result = Host.create(**options)
     elif request.method == 'DELETE':
         result = Host.remove(uri_host)

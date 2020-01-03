@@ -30,7 +30,7 @@ class IscDhcp:
         result = '# SLAM generated file for network {}. {}\n'.format(self.network.name,
                                                                      datetime.now())
         for host in self.hosts:
-            if host.interface is not None:
+            if host.interface is not None and host.dhcp:
                 for address in host.addresses.all():
                     if address in self.network.addresses():
                         result_host = 'host {} {{\n'.format(host.name)

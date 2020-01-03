@@ -153,11 +153,24 @@ class HostViewListener {
         var csrftoken = $.cookie('csrftoken')
         var options = {
             'domain': $('#domains').val(),
-            'network': $('#networks').val(),
             'interface': $('#interface').val(),
             'ns': $('#hostname').val()
         }
-        console.log(options)
+        if ($('#no-ip').is(':checked')) {
+            console.log('No IP');
+            options.no_ip = 'True' // We must put a python like boolean
+            options.network = $('#networks').val();
+        } else if ($('#ip-address').val() == ''){
+            console.log('Network')
+            options.network = $('#networks').val();
+        } else {
+            console.log('IP ' + $('#ip-address').val());
+            options.ip_address = $('#ip-address').val()
+        }
+        if (! $('#no-ip').is(':checked')) {
+            options.dhcp = 'False' // We must put a python like boolean
+        }
+//        console.log(options)
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
         });
@@ -167,7 +180,7 @@ class HostViewListener {
             data: options,
             success: function(data){
                         console.log(data)
-                        if (data.status == 'failed') {
+                        if (data.status != 'done') {
                             console.log('here we are')
                             $('#alert-message').text(data.message)
                              $('#alert-box').collapse('show')

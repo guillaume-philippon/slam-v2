@@ -24,6 +24,7 @@ class Host(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.DO_NOTHING, null=True, blank=True)
     network = models.ForeignKey(Network, on_delete=models.DO_NOTHING, null=True, blank=True)
     creation_date = models.DateTimeField(auto_now_add=True, null=True)
+    dhcp = models.BooleanField(default=True)
 
     def show(self, short=False, key=False):
         """
@@ -71,7 +72,8 @@ class Host(models.Model):
                 'interface': result_interface,
                 'addresses': result_address,
                 'network': result_network,
-                'creation_date': self.creation_date
+                'creation_date': self.creation_date,
+                'dhcp': self.dhcp
             }
         return result
 
@@ -89,11 +91,10 @@ class Host(models.Model):
         interface_host = None
         network_host = None
         address_host = None
-        if network is None and address is None:
-            return {
-                'host': name,
-                'status': 'Integrity error Address or Network should be provide'
-            }
+        if network is None and\
+                address is None:
+            return error_message('host', name,
+                                 'Integrity error Address or Network should be provide')
         if interface is not None:
             try:
                 interface_host = Interface.objects.get(mac_address=interface)
@@ -136,14 +137,16 @@ class Host(models.Model):
                         return result
                 address_host = Address.objects.get(ip=address)
             print(address_host)
-        options = {
+        args = {
             'name': name,
             'interface': interface_host,
             'network': network_host,
             # 'dns_entry': dns_entry_host
         }
+        if options['dhcp'] is not None:
+            args['dhcp'] = options['dhcp']
         try:
-            host = Host(**options)
+            host = Host(**args)
             host.full_clean()
             host.save()
             if address_host is not None:
