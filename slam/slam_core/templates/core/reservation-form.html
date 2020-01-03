@@ -3,7 +3,15 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-body">
-                <div class="card mb-2">
+                {% include "core/reservation-form/producer.html" %}
+                <div class="card mb-2 collapse alert alert-danger" id="alert-box">
+                    <div class="card-body">
+                        <h6 class="card-subtitle text-muted text-right">Alert</h6>
+                        <p class="card-text" id="alert-message">
+                        </p>
+                    </div>
+                </div>
+                <div class="card mb-2" id="network">
                     <div class="card-body">
                         <h6 class="card-subtitle text-muted text-right">Network</h6>
                         <p class="card-text">
@@ -11,7 +19,7 @@
                         </p>
                     </div>
                 </div>
-                <div class="card mb-2">
+                <div class="card mb-2" id="hardware">
                     <div class="card-body">
                         <h6 class="card-subtitle text-muted text-right">Hardware</h6>
                         <p class="card-text">

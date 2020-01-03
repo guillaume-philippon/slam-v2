@@ -97,6 +97,7 @@ class Host(models.Model):
         if interface is not None:
             try:
                 interface_host = Interface.objects.get(mac_address=interface)
+                return error_message('host', name, 'Integrity error Interface still exist !')
             except ObjectDoesNotExist:
                 # If the interface not exist, we create a new one
                 hardware_name = '{}-{}'.format(name.split('.', 1)[0], interface)

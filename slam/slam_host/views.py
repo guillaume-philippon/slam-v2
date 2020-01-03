@@ -53,6 +53,7 @@ def host_view(request, uri_host):
             'name': uri_host,
             'options': dict()
         }
+        print(request.POST)
         if request.POST.get('interface') is not None:
             options['interface'] = request.POST.get('interface')
         if request.POST.get('network') is not None:
@@ -90,6 +91,7 @@ def host_view(request, uri_host):
             'status': 'failed',
             'message': '{} method is not supported'.format(request.method)
         }
+    print(result)
     return JsonResponse(result)
 
 

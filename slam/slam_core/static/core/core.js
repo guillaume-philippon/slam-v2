@@ -1,5 +1,9 @@
 /*jshint esversion: 6 */
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 class DomainsCtrl {
     constructor (){
         this.uri = '/domains';
@@ -75,9 +79,28 @@ class HostViewListener {
             self.check();
         });
 
-        $('#add-host').click(function(){
+        $('#domains').change(function(){
             self.check();
         });
+
+        $('#add-host').click(function(){
+            self.add();
+        });
+
+        $('#commit').click(function(){
+            self.commit();
+        })
+
+        $('#push').click(function(){
+            self.push();
+        })
+
+        $('#alert-box').on('shown.bs.collapse',
+                    async function() {
+                        $('#alert-box').fadeTo(4000)
+                        await sleep(3000)
+                        $('#alert-box').collapse('hide')
+            })
     }
 
     check (){
@@ -88,11 +111,113 @@ class HostViewListener {
         var owner = $('#owner').val();
         var mac_address_regex = new RegExp('([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])');
 
-        if (hostname != '' && mac_address_regex.test(mac_address)){
-            $('#add-host').attr("disabled", false);
-        } else {
-            $('#add-host').attr("disabled", true);
+        $('#add-host').attr("disabled", true);
+        if (hostname != ''){
+            $.ajax({
+                url: '/domains/' + $('#domains').val() + '/' + $('#hostname').val(),
+                success: function(data){
+                    if (data.status == 'failed' && mac_address_regex.test(mac_address)) {
+                        $('#add-host').attr("disabled", false);
+                    } else {
+                        var alert_message_hostname = ''
+                        var alert_message_mac_address = ''
+                        if (data.status != 'failed') {
+                            alert_message_hostname = $(
+                                '<p/>', {
+                                    text: hostname + '.' + domain + ' exist !'
+                                }
+                            );
+                        }
+                        if (! mac_address_regex.test(mac_address) && mac_address != '') {
+                            alert_message_mac_address = $(
+                                '<p/>', {
+                                    text: mac_address + ' is not a valid MAC address'
+                                }
+                            );
+                        }
+                        if (mac_address != ''){
+                            $('#alert-message').text('')
+                            $('#alert-message').append(alert_message_hostname);
+                            $('#alert-message').append(alert_message_mac_address);
+                            $('#alert-box').collapse('show')
+                        }
+                    }
+                }
+            })
         }
+    }
+
+    add (){
+        $('#add-host').attr("disabled", true);
+        var self = this;
+        var csrftoken = $.cookie('csrftoken')
+        var options = {
+            'domain': $('#domains').val(),
+            'network': $('#networks').val(),
+            'interface': $('#interface').val(),
+            'ns': $('#hostname').val()
+        }
+        console.log(options)
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": csrftoken }
+        });
+        $.ajax({
+            url: '/hosts/' + $('#hostname').val() + '.' + $('#domains').val(),
+            type: 'POST',
+            data: options,
+            success: function(data){
+                        console.log(data)
+                        if (data.status == 'failed') {
+                            console.log('here we are')
+                            $('#alert-message').text(data.message)
+                             $('#alert-box').collapse('show')
+                        } else {
+                            $('#success-box').collapse('show')
+                            $('#hostname').val('')
+                            $('#interface').val('')
+                            $('#owner').val('')
+                        }
+                    }
+        })
+    }
+
+     commit (){
+        $('#add-host').attr("disabled", true);
+        var self = this;
+        var csrftoken = $.cookie('csrftoken')
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": csrftoken }
+        });
+        $.ajax({
+            url: '/producer/commit/',
+            type: 'POST',
+            success: function(data){
+                        $('#diff').text(data.data);
+                        $('#push').attr("disabled", false)
+                        $('#network').hide()
+                        $('#hardware').hide()
+                    }
+        })
+    }
+
+     push (){
+        $('#add-host').attr("disabled", true);
+        var self = this;
+        var csrftoken = $.cookie('csrftoken')
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": csrftoken }
+        });
+        $.ajax({
+            url: '/producer/publish/',
+            type: 'POST',
+            success: function(data){
+                        $('#diff').text('');
+                        $('#push').attr("disabled", true)
+                        $('#success-box').collapse('hide')
+                        $('#network').show()
+                        $('#hardware').show()
+                    }
+        })
     }
 
 
