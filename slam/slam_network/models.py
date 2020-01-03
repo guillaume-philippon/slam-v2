@@ -48,6 +48,9 @@ class Network(models.Model):
             }
         elif short:
             result_addresses = []
+            addresses_used = len(self.addresses())
+            addresses_total = ipaddress.ip_network('{}/{}'.format(self.address,
+                                                                  self.prefix)).num_addresses
             # for address in self.addresses():
             #     result_addresses.append(address.show(key=True))
             result = {
@@ -56,12 +59,16 @@ class Network(models.Model):
                 'prefix': self.prefix,
                 'version': ipaddress.ip_address(self.address).version,
                 'description': self.description,
-                # 'addresses': result_addresses
+                'used_addresses': addresses_used,
+                'total': addresses_total
             }
         else:
             result_addresses = []
             for address in self.addresses():
                 result_addresses.append(address.show(short=True))
+            addresses_used = len(self.addresses())
+            addresses_total = ipaddress.ip_network('{}/{}'.format(self.address,
+                                                                  self.prefix)).num_addresses
             result = {
                 'name': self.name,
                 'address': self.address,
@@ -73,6 +80,8 @@ class Network(models.Model):
                 'dhcp': self.dhcp,
                 'vlan': self.vlan,
                 'contact': self.contact,
+                'used_addresses': addresses_used,
+                'total': addresses_total,
                 'addresses': result_addresses
             }
         return result

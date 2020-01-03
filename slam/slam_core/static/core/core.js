@@ -29,10 +29,10 @@ class DomainsCtrl {
 
     show() {
         var self = this;
-            $.each(self.domains, function(key, domain){
-                $('#domains').append(new Option(domain, domain))
-            })
-            $('#domains-load').fadeTo(2000, 0);
+        $.each(self.domains, function(key, domain){
+            $('#domains').append(new Option(domain, domain))
+        })
+        $('#domains-load').fadeTo(2000, 0);
     }
 }
 
