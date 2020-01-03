@@ -1,23 +1,27 @@
 <div class="form-row">
     <div class="form-group col-lg-4">
-        <div class="input-group">
-            <select id="category" class="form-control">
-                <option>Workstation</option>
-                <option selected>Standard Server</option>
-                <option>Grid Server</option>
-            </select>
+        <div class="form-group">
+            <label for="networks">Network</label>
+            <div class="input-group">
+                <select id="networks" class="form-control">
+                </select>
+                <div class="spinner-border" role="status" id="networks-load">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
         </div>
     </div>
     <div class="form-group col-lg-2"></div>
     <div class="form-group col-lg-6">
+        <label for="domains">Domains</label>
         <div class="input-group">
-            <input type="text" class="form-control"
+            <input type="text" class="form-control" id="hostname"
             placeholder="dns-name">
-            <select id="domain" class="form-control">
-                <option>.ijclab.in2p3.fr</option>
-                <option selected>.lal.in2p3.fr</option>
-                <option>.ipno.in2p3.fr</option>
+            <select id="domains" class="form-control">
             </select>
+            <div class="spinner-border" role="status" id="domains-load">
+                <span class="sr-only">Loading...</span>
+            </div>
         </div>
     </div>
 </div>

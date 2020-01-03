@@ -42,14 +42,14 @@ class Domain(models.Model):
                 'name': self.name
             }
         elif short:
-            result_entries = []
-            entries = DomainEntry.objects.filter(domain=self)
-            for entry in entries:
-                result_entries.append(entry.show(key=True))
+            # result_entries = []
+            # entries = DomainEntry.objects.filter(domain=self)
+            # for entry in entries:
+            #     result_entries.append(entry.show(key=True))
             result = {
                 'name': self.name,
                 'description': self.description,
-                'entries': result_entries
+                # 'entries': result_entries
             }
         else:
             result_entries = []
@@ -143,6 +143,7 @@ class Domain(models.Model):
         """
         A custom way to get a domain.
         :param name: the name of the domain
+        :param short: Return a short version of the object
         :return:
         """
         try:
@@ -233,7 +234,7 @@ class DomainEntry(models.Model):
         else:
             for sub_entry in self.entries.all():
                 result_entries.append(sub_entry.show(short=True))
-            for address in self.addresses_set.all():
+            for address in self.address_set.all():
                 result_addresses.append(address.show(key=True))
             result = {
                 'name': self.name,

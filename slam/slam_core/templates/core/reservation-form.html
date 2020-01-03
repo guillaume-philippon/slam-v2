@@ -15,10 +15,11 @@
                     <div class="card-body">
                         <h6 class="card-subtitle text-muted text-right">Hardware</h6>
                         <p class="card-text">
+                            {% include "core/reservation-form/hardware-form.html" %}
                         </p>
                     </div>
                 </div>
-                <button type="button" class="btn btn-primary">Commit</button>
+                <button type="button" class="btn btn-primary" id="add-host" disabled>Add new host</button>
             </div>
         </div>
     </div>

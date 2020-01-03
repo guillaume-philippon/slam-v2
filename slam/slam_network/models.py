@@ -48,15 +48,15 @@ class Network(models.Model):
             }
         elif short:
             result_addresses = []
-            for address in self.addresses():
-                result_addresses.append(address.show(key=True))
+            # for address in self.addresses():
+            #     result_addresses.append(address.show(key=True))
             result = {
                 'name': self.name,
                 'address': self.address,
                 'prefix': self.prefix,
                 'version': ipaddress.ip_address(self.address).version,
                 'description': self.description,
-                'addresses': result_addresses
+                # 'addresses': result_addresses
             }
         else:
             result_addresses = []
