@@ -167,7 +167,7 @@ class HostViewListener {
             console.log('IP ' + $('#ip-address').val());
             options.ip_address = $('#ip-address').val()
         }
-        if (! $('#no-ip').is(':checked')) {
+        if (! $('#dhcp').is(':checked')) {
             options.dhcp = 'False' // We must put a python like boolean
         }
 //        console.log(options)
