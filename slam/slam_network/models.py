@@ -278,7 +278,7 @@ class Address(models.Model):
                 'ip': self.ip,
                 'ns_entries': result_entries,
                 'creation_date': self.creation_date,
-                # 'network': self.network.show(key=True)
+                'network': self.network.show(key=True)
             }
         else:
             result_entries = []
@@ -372,10 +372,12 @@ class Address(models.Model):
                     ip, network_entry.address, network_entry.prefix))
             address_entry = Address.objects.get(ip=ip)
             domain_entry = Domain.objects.get(name=domain)
-            ns_entry_entry = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)
+            ns_entry_obj = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)
+            if ns_type == 'PTR' and len(ns_entry_obj.address_set.all()) != 0:
+                return error_message('entry', ip, 'PTR record is used')
         except ObjectDoesNotExist as err:
             return error_message('entry', ns_entry, err)
-        address_entry.ns_entries.add(ns_entry_entry)
+        address_entry.ns_entries.add(ns_entry_obj)
         return {
             'entry': ns_entry,
             'status': 'done'

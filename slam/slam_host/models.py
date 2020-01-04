@@ -277,15 +277,22 @@ class Host(models.Model):
         }
 
     @staticmethod
-    def add(name, address):
+    def add(name, address, args=None):
         """
         This is a custom method to add a IP to a host.
 
         :param name: the host name
         :param address: IP address
+        :param args: some optional options
         :return:
         """
-        fqdn = name.split('.', 1)
+        record = name
+        if args is not None:
+            try:
+                record = args['fqdn']
+            except KeyError:
+                pass
+        fqdn = record.split('.', 1)
         ns = fqdn[0]
         domain = fqdn[1]
         ns_entry = {
@@ -298,7 +305,7 @@ class Host(models.Model):
             error_message('host', name, err)
         try:  # get the address
             address = Address.objects.get(ip=address)
-            if address.host_set.all() != 0: # If address is not free, we return a error
+            if address.host_set.all() != 0:  # If address is not free, we return a error
                 return error_message('host', name, 'Address already used by another host')
         except ObjectDoesNotExist:  # If address not exist, we create if
             network = Address.match_network(ip=address)  # By geting the network associated to it.

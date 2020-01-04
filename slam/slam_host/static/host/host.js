@@ -2,6 +2,7 @@ class Host {
     constructor() {
         this.uri = $(location).attr('pathname');
         this._get()
+        this.address_index = 0;
     }
 
     _get() {
@@ -24,6 +25,57 @@ class Host {
         })
     }
 
+    switch_index(new_index) {
+        this.address_index = new_index;
+        this.show_record()
+        this.show_ip_address()
+    }
+
+    show_record() {
+        var self = this;
+        $('#records').text('')
+        $.each(this.addresses, function(key, address){
+            var records = $('<ul/>', {})
+            if (key == self.address_index) {
+                $.each(address.ns_entries, function(record_key, record){
+                    records.append($('<li/>', {
+                        text: record.name + '.' + record.domain.name + ' (' + record.type + ')'
+                    }))
+                    $.each(record.entries, function(entry_key, entry) {
+                        records.append($('<li>', {
+                            text: entry.name
+                        }))
+                    })
+                })
+                $('#records').append(records)
+            }
+        })
+    }
+
+    show_ip_address() {
+        var self = this;
+        $('#addresses').text('')
+        $.each(this.addresses, function(key, address){
+            var current_address = address
+            var color = ''
+            var body = $('<p/>',{})
+            if (key == self.address_index) {
+                color = 'btn-outline-primary'
+            } else {
+                color = 'btn-outline-secondary'
+            }
+            var ip_address = $('<button/>', {
+                text: address.ip,
+                class: 'btn btn-sm ml-1 ' + color,
+                click: function(){
+                    self.switch_index(key)
+                }
+            })
+            $('#addresses').append(ip_address)
+        })
+
+    }
+
     show(){
         var selected_address = '';
         var self = this;
@@ -31,22 +83,44 @@ class Host {
         $('#network').text(this.network.name)
         $('#creation_date').text(this.creation_date)
         if (this.interface.hardware != null) {
-            $('#hardware-name').val(this.interface.hardware.name)
-            $('#hardware-mac-address').val(this.interface.mac_address)
-            $('#hardware-owner').val(this.interface.hardware.owner)
-            $('#hardware-buying-date').val(this.interface.hardware.buying_date)
-            $('#hardware-description').val(this.interface.hardware.description)
+            $('#hardware-name').text(this.interface.hardware.name)
+            $('#hardware-mac-address').text(this.interface.mac_address)
+            $('#hardware-owner').text(this.interface.hardware.owner)
+            $('#hardware-buying-date').text(this.interface.hardware.buying_date)
+            $('#hardware-description').text(this.interface.hardware.description)
         }
 
-        $.each(this.addresses, function(key, address){
-            var current_address = address
-            $.each(address.ns_entries, function(key, record){
-                if (record.type == 'PTR') {
-                    selected_address = current_address
-                }
-            })
-        })
-        console.log(selected_address)
+//        $.each(this.addresses, function(key, address){
+//            var current_address = address
+//            var color = ''
+//            var body = $('<p/>',{})
+//            if (key == self.address_index) {
+//                color = 'btn-outline-primary'
+//            } else {
+//                color = 'btn-outline-secondary'
+//            }
+//            var ip_address = $('<button/>', {
+//                text: address.ip,
+//                class: 'btn btn-sm ml-1 ' + color
+//            })
+//            var records = $('<ul/>', {})
+//            if (key == self.address_index) {
+//                $.each(address.ns_entries, function(record_key, record){
+//                    records.append($('<li/>', {
+//                        text: record.name + '.' + record.domain.name + ' (' + record.type + ')'
+//                    }))
+//                    $.each(record.entries, function(entry_key, entry) {
+//                        records.append($('<li>', {
+//                            text: entry.name + ' (CNAME)'
+//                        }))
+//                    })
+//                })
+//            }
+//            $('#records').append(records)
+//            $('#addresses').append(ip_address)
+//        })
+        self.show_record()
+        self.show_ip_address()
     }
 }
 

@@ -221,7 +221,8 @@ class DomainEntry(models.Model):
         if key:
             for sub_entry in self.entries.all():
                 result_entries.append({
-                    'name': '{}.{}'.format(sub_entry.name, sub_entry.domain.name)
+                    'name': '{}.{} ({})'.format(sub_entry.name, sub_entry.domain.name,
+                                                sub_entry.type)
                 })
             for address in self.address_set.all():
                 result_addresses.append(address.show(key=True))
@@ -274,10 +275,27 @@ class DomainEntry(models.Model):
         :param description: A short description of the entry
         :return:
         """
-        try:
+        try:  # First, we get the domain
             entry_domain = Domain.objects.get(name=domain)
         except ObjectDoesNotExist as err:
             return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
+        # We must check
+        #  - if it s a A record, no similar CNAME
+        #  - if it s a CNAME, no similar A record
+        if ns_type == 'A':
+            try:
+                DomainEntry.objects.get(name=name, domain=entry_domain, type='CNAME')
+                return error_message('entry', '{}.{} {}'.format(name, domain, ns_type),
+                                     'A similar CNAME record exist !')
+            except ObjectDoesNotExist:
+                pass
+        elif ns_type == 'CNAME':
+            try:
+                DomainEntry.objects.get(name=name, domain=entry_domain, type='A')
+                return error_message('entry', '{}.{} {}'.format(name, domain, ns_type),
+                                     'A similar A record exist !')
+            except ObjectDoesNotExist:
+                pass
         try:
             entry = DomainEntry(name=name, domain=entry_domain, type=ns_type,
                                 description=description)

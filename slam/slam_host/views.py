@@ -134,5 +134,8 @@ def address_view(request, uri_host, uri_address):
         'message': 'This is a test'
     }
     if request.method == 'POST':
-        result = Host.add(uri_host, uri_address)
+        options = dict()
+        for arg in request.POST:
+            options[arg] = request.POST.get(arg)
+        result = Host.add(uri_host, uri_address, args=options)
     return JsonResponse(result)
