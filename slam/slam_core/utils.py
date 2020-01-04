@@ -1,8 +1,6 @@
 """
 This module provide some usefull function to avoid copy / paste.
 """
-from datetime import datetime
-from django.core.files import locks
 
 
 def error_message(plugin, value, message):

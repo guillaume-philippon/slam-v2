@@ -20,14 +20,21 @@ from slam_core.producer import utils
 @login_required
 def index(request):
     """
-    This is the home page of SLAM.
+    This is the default home page of SLAM. It will only be available through a Web browser as
+    it will only return a HTTP rendering (which will need javascript support).
+
+    :param request: a full HTTP request from user
     """
     return render(request, 'core/index.html', dict())
 
 
 def login(request):
     """
-    This is the sign in form
+    This is the sign in form. 2 method type are supported
+      - GET: to show the HTTP login page
+      - POST: to trig login action
+
+    :param request: full HTTP request from user
     """
     redirect_page = request.GET.get('next')
     if request.method == 'POST':
@@ -41,6 +48,9 @@ def login(request):
 
 @ensure_csrf_cookie
 def csrf(request):
+    # As django need view to have request option but we don't need it, we need to exclude pylint
+    # unused-argument for this method
+    # pylint: disable=W0613
     """
     This page is only a empty page to force CSRF token to be send to browser. In case of REST API,
     CSRF can be painful to retrieve as it is not sent on every pages. This page force Django to
@@ -51,14 +61,15 @@ def csrf(request):
 
     :param request: full HTTP request from user
     """
-    # pylint: disable=W0613
     return JsonResponse(dict())
 
 
 @login_required
 def logout(request):
     """
-    This is the logout page.
+    This is the logout page. Whatever we provide, that trig user logout and that's all.
+
+    :param request: full HTTP request from user
     """
     auth.logout(request)
     return HttpResponseRedirect('/')
@@ -67,14 +78,18 @@ def logout(request):
 @login_required
 def search(request):
     """
-    This function will return a list of objects that match the filter
+    This function will return a list of objects that match the filter. We just provide basic
+    filter as string filter but searching will be done on all field. If no filter has been provide
+    by user, we get all object database.
+
+    The output is a dict abstraction of object in short format (see show method from modules for
+    more information)
+
     :param request: full HTTP request from user
     :return:
     """
     data = request.GET.dict()
     options = dict()
-    # if not data:
-    #     return JsonResponse(dict())
     for item in data:
         options['{}__contains'.format(item)] = data[item]
     try:
@@ -120,8 +135,13 @@ def search(request):
 
 @login_required
 def diff(request):
+    # As django need view to have request option but we don't need it, we need to exclude pylint
+    # unused-argument for this method
+    # pylint: disable=W0613
     """
-    Commit is creating configuration file for DNS / DHCP / freeradius
+    This function provide a git diff output. This is a raw version of git diff command so
+    it can be painfull to read.
+
     :param request: full HTTP request from user
     :return:
     """
@@ -131,8 +151,12 @@ def diff(request):
 
 @login_required
 def commit(request):
+    # As django need view to have request option but we don't need it, we need to exclude pylint
+    # unused-argument for this method
+    # pylint: disable=W0613
     """
-    Commit is creating configuration file for DNS / DHCP / freeradius
+    This function trig DNS/DHCP and freeradius rendering. It will return a raw git diff.
+
     :param request: full HTTP request from user
     :return:
     """
@@ -142,9 +166,13 @@ def commit(request):
 
 @login_required
 def publish(request):
+    # As django need view to have request option but we don't need it, we need to exclude pylint
+    # unused-argument for this method
+    # pylint: disable=W0613
     """
+    This function trig a git push command to publish DNS/DHCP and freeradius rendering available.
 
-    :param request:
+    :param request: full HTTP request from user
     :return:
     """
     result = utils.publish()

@@ -1,32 +1,32 @@
-slam_core apps
-==============
+Core
+====
 
 .. automodule:: slam_core
 
-slam_core.utils
----------------
+Core utils tools
+----------------
 .. automodule:: slam_core.utils
     :members:
 
-slam_core.producer
-------------------
+Core producer
+-------------
 
-slam_core.producer.bind
-#######################
-.. automodule:: slam_core.producer.bind
-    :members:
-
-slam_core.producer.isc_dhcp
-###########################
-.. automodule:: slam_core.producer.isc_dhcp
-    :members:
-
-slam_core.producer.utils
-#######################
+Core producer utils tools
+#########################
 .. automodule:: slam_core.producer.utils
     :members:
 
-slam_core.views
----------------
+Core bind9 producer
+###################
+.. automodule:: slam_core.producer.bind
+    :members:
+
+Core ISC-DHCP producer
+######################
+.. automodule:: slam_core.producer.isc_dhcp
+    :members:
+
+Core views
+----------
 .. automodule:: slam_core.views
     :members:

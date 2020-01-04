@@ -18,9 +18,8 @@ from django.db.utils import IntegrityError
 from slam_core.utils import error_message
 from slam_hardware.models import Interface
 from slam_network.models import Network, Address
-from slam_domain.models import DomainEntry, Domain
-
 from slam_network.exceptions import NetworkFull
+from slam_domain.models import DomainEntry, Domain
 
 
 class Host(models.Model):
@@ -125,7 +124,7 @@ class Host(models.Model):
             try:  # We check if interface exist (we can only one @MAC
                 interface_host = Interface.objects.get(mac_address=interface)
                 try:  # We check if interface is already attached to a host
-                    interface_host_attach = interface_host.host_set.get()
+                    interface_host.host_set.get()
                     # if interface exist and is attached to a host, so we can't add a new host
                     return error_message('host', name, 'Integrity error Interface still exist !')
                 except ObjectDoesNotExist:  # If not, so we are good, the interface is free

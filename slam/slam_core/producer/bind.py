@@ -1,6 +1,12 @@
 """
-
+This module provide tools to produce DNS Bind9 configuration. It will put all records on a file
+named example.com.db (for example.com) and update SOA serial in a file example.com.soa.db. For some
+reason, the serial number should be on its own line with the following format:
+    2020010401 ; Serial
 """
+# As we use django model that provide objects method which is not visible by pylint, we must
+# disable no-member error from pylint
+# pylint: disable=E1101
 import ipaddress
 import os
 from datetime import datetime
@@ -13,23 +19,29 @@ from slam_network.models import Network
 
 class Bind:
     """
-    This class manage Bind 9 configuration
+    This class manage Bind9 file production. This only manage name resolution, not reverse IP
+    resolution.
     """
-    def __init__(self, domain, dir):
+    def __init__(self, domain, directory):
         """
+        Just a constructor for bind, we need a domain name to produce and a directory where to put
+        data generated.
 
+        :param domain: domain name
+        :param directory: directory where to put
         """
         self.domain = Domain.objects.get(name=domain)
         self.entries = DomainEntry.objects.filter(domain=self.domain)
-        self.dir = dir
+        self.directory = directory
 
     def show(self):
         """
+        This method make the rendering and return it as a string. To make git diff easier to read,
+        we don't add some timestamp into the file.
 
         :return:
         """
-        result = '; SLAM generated file for domain {} - {}\n'.format(self.domain.name,
-                                                                     datetime.now())
+        result = ''
         for record in self.entries:
             if record.type == 'A':
                 for address in record.address_set.all():
@@ -52,15 +64,17 @@ class Bind:
 
     def update_soa(self):
         """
+        This method update SOA to change Serial number, it s required by bind9 to make modification
+        available for other DNS server.
 
         :return:
         """
         now = datetime.now()
-        backup_filename = '{}/{}.soa.{}.old'.format(self.dir, self.domain.name,
+        backup_filename = '{}/{}.soa.{}.old'.format(self.directory, self.domain.name,
                                                     now)
-        new_filename = '{}/{}.soa.{}.new'.format(self.dir, self.domain.name,
+        new_filename = '{}/{}.soa.{}.new'.format(self.directory, self.domain.name,
                                                  now)
-        filename = '{}/{}.soa.db'.format(self.dir, self.domain.name)
+        filename = '{}/{}.soa.db'.format(self.directory, self.domain.name)
         os.rename(filename, backup_filename)
         new_file = open(new_filename, 'w')
         backup_file = open(backup_filename, 'r')
@@ -76,10 +90,11 @@ class Bind:
 
     def save(self):
         """
+        This method write on example.com.db file all the records.
 
         :return:
         """
-        filename = '{}/{}.db'.format(self.dir, self.domain.name)
+        filename = '{}/{}.db'.format(self.directory, self.domain.name)
         with open(filename, 'w') as lock_file:
             locks.lock(lock_file, locks.LOCK_EX)
             lock_file.write(self.show())
@@ -88,20 +103,28 @@ class Bind:
 
 
 class BindReverse:
-    def __init__(self, network, dir):
+    """
+    This class manage Bind9 file production. This only reverse IP resolution.
+    """
+    def __init__(self, network, directory):
         """
+        Just a constructor for bind, we need a network name to produce and a directory where to put
+        data generated.
 
+        :param network: network name
+        :param directory: directory where to put
         """
         self.network = Network.objects.get(name=network)
-        self.dir = dir
+        self.directory = directory
 
     def show(self):
         """
+        This method make the rendering and return it as a string. To make git diff easier to read,
+        we don't add some timestamp into the file.
 
         :return:
         """
-        result = '; SLAM generated file for domain {} - {}\n'.format(self.network.name,
-                                                                     datetime.now())
+        result = ''
         for address in self.network.addresses():
             for entry in address.ns_entries.all():
                 if entry.type == 'PTR':
@@ -114,15 +137,17 @@ class BindReverse:
 
     def update_soa(self):
         """
+        This method update SOA to change Serial number, it s required by bind9 to make modification
+        available for other DNS server.
 
         :return:
         """
         now = datetime.now()
-        backup_filename = '{}/{}.soa.{}.old'.format(self.dir, self.network.name,
+        backup_filename = '{}/{}.soa.{}.old'.format(self.directory, self.network.name,
                                                     now)
-        new_filename = '{}/{}.soa.{}.new'.format(self.dir, self.network.name,
+        new_filename = '{}/{}.soa.{}.new'.format(self.directory, self.network.name,
                                                  now)
-        filename = '{}/{}.soa.db'.format(self.dir, self.network.name)
+        filename = '{}/{}.soa.db'.format(self.directory, self.network.name)
         os.rename(filename, backup_filename)
         new_file = open(new_filename, 'w')
         backup_file = open(backup_filename, 'r')
@@ -139,13 +164,13 @@ class BindReverse:
 
     def save(self):
         """
+        This method write on example.com.db file all the records.
 
         :return:
         """
-        filename = '{}/{}.db'.format(self.dir, self.network.name)
+        filename = '{}/{}.db'.format(self.directory, self.network.name)
         with open(filename, 'w') as lock_file:
             locks.lock(lock_file, locks.LOCK_EX)
             lock_file.write(self.show())
             lock_file.close()
         self.update_soa()
-

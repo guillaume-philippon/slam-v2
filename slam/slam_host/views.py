@@ -20,10 +20,12 @@ following nomenclature
   - uri_*: input retrieve from URI structure itself
   - raw_*: a raw version of variable
 """
-from django.shortcuts import render
 from distutils.util import strtobool
+
+from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
+
 from slam_host.models import Host
 
 

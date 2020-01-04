@@ -1,11 +1,13 @@
 """
-
+This module provide some useful tools for GitPython
 """
+# As we use django model that provide objects method which is not visible by pylint, we must
+# disable no-member error from pylint
+# pylint: disable=E1101
 import git
 
 from slam_network.models import Network
 from slam_domain.models import Domain
-
 from slam_core.producer.bind import BindReverse, Bind
 from slam_core.producer.isc_dhcp import IscDhcp
 
@@ -14,6 +16,7 @@ PRODUCER_DIRECTORY = './build'
 
 def commit():
     """
+    This method trig a git commit for DNS/DHCP and freeradius
 
     :return:
     """
@@ -25,7 +28,6 @@ def commit():
         network_bind.save()
         network_isc_dhcp = IscDhcp(network.name, PRODUCER_DIRECTORY + '/isc-dhcp')
         network_isc_dhcp.save()
-
     build_repo = git.Repo(PRODUCER_DIRECTORY)
     result = {
         'data': build_repo.git.diff()
@@ -35,6 +37,7 @@ def commit():
 
 def diff():
     """
+    This function trig a git diff command to let user see differences before pushing data
 
     :return:
     """
@@ -47,6 +50,7 @@ def diff():
 
 def publish(message='This is the default comment'):
     """
+    This function trig a git push command to make data available for production
 
     :return:
     """
