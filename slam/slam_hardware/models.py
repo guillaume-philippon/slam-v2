@@ -1,9 +1,26 @@
 """
-This file provide model for SLAM hardware management.
+This module provide Hardware and Interface models and all associated method.
 
-As we use django models.Model, pylint fail to find objects method. We must disable pylint
-test E1101 (no-member)
+For Hardware
+  - Hardware.show: method to return a dict abstraction of a Hardware
+  - Hardware.create: a staticmethod to create a Hardware w/ some check associated to it
+  - Hardware.update: a staticmethod to update Hardware field
+  - Hardware.remove: a staticmethod to delete a Hardware w/ some check associated to it
+  - Hardware.add: a staticmethod to add a Interface to a Hardware
+  - Hardware.get: a staticmethod to get a dict abstraction of a Hardware w/o instanciate it before
+  - Hardware.search: a staticmethod to get all Hardware match the filter
+
+For Interface
+  - Interface.show: method to return a dict abstraction of a Interface
+  - Interface.create: a staticmethod to create a Interface w/ some check associated to it
+  - Interface.update: a staticmethod to update Interface field
+  - Interface.remove: a staticmethod to delete a Interface w/ some check associated to it
+  - Interface.add: a staticmethod to add a IP to a Interface
+  - Interface.get: a staticmethod to get a dict abstraction of a Interface w/o instanciate it before
+  - Interface.search: a staticmethod to get all Interface match the filter
 """
+# As we use django models.Model, pylint fail to find objects method. We must disable pylint
+# test E1101 (no-member)
 # pylint: disable=E1101
 import re
 
@@ -13,6 +30,24 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
 from slam_core.utils import error_message
+
+HARDWARE_FIELD = [
+    'name',
+    'buying_date',
+    'description',
+    'owner',
+    'vendor',
+    'model',
+    'serial_number',
+    'inventory',
+    'warranty'
+]
+
+INTERFACE_FIELD = [
+    'mac_address',
+    'type',
+    'speed'
+]
 
 
 def mac_address_validator(mac_address):
@@ -30,7 +65,17 @@ def mac_address_validator(mac_address):
 
 class Hardware(models.Model):
     """
-    A hardware represent a physical machine. A hardware can have devices like interface.
+    A Hardware represent a physical machine.
+      - name: a hardware name, there are no relation between hardware name and NS record
+        by default, it's build by Host.create named it name-mac_address
+      - buying_date: when hardware has been buy. By default, it's when it's created
+      - description: a short description of the machine
+      - owner: the owner of the machine
+      - vendor: manifacturor name of the machine
+      - model: the model of the machine
+      - serial_number: unique serial number from manifacturer
+      - inventory: local inventory identifier
+      - warranty: warranty duration
     """
     name = models.CharField(max_length=50, unique=True)
     buying_date = models.DateField(default=timezone.now)
@@ -44,14 +89,24 @@ class Hardware(models.Model):
 
     def interfaces(self):
         """
+        This method return all Interfaces attached to this hardware. A hardware can have more than
+        one Interface.
 
         :return:
         """
-        return Interface.objects.filter(hardware=self)
+        return self.interface_set.all()
+        # return Interface.objects.filter(hardware=self)
 
     def show(self, key=False, short=False):
         """
-        A method to return a dict
+        This method return a dict construction of the object. We have 3 types of output,
+          - standard: all information about object it-self, short information about associated objects
+            (like ForeignKey and ManyToManyField)
+          - short: some basic information about object it-self, primary key of associated objects
+          - key: primary key of the object
+
+        :param short: if set to True, method return a short output
+        :param key: if set to True, method return a key output. It will overwrite short param
         :return:
         """
         if key:
@@ -88,43 +143,27 @@ class Hardware(models.Model):
         return result
 
     @staticmethod
-    def create(name, description=None, owner=None, vendor=None, model=None, serial_number=None,
-               inventory=None, warranty=None, interfaces=None):
-        # pylint: disable=R0913
+    def create(name, interfaces=None, args=None):
         """
-        This is a custom method to create a hardware
+        This is a custom method to create a hardware. args represent all Hardware self attributes.
+        interfaces represent a list of interface.
+
         :param name: name of the hardware
-        :param description: A short description of the hardware
-        :param owner: Owner of the hardware
-        :param vendor: Hardware vendor name
-        :param model: Hardware model name
-        :param serial_number: Hardware Serial Number
-        :param inventory: Inventory number
-        :param warranty: Warranty duration
         :param interfaces: interfaces in the hardware
+        :param args: a dict of field used to create the hardware
         :return:
         """
         try:
             hardware = Hardware(name=name)
-            if description is not None:
-                hardware.description = description
-            if owner is not None:
-                hardware.owner = owner
-            if vendor is not None:
-                hardware.vendor = vendor
-            if model is not None:
-                hardware.model = model
-            if serial_number is not None:
-                hardware.serial_number = serial_number
-            if inventory is not None:
-                hardware.inventory = inventory
-            if warranty is not None:
-                hardware.warranty = warranty
+            for arg in args:
+                if arg in HARDWARE_FIELD:  # We just keep args which are useful for Hardware
+                    # creation
+                    setattr(hardware, arg, args[arg])
             hardware.full_clean()
-        except (IntegrityError, ValidationError) as err:
+        except (IntegrityError, ValidationError) as err:  # if something go wrong we stay here
             return error_message('hardware', name, err)
         hardware.save()
-        if interfaces is not None:
+        if interfaces is not None:  # If we have some interfaces to add
             for interface in interfaces:
                 try:
                     interface['hardware'] = hardware
@@ -133,62 +172,42 @@ class Hardware(models.Model):
                 except (IntegrityError, ValidationError) as err:
                     return error_message('interface', interface['mac_address'], err)
                 interface_hw.save()
-        return {
-            'hardware': hardware.name,
-            'status': 'done'
-        }
+        result = hardware.show()
+        result['status'] = 'done'
+        return result
 
     @staticmethod
-    def update(name, buying_date=None, description=None, owner=None, vendor=None, model=None,
-               serial_number=None, inventory=None, warranty=None):
-        # pylint: disable=R0913
+    def update(name, args=None):
         """
-        This is a custom method to update hardware information
+        This is a custom method to update hardware information. We just update Hardware self
+        information. Adding, remove or update interface is not done by the same way.
+
         :param name: name of the hardware
-        :param buying_date: when hardware as been bought
-        :param description: a short description of the hardware
-        :param owner: the owner of the hardware
-        :param vendor: the vendor name of the hardware
-        :param model: the model name of the hardware
-        :param serial_number: hardware serial number
-        :param inventory: hardware inventory id
-        :param warranty: warranty duration
+        :param args: All information that must be updated
         :return:
         """
-        try:
+        try:  # First, we get the hardware
             hardware = Hardware.objects.get(name=name)
         except ObjectDoesNotExist as err:
             return error_message('hardware', name, err)
-        if buying_date is not None:
-            hardware.buying_date = buying_date
-        if description is not None:
-            hardware.description = description
-        if owner is not None:
-            hardware.owner = owner
-        if vendor is not None:
-            hardware.vendor = vendor
-        if model is not None:
-            hardware.model = model
-        if serial_number is not None:
-            hardware.serial_number = serial_number
-        if inventory is not None:
-            hardware.inventory = inventory
-        if warranty is not None:
-            hardware.warranty = warranty
-        try:
+        for arg in args:
+            if arg in HARDWARE_FIELD:  # We just keep args that is useful for Hardware
+                setattr(hardware, arg, args[arg])
+        try:  # Just in case
             hardware.full_clean()
         except (IntegrityError, ValidationError) as err:
             return error_message('hardware', name, err)
         hardware.save()
-        return {
-            'hardware': name,
-            'status': 'done'
-        }
+        result = hardware.show()
+        result['status'] = 'done'
+        return result
 
     @staticmethod
     def remove(name):
         """
-        This is a custom way to delete a hardware
+        This is a custom way to delete a hardware. As django model have its own delete method, we
+        call it remove.
+
         :return:
         """
         try:
@@ -205,9 +224,10 @@ class Hardware(models.Model):
         }
 
     @staticmethod
-    def get(name, short=False):
+    def get(name):
         """
-        This is a custom method to get hardware information
+        This is a custom method to get hardware information.
+
         :param name: name of the hardware
         :return:
         """
@@ -215,12 +235,13 @@ class Hardware(models.Model):
             hardware = Hardware.objects.get(name=name)
         except ObjectDoesNotExist as err:
             return error_message('hardware', name, err)
-        return hardware.show(short)
+        return hardware.show()
 
     @staticmethod
     def search(filters=None):
         """
         This is a custom way to get all hardware match the filter
+
         :param filters:
         :return:
         """
@@ -252,8 +273,14 @@ class Interface(models.Model):
 
     def show(self, key=False, short=False):
         """
-        Return a dict for Interface
-        :param short: if True, we
+        This method return a dict construction of the object. We have 3 types of output,
+          - standard: all information about object it-self, short information about associated objects
+            (like ForeignKey and ManyToManyField)
+          - short: some basic information about object it-self, primary key of associated objects
+          - key: primary key of the object
+
+        :param short: if set to True, method return a short output
+        :param key: if set to True, method return a key output. It will overwrite short param
         :return:
         """
         if key:
@@ -275,39 +302,35 @@ class Interface(models.Model):
         return result
 
     @staticmethod
-    def create(mac_address, hardware, int_type=None, speed=None):
+    def create(mac_address, hardware, int_type=None, speed=None, args=None):
         """
         This is a custom method to create a interface
         :param mac_address: mac address of the interface
         :param hardware: hardware where interface is attached
         :param int_type: interface type (copper, fiber, wireless)
         :param speed: interface speed
+        :param args: options for Interface creation
         :return:
         """
-        try:
+        try:  # First, we see if hardware exist
             hardware = Hardware.objects.get(name=hardware)
-        except ObjectDoesNotExist as err:
+        except ObjectDoesNotExist:
             # If hardware not exist, we create it
             Hardware.create(name=hardware)
             hardware = Hardware.objects.get(name=hardware)
-        options = {
-            'mac_address': mac_address,
-            'hardware': hardware,
-        }
-        if int_type is not None:
-            options['type'] = int_type
-        if speed is not None:
-            options['speed'] = speed
         try:
-            interface = Interface(**options)
+            interface = Interface(mac_address=mac_address)
+            setattr(interface, 'hardware', hardware)
+            for arg in args:
+                if arg in INTERFACE_FIELD:
+                    setattr(interface, arg, args[arg])
             interface.full_clean()
         except (IntegrityError, ValidationError) as err:
             return error_message('interface', mac_address, err)
         interface.save()
-        return {
-            'interface': mac_address,
-            'status': 'done'
-        }
+        result = interface.show()
+        result['status'] = 'done'
+        return result
 
     @staticmethod
     def remove(mac_address):

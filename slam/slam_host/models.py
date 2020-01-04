@@ -99,7 +99,7 @@ class Host(models.Model):
     @staticmethod
     def create(name, address=None, interface=None, network=None, dns_entry=None, options=None):
         """
-        This is a custom way to create a host w/ some check like.
+        This is a custom method to create a host w/ some check like.
           - Interface: check if it exist and it s free. If not, create a new one.
           - Address: check if it exist,it s free and in the network. If no address as been provide,
             get a free IP from the network

@@ -53,15 +53,12 @@ def interface_view(request, uri_hardware, uri_interface):
     """
     result = dict()
     if request.method == 'POST':
-        options = {
-            'mac_address': uri_interface,
-            'hardware': uri_hardware
-        }
+        options = dict()
         if request.POST.get('interface_type') is not None:
             options['type'] = request.POST.get('interface_type')
         if request.POST.get('interface_speed') is not None:
             options['speed'] = request.POST.get('interface_speed')
-        result = Interface.create(**options)
+        result = Interface.create(mac_address=uri_interface, hardware=uri_hardware, args=options)
     elif request.method == 'DELETE':
         result = Interface.remove(uri_interface)
     elif request.method == 'GET':
@@ -79,26 +76,13 @@ def hardware_view(request, uri_hardware):
     :param request: full HTTP request from user
     :param uri_hardware: the name of the hardware from URI
     """
-    if request.method == 'POST':
-        options = {
-            'name': uri_hardware
-        }
-        # We start w/ hardware
-        if request.POST.get('description') is not None:
-            options['description'] = request.POST.get('description')
-        if request.POST.get('owner') is not None:
-            options['owner'] = request.POST.get('owner')
-        if request.POST.get('vendor') is not None:
-            options['vendor'] = request.POST.get('vendor')
-        if request.POST.get('model') is not None:
-            options['model'] = request.POST.get('model')
-        if request.POST.get('serial_number') is not None:
-            options['serial_number'] = request.POST.get('serial_number')
-        if request.POST.get('inventory') is not None:
-            options['inventory'] = request.POST.get('inventory')
-        if request.POST.get('warranty') is not None:
-            options['warranty'] = request.POST.get('warranty')
-        # Now we look at interface options
+    if request.method == 'POST':  # If we have a POST request (ie Hardware creation)
+        options = dict()
+        for arg in request.POST:  # For almost all things, that's right. We don't need to take care
+            # of sanity of options as create do it.
+            options[arg] = request.POST.get(arg)
+        # But for interface it a little bit tricky as request.POST not authorized dict of dict.
+        # All interface based request have a prefix interface. We build a specific options for it.
         options_interface = {
             'mac_address': request.POST.get('interface_mac_address')
         }
@@ -106,35 +90,18 @@ def hardware_view(request, uri_hardware):
             options_interface['speed'] = request.POST.get('interface_speed')
         if request.POST.get('interface-type'):
             options_interface['type'] = request.POST.get('interface-type')
-        options['interfaces'] = [
-            options_interface
-        ]
-        result = Hardware.create(**options)
+        result = Hardware.create(name=uri_hardware, interfaces=[options_interface], args=options)
     elif request.method == 'GET':
         result = Hardware.get(uri_hardware)
     elif request.method == 'PUT':
+        # As PUT is not a legacy method for HTTP the way to retrieve data is a little bit more
+        # tricky
         raw_data = request.body
         data = QueryDict(raw_data)
-        options = {
-            'name': uri_hardware
-        }
-        if data.get('buying_date') is not None:
-            options['buying_date'] = data.get('buying_date')
-        if data.get('description') is not None:
-            options['description'] = data.get('description')
-        if data.get('owner') is not None:
-            options['owner'] = data.get('owner')
-        if data.get('vendor') is not None:
-            options['vendor'] = data.get('vendor')
-        if data.get('model') is not None:
-            options['model'] = data.get('model')
-        if data.get('serial_number') is not None:
-            options['serial_number'] = data.get('serial_number')
-        if data.get('inventory') is not None:
-            options['inventory'] = data.get('inventory')
-        if data.get('warranty') is not None:
-            options['warranty'] = data.get('warranty')
-        result = Hardware.update(**options)
+        options = dict()
+        for arg in data:  # We don't care about sanity, update method from Hardware do it.
+            options[arg] = data.get(arg)
+        result = Hardware.update(name=uri_hardware, args=options)
     elif request.method == 'DELETE':
         result = Hardware.remove(uri_hardware)
     return JsonResponse(result)
