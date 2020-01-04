@@ -26,13 +26,13 @@ from slam_network.exceptions import NetworkFull
 class Host(models.Model):
     """
     Host represent a association between hardware, network and domain name service
-    - name: a name for the hosts, by default, the name fqdn of the host
-    - addresses: a list of IP address. Should be one-to-many relation but for some mistake, it s a
-    many-to-many relation...
-    - interface: the MAC address of the host
-    - network: the main network for the host (ie. where it will be put by freeradius)
-    - creation_date: When Host has been created
-    - dhcp: a flag to enable, disable DHCP configuration.
+      - name: a name for the hosts, by default, the name fqdn of the host
+      - addresses: a list of IP address. Should be one-to-many relation but for some mistake, it s a
+        many-to-many relation...
+      - interface: the MAC address of the host
+      - network: the main network for the host (ie. where it will be put by freeradius)
+      - creation_date: When Host has been created
+      - dhcp: a flag to enable, disable DHCP configuration.
     """
     name = models.CharField(max_length=150, unique=True)
     addresses = models.ManyToManyField(Address)
@@ -101,10 +101,11 @@ class Host(models.Model):
     def create(name, address=None, interface=None, network=None, dns_entry=None, options=None):
         """
         This is a custom way to create a host w/ some check like.
-         - Interface: check if it exist and it s free. If not, create a new one.
-         - Address: check if it exist,it s free and in the network. If no address as been provide,
-         get a free IP from the network
-         - NS record: A and PTR record will be created
+          - Interface: check if it exist and it s free. If not, create a new one.
+          - Address: check if it exist,it s free and in the network. If no address as been provide,
+            get a free IP from the network
+          - NS record: A and PTR record will be created
+
         :param name: name of the Host
         :param address: IP address for the Host
         :param interface: interface associated to this Host
@@ -194,6 +195,7 @@ class Host(models.Model):
     def update(name, address=None, interface=None, network=None, dns_entry=None):
         """
         This is a custom method to update a Host. Depending of options give, the rightfull field.
+
         :param name: name of the host (not used to update but to retrieve Host)
         :param address: IP address of the host
         :param interface: mac-address of the host
@@ -228,6 +230,7 @@ class Host(models.Model):
         """
         This method is a method to delete a Host. As django use a internal method called delete
         to delete a instanciated object, we call the method remove.
+
         :param name: name of host
         :param addresses: if set to True, we also delete all addresses (default: True)
         :param hardware: if set to True, we also delete hardware (default: False)
@@ -277,6 +280,7 @@ class Host(models.Model):
     def add(name, address):
         """
         This is a custom method to add a IP to a host.
+
         :param name: the host name
         :param address: IP address
         :return:
@@ -312,7 +316,8 @@ class Host(models.Model):
     def get(name):
         """
         This is a custom method to get the dict abstraction of a Host. We get a standard version of
-        the abstraction (see show method comment)
+        the abstraction (see show method comment).
+
         :param name: name of the host
         :return:
         """
@@ -328,6 +333,7 @@ class Host(models.Model):
         """
         This is a custom method to get a dict abstraction of all Host on database. We get a
         short version of Host (see show method comment).
+
         :param filters: a dict of field as QuerySet
         :return:
         """
