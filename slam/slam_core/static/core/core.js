@@ -52,9 +52,17 @@ class NetworkCtrl {
             url: self.uri,
             success: function(data){
                 $.each(data, function(key, item){
-                    self.networks.push(item.name);
+                    var net = {
+                        'name': item.name,
+                        'address' : item.address + '/' + item.prefix,
+                        'description': item.description,
+                        'total': item.total,
+                        'used': item.used_addresses
+                    }
+                    self.networks.push(net);
                 });
                 self.show();
+                self.dashboard();
             }
         })
     }
@@ -62,9 +70,19 @@ class NetworkCtrl {
     show() {
         var self = this;
             $.each(self.networks, function(key, network){
-                $('#networks').append(new Option(network, network))
+                $('#networks').append(new Option(network.name, network.name))
             })
             $('#networks-load').fadeTo(2000, 0);
+    }
+
+    dashboard() {
+        var self = this;
+        $.each(self.networks, function(key, network){
+            console.log(key)
+            var net = new NetworkView(network.name, network.address,
+            network.description, network.total, network.used)
+            net.show()
+        })
     }
 }
 
@@ -170,7 +188,6 @@ class HostViewListener {
         if (! $('#dhcp').is(':checked')) {
             options.dhcp = 'False' // We must put a python like boolean
         }
-//        console.log(options)
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
         });
@@ -235,6 +252,74 @@ class HostViewListener {
 
 
 }
+
+class NetworkView {
+    constructor(name, address, description, max, used) {
+        this.name = name;
+        this.address = address
+        this.description = description
+        this.max = max
+        this.used = used
+        this.per_cent = ( this.used * 100 ) / this.max
+    }
+    show(){
+        var self = this;
+//        console.log(this.per_cent)
+        var card = $('<div/>', {
+            class: 'card ml-2 mb2',
+            style: 'width: 18rem'
+         });
+        var card_body = $('<div/>',{
+            class: 'card-body'
+        });
+        var card_title = $('<h5/>',{
+            class: 'card-title',
+            text: self.name,
+        });
+        var card_subtitle = $('<h6/>',{
+            class: 'card-subtitle mb-2 text-muted',
+            text: self.address,
+        });
+        var card_text = $('<p/>',{
+            class: 'card-text',
+            text: self.description,
+        });
+        var card_link = $('<a/>', {
+            href: '/networks/' + self.name,
+            class: 'card-link',
+            text: 'More info'
+        })
+        var card_footer = $('<div/>', {
+            class: 'card-footer text-muted',
+            text: '2/2'
+        })
+        var progress = $('<div/>', {
+            class: 'progress',
+        })
+        var progress_bar = $('<div/>', {
+            class: 'progress-bar progress-bar-striped',
+            role: 'progressbar',
+            style: 'width: ' + self.per_cent + '%',
+        })
+
+        var progress_build = progress.append(progress_bar)
+        var footer_buid = card_footer.append()
+        $('#network-cards').append(
+         card.append(
+                card_body.append(
+                    card_title,
+                    card_subtitle,
+                    progress.append(
+                        progress_bar
+                    ),
+                    card_text,
+                    card_link,
+                )
+            )
+        )
+    }
+}
+
 
 $(function(){
     var domains = new DomainsCtrl();
