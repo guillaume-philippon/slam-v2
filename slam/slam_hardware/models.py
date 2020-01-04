@@ -302,13 +302,11 @@ class Interface(models.Model):
         return result
 
     @staticmethod
-    def create(mac_address, hardware, int_type=None, speed=None, args=None):
+    def create(mac_address, hardware, args=None):
         """
         This is a custom method to create a interface
         :param mac_address: mac address of the interface
         :param hardware: hardware where interface is attached
-        :param int_type: interface type (copper, fiber, wireless)
-        :param speed: interface speed
         :param args: options for Interface creation
         :return:
         """
