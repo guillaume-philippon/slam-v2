@@ -1,14 +1,14 @@
-slam_domain apps
-================
+Domain
+======
 
 .. automodule:: slam_domain
 
-slam_domain.models
-------------------
+Domain data model
+-----------------
 .. automodule:: slam_domain.models
     :members:
 
-slam_domain.views
------------------
+Domain view
+-----------
 .. automodule:: slam_domain.views
     :members:
