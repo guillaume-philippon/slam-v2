@@ -78,7 +78,6 @@ class NetworkCtrl {
     dashboard() {
         var self = this;
         $.each(self.networks, function(key, network){
-            console.log(key)
             var net = new NetworkView(network.name, network.address,
             network.description, network.total, network.used)
             net.show()
@@ -89,6 +88,9 @@ class NetworkCtrl {
 class HostViewListener {
     constructor(){
         var self = this;
+        this.hostname = $('#hostname').val()
+        this.domain = $('#domains').val()
+
         $('#hostname').change(function(){
             self.check();
         });
@@ -129,6 +131,9 @@ class HostViewListener {
         var owner = $('#owner').val();
         var mac_address_regex = new RegExp('([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])');
 
+        this.hostname = hostname;
+        this.domain = domain;
+
         $('#add-host').attr("disabled", true);
         if (hostname != ''){
             $.ajax({
@@ -168,7 +173,9 @@ class HostViewListener {
     add (){
         $('#add-host').attr("disabled", true);
         var self = this;
-        var csrftoken = $.cookie('csrftoken')
+        var csrftoken = $.cookie('csrftoken');
+        this.hostname = $('#hostname').val();
+        this.domain = $('#domains').val();
         var options = {
             'domain': $('#domains').val(),
             'interface': $('#interface').val(),
@@ -246,6 +253,8 @@ class HostViewListener {
                         $('#success-box').collapse('hide')
                         $('#network').show()
                         $('#hardware').show()
+                        $(location).attr('pathname', '/hosts/' + self.hostname + '.' + self.domain)
+
                     }
         })
     }

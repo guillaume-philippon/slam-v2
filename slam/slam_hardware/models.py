@@ -260,11 +260,11 @@ class Interface(models.Model):
             result = {
                 'mac_address': self.mac_address
             }
-        elif short:
-            result = {
-                'mac_address': self.mac_address,
-                'hardware': self.hardware.show(key=True)
-            }
+        # elif short:
+        #     result = {
+        #         'mac_address': self.mac_address,
+        #         'hardware': self.hardware.show(short=True)
+        #     }
         else:
             result = {
                 'mac_address': self.mac_address,

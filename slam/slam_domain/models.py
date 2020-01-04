@@ -181,7 +181,7 @@ class DomainEntry(models.Model):
     - creation_date: when entry as been created
     """
     name = models.CharField(max_length=50)
-    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
+    domain = models.ForeignKey(Domain, on_delete=models.PROTECT)
     type = models.CharField(max_length=5, default='A')
     entries = models.ManyToManyField('self')
     description = models.CharField(max_length=150, blank=True, default='', null=True)

@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+
+{% block scripts %}
+    <script src="/static/host/host.js"></script>
+{% endblock%}
+
+{% block main %}
+<main role="main" class="container">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title" id="name">name</h5>
+            <h6 class="card-subtitle mb-2 text-muted text-right" id="network">Network</h6>
+            <h6 class="card-subtitle mb-2 text-muted text-right" id="creation_date"></h6>
+            <p class="card-text" id="description"></p>
+            <div class="row">
+                <div class="card col-sm-6">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted text-right">Hardware</h6>
+                        <div class="form">
+                            <div class="form-group row">
+                                <label for="hardware-name" class="col-sm-4 col-form-label">Name</label>
+                                <div class="col-sm-8">
+                                    <input type="text" readonly class="form-control-plaintext" id="hardware-name" value="">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="hardware-mac-address" class="col-sm-4 col-form-label">Interface</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="hardware-mac-address">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="hardware-owner" class="col-sm-4 col-form-label">Owner</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="hardware-owner">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="hardware-buying-date" class="col-sm-4 col-form-label">Buying Date</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="hardware-buying-date">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="hardware-description" class="col-sm-4 col-form-label">Description</label>
+                                <div class="col-sm-8">
+                                    <textarea type="textarea" class="form-control" id="hardware-description"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card col-sm-6">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted text-right">Network</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{%endblock %}
+

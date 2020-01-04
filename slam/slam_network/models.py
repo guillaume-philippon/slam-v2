@@ -32,7 +32,7 @@ class Network(models.Model):
      - vlan: the VLAN id of the network
     """
     name = models.CharField(max_length=50, unique=True)
-    address = models.GenericIPAddressField(unique=True)
+    ip = models.GenericIPAddressField(unique=True)
     prefix = models.IntegerField(default=24)
     description = models.CharField(max_length=150, default='')
     gateway = models.GenericIPAddressField(blank=True, null=True)
@@ -49,15 +49,15 @@ class Network(models.Model):
         elif short:
             result_addresses = []
             addresses_used = len(self.addresses())
-            addresses_total = ipaddress.ip_network('{}/{}'.format(self.address,
+            addresses_total = ipaddress.ip_network('{}/{}'.format(self.ip,
                                                                   self.prefix)).num_addresses
             # for address in self.addresses():
             #     result_addresses.append(address.show(key=True))
             result = {
                 'name': self.name,
-                'address': self.address,
+                'address': self.ip,
                 'prefix': self.prefix,
-                'version': ipaddress.ip_address(self.address).version,
+                'version': ipaddress.ip_address(self.ip).version,
                 'description': self.description,
                 'used_addresses': addresses_used,
                 'total': addresses_total
@@ -67,13 +67,13 @@ class Network(models.Model):
             for address in self.addresses():
                 result_addresses.append(address.show(short=True))
             addresses_used = len(self.addresses())
-            addresses_total = ipaddress.ip_network('{}/{}'.format(self.address,
+            addresses_total = ipaddress.ip_network('{}/{}'.format(self.ip,
                                                                   self.prefix)).num_addresses
             result = {
                 'name': self.name,
-                'address': self.address,
+                'address': self.ip,
                 'prefix': self.prefix,
-                'version': ipaddress.ip_address(self.address).version,
+                'version': ipaddress.ip_address(self.ip).version,
                 'description': self.description,
                 'gateway': self.gateway,
                 'dns_master': self.dns_master,
@@ -93,7 +93,7 @@ class Network(models.Model):
         :return:
         """
         address = ipaddress.ip_address(ip)
-        network = ipaddress.ip_network('{}/{}'.format(self.address, self.prefix))
+        network = ipaddress.ip_network('{}/{}'.format(self.ip, self.prefix))
         if address.version == network.version and address in network:
             return True
         return False
@@ -103,11 +103,7 @@ class Network(models.Model):
         This method return all addresses which are in the current network.
         :return:
         """
-        addresses = Address.objects.all()
-        result = []
-        for address in addresses:
-            if self.is_include(address.ip):
-                result.append(address)
+        result = self.address_set.all()
         return result
 
     def get_free_ip(self):
@@ -115,7 +111,7 @@ class Network(models.Model):
 
         :return:
         """
-        network = ipaddress.ip_network('{}/{}'.format(self.address, self.prefix))
+        network = ipaddress.ip_network('{}/{}'.format(self.ip, self.prefix))
         addresses = []
         for address in self.addresses():
             addresses.append(ipaddress.ip_address(address.ip))
@@ -129,7 +125,7 @@ class Network(models.Model):
 
         :return:
         """
-        return ipaddress.ip_network('{}/{}'.format(self.address, self.prefix)).version
+        return ipaddress.ip_network('{}/{}'.format(self.ip, self.prefix)).version
 
     @staticmethod
     def create(name, address, prefix, description='A short description', gateway=None,
@@ -149,7 +145,7 @@ class Network(models.Model):
         :return:
         """
         try:
-            network = Network(name=name, address=address, prefix=prefix, description=description,
+            network = Network(name=name, ip=address, prefix=prefix, description=description,
                               gateway=gateway, dns_master=dns_master, dhcp=dhcp, vlan=vlan,
                               contact=contact)
             network.full_clean()
@@ -261,6 +257,7 @@ class Address(models.Model):
     ip = models.GenericIPAddressField(unique=True)
     ns_entries = models.ManyToManyField(DomainEntry)
     creation_date = models.DateTimeField(auto_now_add=True, null=True)
+    network = models.ForeignKey(Network, on_delete=models.PROTECT)
 
     def show(self, key=False, short=True):
         """
@@ -277,23 +274,21 @@ class Address(models.Model):
             result_entries = []
             for entry in self.ns_entries.all():
                 result_entries.append(entry.show(key=True))
-            network = Address.network(self.ip)
             result = {
                 'ip': self.ip,
                 'ns_entries': result_entries,
                 'creation_date': self.creation_date,
-                'network': network.show(key=True)
+                # 'network': self.network.show(key=True)
             }
         else:
             result_entries = []
             for entry in self.ns_entries.all():
                 result_entries.append(entry.show(short=True))
-            network = Address.network(self.ip)
             result = {
                 'ip': self.ip,
                 'ns_entries': result_entries,
                 'creation_date': self.creation_date,
-                'network': network.show(short=True)
+                # 'network': self.network.show(short=True)
             }
         return result
 
@@ -322,7 +317,7 @@ class Address(models.Model):
             if network_address is not None and not network_address.is_include(ip):
                 return error_message('address', ip, 'Address {} not in Network {}/{}'.format(
                     ip, network_address.address, network_address.prefix))
-            address = Address(ip=ip)
+            address = Address(ip=ip, network=network_address)
             address.full_clean()
         except (IntegrityError, ValueError, ValidationError) as err:
             return error_message('address', ip, err)
@@ -497,7 +492,7 @@ class Address(models.Model):
         return result
 
     @staticmethod
-    def network(ip):
+    def match_network(ip):
         """
         This method return the network associated with the address
         :return:

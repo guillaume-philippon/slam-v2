@@ -20,7 +20,6 @@ class Authentication {
         });
         var next = $.urlParam('next')
         $.post('/login?next=' + next, data, function(result){
-            console.log(result);
             $(location).attr('href', result.next)
         });
     }

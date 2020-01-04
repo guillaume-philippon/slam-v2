@@ -12,6 +12,7 @@ following nomenclature
  - result_*: a temporary structure that represent a part of the output (per example result_entries)
  - uri_*: input retrieve from URI structure itself
 """
+from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
 
@@ -40,7 +41,9 @@ def network_view(request, uri_network):
     :param request: full HTTP request from user
     :param uri_network: the network name
     """
-    if request.method == 'GET':
+    if request.method == 'GET' and request.headers['Accept'] != 'application/json':
+        return render(request, 'networks/network.html', dict())
+    elif request.method == 'GET':
         # If we want to get (GET) information about a network, we're looking for it and send
         # information
         result = Network.get(name=uri_network)

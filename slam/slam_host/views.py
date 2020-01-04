@@ -20,6 +20,7 @@ following nomenclature
  - uri_*: input retrieve from URI structure itself
  - raw_*: a raw version of variable
 """
+from django.shortcuts import render
 from distutils.util import strtobool
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
@@ -48,6 +49,8 @@ def host_view(request, uri_host):
     :param uri_host: host name from URI
     :return:
     """
+    if request.method == 'GET' and request.headers['Accept'] != 'application/json':
+        return render(request, 'host/host.html', dict())
     if request.method == 'POST':
         options = {
             'name': uri_host,

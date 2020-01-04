@@ -1,0 +1,21 @@
+{% extends "core/base.html" %}
+
+{% block scripts %}
+    <script src="/static/networks/network.js"></script>
+{% endblock%}
+
+{% block main %}
+<main role="main" class="container">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title" id="name">name</h5>
+            <h6 class="card-subtitle mb-2 text-muted text-right" id="address">Address</h6>
+            <p class="card-text" id="description"></p>
+            <div class="progress" id="progress"></div>
+                <p class="card-text">
+            <table class="table table-striped table-bordered" id="addresses" width="100%"></table></p>
+        </div>
+    </div>
+</main>
+{%endblock %}
+
