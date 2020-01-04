@@ -209,6 +209,10 @@ class HostViewListener {
                             $('#alert-message').text(data.message)
                              $('#alert-box').collapse('show')
                         } else {
+                            console.log('--')
+                            console.log(data.addresses[0].ip)
+                            console.log('--')
+                            $('#success-ip-address').text(data.addresses[0].ip)
                             $('#success-box').collapse('show')
                             $('#hostname').val('')
                             $('#interface').val('')

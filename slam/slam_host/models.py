@@ -184,10 +184,10 @@ class Host(models.Model):
             host.save()
             if address_host is not None:
                 host.addresses.add(address_host)
-            return {
-                'host': name,
-                'status': 'done'
-            }
+            # We will return a dict representation and a status
+            result = host.show()
+            result['status'] = 'done'
+            return result
         except (ObjectDoesNotExist, IntegrityError, ValidationError) as err:
             return error_message('host', name, err)
 
