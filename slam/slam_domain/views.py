@@ -52,13 +52,11 @@ def domain_view(request, uri_domain):
     elif request.method == 'POST':
         # If we want to create (POST) a new domain. We retrieve optional information and create
         # a new object.
-        options = {
-            'name': uri_domain,
-        }
+        options = dict()
         for args in request.POST:
             # We don't care about the saintly of options as Domain.create take care of it.
             options[args] = request.POST.get(args)
-        result = Domain.create(**options)
+        result = Domain.create(name=uri_domain, args=options)
     elif request.method == 'PUT':
         # If we want to update (PUT) a existing domain. We retrieve all mutable value and change it.
         raw_data = request.body
@@ -67,7 +65,7 @@ def domain_view(request, uri_domain):
         for args in data:
             # We don't care about the saintly of options as Domain.update take care of it.
             options[args] = data.get(args)
-        result = Domain.update(uri_domain, **options)
+        result = Domain.update(uri_domain, args=options)
     elif request.method == 'DELETE':
         # If we want to delete (DELETE) a existing domain, we just do it.
         result = Domain.remove(uri_domain)

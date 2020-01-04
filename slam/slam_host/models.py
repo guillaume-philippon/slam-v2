@@ -44,10 +44,11 @@ class Host(models.Model):
     def show(self, short=False, key=False):
         """
         This method return a dict construction of the object. We have 3 types of output,
-        - standard: all information about object it-self, short information about associated objects
-        (like ForeignKey and ManyToManyField)
-        - short: some basic information about object it-self, primary key of associated objects
-        - key: primary key of the object
+          - standard: all information about object it-self, short information about associated objects
+            (like ForeignKey and ManyToManyField)
+          - short: some basic information about object it-self, primary key of associated objects
+          - key: primary key of the object
+
         :param short: if set to True, method return a short output
         :param key: if set to True, method return a key output. It will overwrite short param
         :return:

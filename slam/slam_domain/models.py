@@ -1,28 +1,34 @@
 """
 This module provide model for domains. There are 2 models
- - Domain: which represent a DNS domain like example.com
- - DomainEntry: which represent a named entry like www.example.com
-
-As we use meta class from django that not require any public method, we disable pylint
-for R0903 (too-few-public-methods)
-As we use models from django that make pylint difficult to know embeded method we must disable
-E1101 (no-member)
+  - Domain: which represent a DNS domain like example.com
+  - DomainEntry: which represent a named entry like www.example.com
 """
-# pylint: disable=R0903, E1101
+# As we use meta class from django that not require any public method, we disable pylint
+# for R0903 (too-few-public-methods)
+# As we use django models.Model, pylint fail to find objects method. We must disable pylint
+# test E1101 (no-member)
+# pylint: disable=E1101,R0903
 from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
 from slam_core.utils import error_message
 
+DOMAIN_FIELD = [
+    'description',
+    'dns_master',
+    'contact'
+]
+
 
 class Domain(models.Model):
     """
     Domain class represent a fqdn domain like example.com
-    - name: immutable name of the domain (example.com)
-    - description: a short description of the domain
-    - dns_master: IP of DNS master (used to push data in production)
-    - contact: a contact email for the domain
+      - name: immutable name of the domain (example.com)
+      - description: a short description of the domain
+      - dns_master: IP of DNS master (used to push data in production)
+      - contact: a contact email for the domain
+      - creation_date: when domain has been created
     """
     name = models.CharField(max_length=50, unique=True)
     description = models.CharField(max_length=120, blank=True, null=True)
@@ -32,9 +38,14 @@ class Domain(models.Model):
 
     def show(self, key=False, short=False):
         """
+        This method return a dict construction of the object. We have 3 types of output,
+          - standard: all information about object it-self, short information about associated objects
+            (like ForeignKey and ManyToManyField)
+          - short: some basic information about object it-self, primary key of associated objects
+          - key: primary key of the object
 
-        :param key:
-        :param short:
+        :param short: if set to True, method return a short output
+        :param key: if set to True, method return a key output. It will overwrite short param
         :return:
         """
         if key:
@@ -59,6 +70,7 @@ class Domain(models.Model):
             result = {
                 'name': self.name,
                 'description': self.description,
+                'dns_master': self.dns_master,
                 'contact': self.contact,
                 'creation_date': self.creation_date,
                 'entries': result_entries
@@ -66,58 +78,59 @@ class Domain(models.Model):
         return result
 
     @staticmethod
-    def create(name, dns_master, description=None, contact=None):
+    def create(name, args=None):
         """
         A custom way to create a domain.
 
         :param name: the DNS name
-        :param dns_master: the IP of DNS master
-        :param description: A short description of the domain
-        :param contact: contact email for the domain
+        :param args: some optional information about a domain
         :return:
         """
         try:
-            domain = Domain(name=name, dns_master=dns_master, description=description,
-                            contact=contact)
+            domain = Domain(name=name)
+            if args is not None:
+                for arg in args:
+                    if arg in DOMAIN_FIELD:
+                        setattr(domain, arg, args[arg])
             domain.full_clean()
         except (IntegrityError, ValidationError) as err:
             return error_message('domain', name, err)
         domain.save()
-        return {
-            'domain': domain.name,
-            'status': 'done'
-        }
+        result = domain.show()
+        result['status'] = 'done'
+        return result
 
     @staticmethod
-    def update(name, dns_master=None, description=None, contact=None):
+    def update(name, args=None):
         """
-        A custom way to update a domain.
+        A custom method to update a domain.
 
         :param name: the name of the domain
-        :param dns_master: the IP of DNS master
-        :param description: A short description of the domain
-        :param contact: contact email for the domain
+        :param args: field that must be updated
         :return:
         """
-        try:
+        try:  # First, we get the domain
             domain = Domain.objects.get(name=name)
         except ObjectDoesNotExist as err:
             return error_message('domain', name, err)
-        if dns_master is not None:
-            domain.dns_master = dns_master
-        if description is not None:
-            domain.description = description
-        if contact is not None:
-            domain.contact = contact
+        if args is not None:
+            for arg in args:
+                if arg in DOMAIN_FIELD:
+                    setattr(domain, arg, args[arg])
+        # if dns_master is not None:
+        #     domain.dns_master = dns_master
+        # if description is not None:
+        #     domain.description = description
+        # if contact is not None:
+        #     domain.contact = contact
         try:
             domain.full_clean()
         except (ValidationError, IntegrityError) as err:
             error_message('domain', name, err)
         domain.save()
-        return {
-            'domain': name,
-            'status': 'done'
-        }
+        result = domain.show()
+        result['status'] = 'done'
+        return result
 
     @staticmethod
     def remove(name):
@@ -142,6 +155,7 @@ class Domain(models.Model):
     def get(name, short=False):
         """
         A custom way to get a domain.
+
         :param name: the name of the domain
         :param short: Return a short version of the object
         :return:
@@ -157,6 +171,7 @@ class Domain(models.Model):
     def search(filters=None):
         """
         This is a custom way to get all domains that match the filters
+
         :param filters: a dict of field / regex
         :return:
         """
@@ -173,12 +188,12 @@ class Domain(models.Model):
 class DomainEntry(models.Model):
     """
     Domain entry is a name in domain like www.example.com
-    - name: the name of the entry
-    - domain: the domain associated (fqdn is name.domain)
-    - type: the DNS entry type (A, CNAME, NS, ...). AAAA entries are marked as A type
-    - entries: In some cases (CNAME, NS, ...) entry refered to another entry
-    - description: a short description of the entry
-    - creation_date: when entry as been created
+      - name: the name of the entry
+      - domain: the domain associated (fqdn is name.domain)
+      - type: the DNS entry type (A, CNAME, NS, ...). AAAA entries are marked as A type
+      - entries: In some cases (CNAME, NS, ...) entry refered to another entry
+      - description: a short description of the entry
+      - creation_date: when entry as been created
     """
     name = models.CharField(max_length=50)
     domain = models.ForeignKey(Domain, on_delete=models.PROTECT)
