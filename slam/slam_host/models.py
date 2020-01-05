@@ -121,7 +121,8 @@ class Host(models.Model):
                 address is None:  # We need at least one of this options
             return error_message('host', name,
                                  'Integrity error Address or Network should be provide')
-        if interface is not None:  # If we create a host with a interface
+        if interface is not None and\
+                interface != '':  # If we create a host with a interface
             try:  # We check if interface exist (we can only one @MAC
                 interface_host = Interface.objects.get(mac_address=interface)
                 try:  # We check if interface is already attached to a host

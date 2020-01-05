@@ -139,7 +139,8 @@ class HostViewListener {
             $.ajax({
                 url: '/domains/' + $('#domains').val() + '/' + $('#hostname').val(),
                 success: function(data){
-                    if (data.status == 'failed' && mac_address_regex.test(mac_address)) {
+                    console.log(mac_address)
+                    if (data.status == 'failed' && (mac_address_regex.test(mac_address) || mac_address == '')) {
                         $('#add-host').attr("disabled", false);
                     } else {
                         var alert_message_hostname = ''
