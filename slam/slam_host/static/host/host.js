@@ -1,8 +1,9 @@
 class Host {
     constructor() {
         this.uri = $(location).attr('pathname');
-        this._get()
         this.address_index = 0;
+        this.address = new AddressCtrl()
+        this._get()
     }
 
     _get() {
@@ -13,19 +14,34 @@ class Host {
         $.ajax({
             url: self.uri,
             success: function(data){
-                console.log(data)
                 self.name = data.name
                 self.interface = data.interface
                 self.addresses = data.addresses
                 self.network = data.network
                 self.creation_date = data.creation_date
                 self.dhcp = data.dhcp
+                $.each(self.addresses, function(key, address){
+                    if (key == self.address_index) {
+                        self.address.set(address)
+                        $('#network-edit-add-button').on('click', function(){
+                            self.address.add()
+                        })
+                        $('#network-edit-add-name').change(function(){
+                            self.address.check()
+                        })
+                        $('#network-edit-remove-button').on('click', function(){
+                            self.address.remove()
+                        })
+                    }
+                })
                 self.show();
+                self.address.show()
+//                console.log(self)
             }
         })
     }
 
-    delete() {
+    remove() {
         var csrftoken = $.cookie('csrftoken')
         $.ajaxSetup({
             headers: {
@@ -37,7 +53,7 @@ class Host {
             url: '/hosts/' + $('#name').text(),
             type: 'DELETE',
             success: function(data){
-                console.log(data)
+//                console.log(data)
                 if (data.status == 'done') {
                     $(location).attr('pathname', '/hosts')
                 }
@@ -113,7 +129,7 @@ class Host {
                     class: 'btn btn-sm ml-1 mb-1 ' + color,
                     disabled: disabled
                 })
-                console.log(mac_address)
+//                console.log(mac_address)
                 $('#interfaces').append(result_interface)
             })
         }
@@ -178,13 +194,11 @@ class HardwareCtrl {
                 'Accept': 'application/json'
             }
         });
-        console.log(options)
         $.ajax({
             url: '/hardware/' + $('#hardware-name').text(),
             type: 'PUT',
             data: options,
             success: function(data){
-                console.log(data)
                 if (data.status != 'failed') {
                     $('#hardware-name').text(data.name)
                     $('#hardware-owner').text(data.owner)
@@ -197,13 +211,169 @@ class HardwareCtrl {
     }
 }
 
+class AddressCtrl {
+    constructor() {
+        this.ip = ''
+        this.ns_entries = null;
+    }
+
+    set(address){
+        this.ip = address.ip;
+        this.ns_entries = address.ns_entries;
+    }
+
+    show() {
+        var self = this;
+        self.removable = []
+        $('#network-edit-record-remove').text = ''
+        $('#network-edit-address').text(self.ip)
+        $.each(self.ns_entries, function(key, record){
+            $.each(record.entries, function(key, entry){
+                var label = entry.name.replace(' (CNAME)','')
+                var form_check = $('<div/>', {
+                    class: 'form-check'
+                })
+                var input_checkbox = $('<input/>', {
+                    class: 'form-check-input',
+                    type: 'checkbox',
+                    id: entry.name.replace(/\./g,'_').replace(' (CNAME)',''),
+                    value: entry.name.replace(' (CNAME)','')
+                })
+                var label_checkbox = $('<label/>', {
+                    class: 'form-check-label',
+                    text: label
+                })
+                self.removable.push(entry.name.replace(/\./g,'_').replace(' (CNAME)',''))
+                $('#network-edit-record-remove').append(
+                    form_check.append(
+                        input_checkbox,
+                        label_checkbox
+                    )
+                )
+            })
+            var select_target = null
+            if (record.type == 'A') {
+                $('#network-edit-add-target').append(
+                    new Option(record.name + '.' + record.domain.name,
+                               record.name + '.' + record.domain.name))
+            }
+        })
+        console.log(self.removable)
+    }
+
+    check() {
+        var name_regex = new RegExp("^(([a-zA-Z0-9-_\.])*)*$");
+        var new_record_name = $('#network-edit-add-name').val()
+        console.log("new_record_name")
+        console.log(new_record_name)
+        $('#network-edit-add-button').attr('disabled', true)
+        if (name_regex.test(new_record_name)) {
+            $('#network-edit-add-button').attr('disabled', false)
+        }
+    }
+
+    add() {
+        var new_record_name = $('#network-edit-add-name').val()
+        var new_record_domain = $('#network-edit-add-domain').val()
+        var new_record_target_name = $('#network-edit-add-target').val().split('.')[0]
+        var new_record_target_domain = $('#network-edit-add-target').val().split('.').slice(1).join('.')
+        var self = this;
+        var options = {
+            'name': new_record_name,
+            'domain': new_record_domain,
+            'ns_type': 'CNAME',
+            'sub_entry_name': new_record_target_name,
+            'sub_entry_domain': new_record_target_domain,
+            'sub_entry_type': 'A'
+        }
+        var csrftoken = $.cookie('csrftoken')
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": csrftoken }
+        });
+        $.ajax({
+            url: '/domains/' + new_record_domain + '/' + new_record_name,
+            type: 'POST',
+            data: options,
+            success: function(data){
+                        console.log(data)
+                    }
+        })
+        console.log(options)
+//        self.show()
+        $('#network-edit').modal('hide')
+    }
+
+    remove() {
+        var self = this;
+        $.each(self.removable, function(key, record){
+            if ($('#' + record).is(':checked')) {
+                var record_to_delete = $("#" + record).val()
+                var record_to_delete_name = record_to_delete.split('.')[0]
+                var record_to_delete_domain = record_to_delete.split('.').slice(1).join('.')
+                console.log(record_to_delete_name)
+                console.log(record_to_delete_domain)
+                var csrftoken = $.cookie('csrftoken')
+                var options = {
+                    'type': 'CNAME'
+                }
+                $.ajaxSetup({
+                    headers: { "X-CSRFToken": csrftoken }
+                });
+                $.ajax({
+                    url: '/domains/' + record_to_delete_domain + '/' + record_to_delete_name,
+                    type: 'DELETE',
+                    data: options,
+                    success: function(data){
+                                console.log(data)
+                            }
+                })
+            }
+        })
+//        self.show()
+        $('#network-edit').modal('hide')
+    }
+}
+
+class DomainsCtrl {
+    constructor (){
+        this.uri = '/domains';
+        this.domains = [];
+        this._get();
+    }
+
+    _get() {
+        var self = this;
+        $.ajaxSetup({
+            headers: {'Accept': 'application/json'}
+        })
+        $.ajax({
+            url: self.uri,
+            success: function(data){
+                $.each(data, function(key, item){
+                    self.domains.push(item.name);
+                });
+                self.show();
+            }
+        })
+    }
+
+    show() {
+        var self = this;
+        $.each(self.domains, function(key, domain){
+            $('#network-edit-add-domain').append(new Option(domain, domain))
+        })
+    }
+}
+
 $(function(){
     var host = new Host()
     $('#delete-host').on('click', function(){
-        host.delete()
+        host.remove()
     })
     var hardwareCtrl = new HardwareCtrl()
     $('#hardware-edit-save').on('click', function(){
         hardwareCtrl.save()
     })
+
+    var domains = new DomainsCtrl();
 })
