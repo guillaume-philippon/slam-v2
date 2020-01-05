@@ -226,6 +226,7 @@ class AddressCtrl {
         var self = this;
         self.removable = []
         $('#network-edit-record-remove').empty()
+        $('#network-edit-add-target').empty()
         $('#network-edit-address').text(self.ip)
         $.each(self.ns_entries, function(key, record){
             $.each(record.entries, function(key, entry){
@@ -360,6 +361,7 @@ class DomainsCtrl {
 
     show() {
         var self = this;
+        $('#network-edit-add-domain').empty()
         $.each(self.domains, function(key, domain){
             $('#network-edit-add-domain').append(new Option(domain, domain))
         })
