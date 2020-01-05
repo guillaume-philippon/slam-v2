@@ -53,6 +53,7 @@ class Network {
                 address.creation_date,
             ])
         })
+        console.log(datatable_addresses)
         $('#addresses').DataTable({
             data: datatable_addresses,
             columns: [
