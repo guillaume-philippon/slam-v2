@@ -20,7 +20,10 @@ class Hosts {
                     if (host.interface.mac_address != null){
                         mac_address = host.interface.mac_address
                     }
-                    var network = host.network.name
+                    var network = ''
+                    if (host.network.name != null) {
+                        network = host.network.name
+                    }
                     var ip_addresses = ''
                     var result_ip_addresses = []
                     $.each(host.addresses, function(key, address){

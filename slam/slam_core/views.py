@@ -28,6 +28,7 @@ def index(request):
     return render(request, 'core/index.html', dict())
 
 
+@ensure_csrf_cookie
 def login(request):
     """
     This is the sign in form. 2 method type are supported
