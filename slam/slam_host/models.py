@@ -133,7 +133,7 @@ class Host(models.Model):
                     pass
             except ObjectDoesNotExist:  # If interface not exist, we create a new one
                 # We generate a default HW name
-                hardware_name = '{}-{}'.format(name.split('.', 1)[0], interface)
+                hardware_name = '{}-{}'.format(name.split('.', 1)[0], interface.replace(':', '-'))
                 # We create a interface and a hardware for this interface
                 result = Interface.create(mac_address=interface, hardware=hardware_name)
                 if result['status'] != 'done':  # If we failed to create the interface
