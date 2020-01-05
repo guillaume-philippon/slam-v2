@@ -111,6 +111,12 @@ class Host {
             $('#hardware-owner').text(this.interface.hardware.owner)
             $('#hardware-buying-date').text(this.interface.hardware.buying_date)
             $('#hardware-description').text(this.interface.hardware.description)
+
+            $('#hardware-name-edit').val(this.interface.hardware.name)
+//            $('#hardware-mac-address').text(this.interface.mac_address)
+            $('#hardware-owner-edit').val(this.interface.hardware.owner)
+            $('#hardware-buying-date-edit').val(this.interface.hardware.buying_date)
+            $('#hardware-description-edit').text(this.interface.hardware.description)
         }
         self.show_record()
         self.show_ip_address()
@@ -118,6 +124,63 @@ class Host {
     }
 }
 
+class HardwareCtrl {
+    constructor(){
+        this.name = $('#hardware-name-edit').val()
+        this.owner = $('#hardware-owner-edit').val()
+        this.buying_date = $('#hardware-buying-date-edit').val()
+        this.description = $('#hardware-description-edit').val()
+    }
+
+    save() {
+        var new_name = $('#hardware-name-edit').val()
+        var new_owner = $('#hardware-owner-edit').val()
+        var new_buying_date = $('#hardware-buying-date-edit').val()
+        var new_description = $('#hardware-description-edit').val()
+        var options = {}
+        if ( new_name != this.name ) {
+            options['name'] = new_name
+        }
+        if ( new_owner != this.owner ) {
+            options['owner'] = new_owner
+        }
+        if ( new_buying_date != this.buying_date ) {
+            options['buying_date'] = new_buying_date
+        }
+        if ( new_name != this.description ) {
+            options['description'] = new_description
+        }
+        var csrftoken = $.cookie('csrftoken')
+
+        $.ajaxSetup({
+            headers: {
+                "X-CSRFToken": csrftoken,
+                'Accept': 'application/json'
+            }
+        });
+        console.log(options)
+        $.ajax({
+            url: '/hardware/' + $('#hardware-name').text(),
+            type: 'PUT',
+            data: options,
+            success: function(data){
+                console.log(data)
+                if (data.status != 'failed') {
+                    $('#hardware-name').text(data.name)
+                    $('#hardware-owner').text(data.owner)
+                    $('#hardware-buying-date').text(data.buying_date)
+                    $('#hardware-description').text(data.description)
+                    $('#hardware-edit').modal('hide')
+                }
+            }
+        })
+    }
+}
+
 $(function(){
     var host = new Host()
+    var hardwareCtrl = new HardwareCtrl()
+    $('#hardware-edit-save').on('click', function(){
+        hardwareCtrl.save()
+    })
 })

@@ -153,6 +153,8 @@ class Hardware(models.Model):
         :param args: a dict of field used to create the hardware
         :return:
         """
+        if ' ' in name:
+            return error_message('hardware', name, 'Space is not allowed in name')
         try:
             hardware = Hardware(name=name)
             if args is not None:
@@ -187,12 +189,16 @@ class Hardware(models.Model):
         :param args: All information that must be updated
         :return:
         """
+        if ' ' in name:
+            return error_message('hardware', name, 'Space is not allowed in name')
         try:  # First, we get the hardware
             hardware = Hardware.objects.get(name=name)
         except ObjectDoesNotExist as err:
             return error_message('hardware', name, err)
         for arg in args:
             if arg in HARDWARE_FIELD:  # We just keep args that is useful for Hardware
+                if arg == 'name' and ' ' in args[arg]:
+                    return error_message('hardware', name, 'Space is not allowed in name')
                 setattr(hardware, arg, args[arg])
         try:  # Just in case
             hardware.full_clean()

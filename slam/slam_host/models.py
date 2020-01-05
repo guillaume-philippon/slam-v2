@@ -117,6 +117,8 @@ class Host(models.Model):
         interface_host = None
         network_host = None
         address_host = None
+        if ' ' in name:
+            return error_message('host', name, 'Space is not allowed in name')
         if network is None and\
                 address is None:  # We need at least one of this options
             return error_message('host', name,

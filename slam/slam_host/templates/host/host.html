@@ -13,67 +13,11 @@
             <h6 class="card-subtitle mb-2 text-muted text-right" id="creation_date"></h6>
             <p class="card-text" id="description"></p>
             <div class="row">
-            <div class="col-sm-5">
-                <div class="card col-sm-12 mb-2">
-                    <div class="card-body">
-                        <h6 class="card-subtitle mb-2 text-muted text-right">Interface</h6>
-                        <p class="card-text" id="interfaces">
-                        </p>
-                    </div>
+                <div class="col-sm-5">
+                {% include "host/host/hardware.html" %}
                 </div>
-                <div class="card col-sm-12">
-                    <div class="card-body">
-                        <h6 class="card-subtitle mb-2 text-muted text-right">Hardware</h6>
-                        <div class="form">
-                            <div class="form-group row">
-                                <label for="hardware-name" class="col-sm-4 col-form-label text-truncate">Name</label>
-                                <div class="col-sm-8">
-                                    <p type="text" class="form-control-plaintext" id="hardware-name" value="">
-                                </div>
-                            </div>
-<!--                            <div class="form-group row">-->
-<!--                                <label for="hardware-mac-address" class="col-sm-4 col-form-label text-truncate">Interface</label>-->
-<!--                                <div class="col-sm-8">-->
-<!--                                    <p type="text" class="form-control-plaintext" id="hardware-mac-address">-->
-<!--                                </div>-->
-<!--                            </div>-->
-                            <div class="form-group row">
-                                <label for="hardware-owner" class="col-sm-4 col-form-label text-truncate">Owner</label>
-                                <div class="col-sm-8">
-                                    <p type="text" class="form-control-plaintext" id="hardware-owner">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="hardware-buying-date" class="col-sm-4 col-form-label text-truncate">Buying Date</label>
-                                <div class="col-sm-8">
-                                    <p type="text" class="form-control-plaintext" id="hardware-buying-date">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="hardware-description" class="col-sm-4 col-form-label text-truncate">Description</label>
-                                <div class="col-sm-8">
-                                    <p type="textarea" class="form-control-plaintext" id="hardware-description"></p>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn btn-outline-danger btn-sm">Edit</button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-7">
-                <div class="card col-sm-12 mb-2">
-                    <div class="card-body">
-                        <h6 class="card-subtitle mb-2 text-muted text-right">Address</h6>
-                        <p class="card-text" id="addresses">
-                        </p>
-                    </div>
-                </div>
-                <div class="card col-sm-12">
-                    <div class="card-body">
-                        <h6 class="card-subtitle mb-2 text-muted text-right">Domain</h6>
-                        <p class="card-text" id="records">
-                        </p>
-                    </div>
+                <div class="col-sm-7">
+                {% include "host/host/network.html" %}
                 </div>
             </div>
         </div>
@@ -81,3 +25,6 @@
 </main>
 {%endblock %}
 
+{% block modal %}
+{% include "host/host/modal.html" %}
+{% endblock %}

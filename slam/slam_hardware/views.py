@@ -98,9 +98,11 @@ def hardware_view(request, uri_hardware):
         # tricky
         raw_data = request.body
         data = QueryDict(raw_data)
+        print(data)
         options = dict()
         for arg in data:  # We don't care about sanity, update method from Hardware do it.
             options[arg] = data.get(arg)
+        print(uri_hardware)
         result = Hardware.update(name=uri_hardware, args=options)
     elif request.method == 'DELETE':
         result = Hardware.remove(uri_hardware)
