@@ -225,7 +225,7 @@ class AddressCtrl {
     show() {
         var self = this;
         self.removable = []
-        $('#network-edit-record-remove').text = ''
+        $('#network-edit-record-remove').empty()
         $('#network-edit-address').text(self.ip)
         $.each(self.ns_entries, function(key, record){
             $.each(record.entries, function(key, entry){
@@ -296,11 +296,12 @@ class AddressCtrl {
             data: options,
             success: function(data){
                         console.log(data)
+                        $('#network-edit').modal('hide')
                     }
         })
         console.log(options)
 //        self.show()
-        $('#network-edit').modal('hide')
+//        $('#network-edit').modal('hide')
     }
 
     remove() {
@@ -325,12 +326,12 @@ class AddressCtrl {
                     data: options,
                     success: function(data){
                                 console.log(data)
+                                $('#network-edit').modal('hide')
                             }
                 })
             }
         })
 //        self.show()
-        $('#network-edit').modal('hide')
     }
 }
 
@@ -376,4 +377,8 @@ $(function(){
     })
 
     var domains = new DomainsCtrl();
+
+    $('#network-edit').on('hidden.bs.modal', function () {
+        host._get()
+    });
 })

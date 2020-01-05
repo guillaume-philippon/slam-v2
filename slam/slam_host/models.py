@@ -160,6 +160,8 @@ class Host(models.Model):
             except ObjectDoesNotExist:  # If address not exist, we create it
                 # We check if address is in the right network
                 network_host = Address.match_network(address)
+                if network_host is None:
+                    return error_message('host', name, 'No network found for {}'.format(address))
                 if dns_entry is not None:  # If we provide a NS record we create the address w/ it.
                     result = Address.create(ip=address, network=network_host.name,
                                             ns_entry=dns_entry)
