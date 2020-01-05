@@ -13,7 +13,7 @@ from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
-from slam_core.utils import error_message
+from slam_core.utils import error_message, name_validator
 from slam_domain.models import DomainEntry, Domain
 from slam_network.exceptions import NetworkFull
 
@@ -31,7 +31,7 @@ class Network(models.Model):
      - dhcp: the IP of DHCP server (used to push data in production)
      - vlan: the VLAN id of the network
     """
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50, unique=True, validators=[name_validator])
     ip = models.GenericIPAddressField(unique=True)
     prefix = models.IntegerField(default=24)
     description = models.CharField(max_length=150, default='')

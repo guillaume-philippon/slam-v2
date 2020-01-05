@@ -129,13 +129,16 @@ class HostViewListener {
         var domain = $('#domains').val();
         var mac_address = $('#interface').val();
         var owner = $('#owner').val();
+        var name_regex = new RegExp("^(([a-zA-Z0-9-_\.])*)*$");
         var mac_address_regex = new RegExp('([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])');
 
         this.hostname = hostname;
         this.domain = domain;
 
         $('#add-host').attr("disabled", true);
-        if (hostname != ''){
+        console.log('aa' + hostname + 'aa')
+        console.log(name_regex.test(hostname))
+        if (hostname != '' && name_regex.test(hostname)){
             $.ajax({
                 url: '/domains/' + $('#domains').val() + '/' + $('#hostname').val(),
                 success: function(data){

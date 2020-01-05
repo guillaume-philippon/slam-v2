@@ -15,7 +15,7 @@ from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
-from slam_core.utils import error_message
+from slam_core.utils import error_message, name_validator
 from slam_hardware.models import Interface
 from slam_network.models import Network, Address
 from slam_network.exceptions import NetworkFull
@@ -33,7 +33,7 @@ class Host(models.Model):
       - creation_date: When Host has been created
       - dhcp: a flag to enable, disable DHCP configuration.
     """
-    name = models.CharField(max_length=150, unique=True)
+    name = models.CharField(max_length=150, unique=True, validators=[name_validator])
     addresses = models.ManyToManyField(Address)
     interface = models.ForeignKey(Interface, on_delete=models.PROTECT, null=True, blank=True,
                                   unique=True)
@@ -117,8 +117,6 @@ class Host(models.Model):
         interface_host = None
         network_host = None
         address_host = None
-        if ' ' in name:
-            return error_message('host', name, 'Space is not allowed in name')
         if network is None and\
                 address is None:  # We need at least one of this options
             return error_message('host', name,

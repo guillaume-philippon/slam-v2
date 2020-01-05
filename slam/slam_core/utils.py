@@ -1,6 +1,9 @@
 """
 This module provide some usefull function to avoid copy / paste.
 """
+import re
+
+from django.core.exceptions import ValidationError
 
 
 def error_message(plugin, value, message):
@@ -17,3 +20,16 @@ def error_message(plugin, value, message):
     result['status'] = 'failed'
     result['message'] = '{}'.format(message)
     return result
+
+
+def name_validator(name):
+    """
+    This function check if a name haven't some wierd char
+
+    :param name: mac-address provided by user
+    :return:
+    """
+    regex = r"^(([a-zA-Z0-9-_\.])*)*$"
+    pattern = re.compile(regex)
+    if not pattern.match(name):
+        raise ValidationError('Invalid name not match {}'.format(regex))

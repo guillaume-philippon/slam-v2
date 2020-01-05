@@ -29,7 +29,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
-from slam_core.utils import error_message
+from slam_core.utils import error_message, name_validator
 
 HARDWARE_FIELD = [
     'name',
@@ -77,7 +77,7 @@ class Hardware(models.Model):
       - inventory: local inventory identifier
       - warranty: warranty duration
     """
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50, unique=True, validators=[name_validator])
     buying_date = models.DateField(default=timezone.now)
     description = models.CharField(max_length=150, default='', blank=True)
     owner = models.CharField(max_length=150, default='', blank=True)
@@ -153,8 +153,6 @@ class Hardware(models.Model):
         :param args: a dict of field used to create the hardware
         :return:
         """
-        if ' ' in name:
-            return error_message('hardware', name, 'Space is not allowed in name')
         try:
             hardware = Hardware(name=name)
             if args is not None:
@@ -189,16 +187,12 @@ class Hardware(models.Model):
         :param args: All information that must be updated
         :return:
         """
-        if ' ' in name:
-            return error_message('hardware', name, 'Space is not allowed in name')
         try:  # First, we get the hardware
             hardware = Hardware.objects.get(name=name)
         except ObjectDoesNotExist as err:
             return error_message('hardware', name, err)
         for arg in args:
             if arg in HARDWARE_FIELD:  # We just keep args that is useful for Hardware
-                if arg == 'name' and ' ' in args[arg]:
-                    return error_message('hardware', name, 'Space is not allowed in name')
                 setattr(hardware, arg, args[arg])
         try:  # Just in case
             hardware.full_clean()

@@ -12,7 +12,7 @@ from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
 
-from slam_core.utils import error_message
+from slam_core.utils import error_message, name_validator
 
 DOMAIN_FIELD = [
     'description',
@@ -30,7 +30,7 @@ class Domain(models.Model):
       - contact: a contact email for the domain
       - creation_date: when domain has been created
     """
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50, unique=True, validators=[name_validator])
     description = models.CharField(max_length=120, blank=True, null=True)
     dns_master = models.GenericIPAddressField()
     contact = models.EmailField(blank=True, null=True)
@@ -195,7 +195,7 @@ class DomainEntry(models.Model):
       - description: a short description of the entry
       - creation_date: when entry as been created
     """
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, validators=[name_validator])
     domain = models.ForeignKey(Domain, on_delete=models.PROTECT)
     type = models.CharField(max_length=5, default='A')
     entries = models.ManyToManyField('self')
@@ -275,6 +275,8 @@ class DomainEntry(models.Model):
         :param description: A short description of the entry
         :return:
         """
+        if ' ' in name:
+            return error_message('domain', name, 'Space not allowed in name')
         try:  # First, we get the domain
             entry_domain = Domain.objects.get(name=domain)
         except ObjectDoesNotExist as err:
@@ -332,9 +334,14 @@ class DomainEntry(models.Model):
         if description is not None:
             entry.description = description
         if sub_entry is not None:
+            if sub_entry['name']:
+                return error_message('entry', '{}.{} {}'.format(name, domain, ns_type),
+                                     'Space not allowed in name')
             sub_entry_obj = DomainEntry(name=sub_entry['name'], domain=sub_entry['domain'],
                                         type=sub_entry['type'])
-            entry.entries.add(sub_entry)
+            sub_entry_obj.full_clean()
+            sub_entry_obj.save()
+            entry.entries.add(sub_entry_obj)
         return {
             'entry': '{}.{} {}'.format(name, domain, ns_type),
             'status': 'done'
@@ -355,9 +362,9 @@ class DomainEntry(models.Model):
         except ObjectDoesNotExist as err:
             error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         if sub_entry is not None:
-            sub_entry_obj = DomainEntry(name=sub_entry['name'], domain=sub_entry['domain'],
+            sub_entry_obj = DomainEntry.get(name=sub_entry['name'], domain=sub_entry['domain'],
                                         type=sub_entry['type'])
-            entry.entries.remove(sub_entry)
+            entry.entries.remove(sub_entry_obj)
         return {
             'entry': '{}.{} {}'.format(name, domain, ns_type),
             'status': 'done'
