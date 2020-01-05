@@ -31,7 +31,6 @@ from slam_host.models import Host
 
 @login_required
 def hosts_view(request):
-    # pylint: disable=W0613
     """
     This function manage interaction between user and SLAM for hosts management. URI is
     represented by https://slam.example.com/hosts
@@ -41,6 +40,8 @@ def hosts_view(request):
     :param request: full HTTP request from user
     :return:
     """
+    if request.method == 'GET' and request.headers['Accept'] != 'application/json':
+        return render(request, 'host/hosts.html', dict())
     result = Host.search()
     return JsonResponse(result, safe=False)
 
