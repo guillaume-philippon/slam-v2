@@ -26,6 +26,11 @@ Core ISC-DHCP producer
 .. automodule:: slam_core.producer.isc_dhcp
     :members:
 
+Core freeradius producer
+########################
+.. automodule:: slam_core.producer.freeradius
+    :members:
+
 Core views
 ----------
 .. automodule:: slam_core.views

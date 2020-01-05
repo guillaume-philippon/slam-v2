@@ -155,10 +155,11 @@ class Hardware(models.Model):
         """
         try:
             hardware = Hardware(name=name)
-            for arg in args:
-                if arg in HARDWARE_FIELD:  # We just keep args which are useful for Hardware
-                    # creation
-                    setattr(hardware, arg, args[arg])
+            if args is not None:
+                for arg in args:
+                    if arg in HARDWARE_FIELD:  # We just keep args which are useful for Hardware
+                        # creation
+                        setattr(hardware, arg, args[arg])
             hardware.full_clean()
         except (IntegrityError, ValidationError) as err:  # if something go wrong we stay here
             return error_message('hardware', name, err)
@@ -319,9 +320,10 @@ class Interface(models.Model):
         try:
             interface = Interface(mac_address=mac_address)
             setattr(interface, 'hardware', hardware)
-            for arg in args:
-                if arg in INTERFACE_FIELD:
-                    setattr(interface, arg, args[arg])
+            if args is not None:
+                for arg in args:
+                    if arg in INTERFACE_FIELD:
+                        setattr(interface, arg, args[arg])
             interface.full_clean()
         except (IntegrityError, ValidationError) as err:
             return error_message('interface', mac_address, err)

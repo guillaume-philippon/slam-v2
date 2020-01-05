@@ -10,6 +10,7 @@ from slam_network.models import Network
 from slam_domain.models import Domain
 from slam_core.producer.bind import BindReverse, Bind
 from slam_core.producer.isc_dhcp import IscDhcp
+from slam_core.producer.freeradius import FreeRadius
 
 PRODUCER_DIRECTORY = './build'
 
@@ -28,6 +29,8 @@ def commit():
         network_bind.save()
         network_isc_dhcp = IscDhcp(network.name, PRODUCER_DIRECTORY + '/isc-dhcp')
         network_isc_dhcp.save()
+    freeradius = FreeRadius(PRODUCER_DIRECTORY + '/freeradius')
+    freeradius.save()
     build_repo = git.Repo(PRODUCER_DIRECTORY)
     result = {
         'data': build_repo.git.diff()
