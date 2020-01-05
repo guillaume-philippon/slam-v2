@@ -25,6 +25,26 @@ class Host {
         })
     }
 
+    delete() {
+        var csrftoken = $.cookie('csrftoken')
+        $.ajaxSetup({
+            headers: {
+                "X-CSRFToken": csrftoken,
+                'Accept': 'application/json'
+            }
+        });
+        $.ajax({
+            url: '/hosts/' + $('#name').text(),
+            type: 'DELETE',
+            success: function(data){
+                console.log(data)
+                if (data.status == 'done') {
+                    $(location).attr('pathname', '/hosts')
+                }
+            }
+        })
+    }
+
     switch_index(new_index) {
         this.address_index = new_index;
         this.show_record()
@@ -103,6 +123,7 @@ class Host {
         var selected_address = '';
         var self = this;
         $('#name').text(this.name)
+        $('#host-delete-confirm-name').text(this.name)
         $('#network').text(this.network.name)
         $('#creation_date').text(this.creation_date)
         if (this.interface.hardware != null) {
@@ -116,7 +137,7 @@ class Host {
 //            $('#hardware-mac-address').text(this.interface.mac_address)
             $('#hardware-owner-edit').val(this.interface.hardware.owner)
             $('#hardware-buying-date-edit').val(this.interface.hardware.buying_date)
-            $('#hardware-description-edit').text(this.interface.hardware.description)
+            $('#hardware-description-edit').val(this.interface.hardware.description)
         }
         self.show_record()
         self.show_ip_address()
@@ -151,7 +172,6 @@ class HardwareCtrl {
             options['description'] = new_description
         }
         var csrftoken = $.cookie('csrftoken')
-
         $.ajaxSetup({
             headers: {
                 "X-CSRFToken": csrftoken,
@@ -179,6 +199,9 @@ class HardwareCtrl {
 
 $(function(){
     var host = new Host()
+    $('#delete-host').on('click', function(){
+        host.delete()
+    })
     var hardwareCtrl = new HardwareCtrl()
     $('#hardware-edit-save').on('click', function(){
         hardwareCtrl.save()

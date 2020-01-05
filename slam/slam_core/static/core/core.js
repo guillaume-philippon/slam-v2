@@ -136,13 +136,10 @@ class HostViewListener {
         this.domain = domain;
 
         $('#add-host').attr("disabled", true);
-        console.log('aa' + hostname + 'aa')
-        console.log(name_regex.test(hostname))
         if (hostname != '' && name_regex.test(hostname)){
             $.ajax({
                 url: '/domains/' + $('#domains').val() + '/' + $('#hostname').val(),
                 success: function(data){
-                    console.log(mac_address)
                     if (data.status == 'failed' && (mac_address_regex.test(mac_address) || mac_address == '')) {
                         $('#add-host').attr("disabled", false);
                     } else {
@@ -162,12 +159,12 @@ class HostViewListener {
                                 }
                             );
                         }
-                        if (mac_address != ''){
+//                        if (mac_address != ''){
                             $('#alert-message').text('')
                             $('#alert-message').append(alert_message_hostname);
                             $('#alert-message').append(alert_message_mac_address);
                             $('#alert-box').collapse('show')
-                        }
+//                        }
                     }
                 }
             })
