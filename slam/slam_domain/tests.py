@@ -4,8 +4,7 @@ As this is a django internal template, we disable pylint
 # pylint: disable=W0611
 from django.test import TestCase
 from django.core.exceptions import ObjectDoesNotExist
-from slam_domain.models import Domain
-# Create your tests here.
+from slam_domain.models import Domain, DomainEntry
 
 DOMAIN_OPTIONS_EMPTY = {
     'dns_master': '127.0.0.1'
@@ -15,6 +14,7 @@ DOMAIN_OPTIONS_FULL = {
     'dns_master': '127.0.0.1',
     'description': 'This is a test',
     'contact': 'ns-master@full.com',
+    'creation_date': '2020-01-01'
 }
 
 EMPTY_DOMAIN_NAME = 'empty.com'

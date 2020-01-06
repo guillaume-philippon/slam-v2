@@ -95,7 +95,6 @@ class Hardware(models.Model):
         :return:
         """
         return self.interface_set.all()
-        # return Interface.objects.filter(hardware=self)
 
     def show(self, key=False, short=False):
         """
