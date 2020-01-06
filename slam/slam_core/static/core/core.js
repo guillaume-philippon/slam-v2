@@ -290,10 +290,6 @@ class NetworkView {
             class: 'card-link',
             text: 'More info'
         })
-        var card_footer = $('<div/>', {
-            class: 'card-footer text-muted',
-            text: '2/2'
-        })
         var progress = $('<div/>', {
             class: 'progress',
         })

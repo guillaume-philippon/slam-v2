@@ -227,7 +227,7 @@ class AddressCtrl {
         $('#network-edit-add-target').empty()
         $('#network-edit-address').text(self.ip)
         $.each(self.ns_entries, function(key, record){
-            $.each(record.entries, function(key, entry){
+            $.each(record.entries, function(record_key, entry){
                 var label = entry.name.replace(' (CNAME)','')
                 var form_check = $('<div/>', {
                     class: 'form-check'

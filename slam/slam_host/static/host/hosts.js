@@ -26,7 +26,7 @@ class Hosts {
                     }
                     var ip_addresses = ''
                     var result_ip_addresses = []
-                    $.each(host.addresses, function(key, address){
+                    $.each(host.addresses, function(address_key, address){
                         result_ip_addresses.push(address.ip)
                     })
                     ip_addresses = result_ip_addresses.join(', ')

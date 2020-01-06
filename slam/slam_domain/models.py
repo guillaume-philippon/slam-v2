@@ -53,14 +53,9 @@ class Domain(models.Model):
                 'name': self.name
             }
         elif short:
-            # result_entries = []
-            # entries = DomainEntry.objects.filter(domain=self)
-            # for entry in entries:
-            #     result_entries.append(entry.show(key=True))
             result = {
                 'name': self.name,
                 'description': self.description,
-                # 'entries': result_entries
             }
         else:
             result_entries = []
@@ -117,12 +112,6 @@ class Domain(models.Model):
             for arg in args:
                 if arg in DOMAIN_FIELD:
                     setattr(domain, arg, args[arg])
-        # if dns_master is not None:
-        #     domain.dns_master = dns_master
-        # if description is not None:
-        #     domain.description = description
-        # if contact is not None:
-        #     domain.contact = contact
         try:
             domain.full_clean()
         except (ValidationError, IntegrityError) as err:

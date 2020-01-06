@@ -177,7 +177,6 @@ class Host(models.Model):
             'name': name,
             'interface': interface_host,
             'network': network_host,
-            # 'dns_entry': dns_entry_host
         }
         if options['dhcp'] is not None:  # If we provided a specific value for DHCP generation
             args['dhcp'] = options['dhcp']
@@ -243,9 +242,7 @@ class Host(models.Model):
         :param dns_entry: if set to True, we also delete dns_entry (default: True)
         :return:
         """
-        addresses_host = None
         hardware_host = None
-        # dns_entry_host = None
         try:  # We need to get the object.
             host = Host.objects.get(name=name)
         except ObjectDoesNotExist as err:  # If it not exist, no reason to delete it.

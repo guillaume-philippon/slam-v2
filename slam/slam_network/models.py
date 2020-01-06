@@ -47,12 +47,9 @@ class Network(models.Model):
                 'name': self.name
             }
         elif short:
-            result_addresses = []
             addresses_used = len(self.addresses())
             addresses_total = ipaddress.ip_network('{}/{}'.format(self.ip,
                                                                   self.prefix)).num_addresses
-            # for address in self.addresses():
-            #     result_addresses.append(address.show(key=True))
             result = {
                 'name': self.name,
                 'address': self.ip,
@@ -429,11 +426,11 @@ class Address(models.Model):
             address = Address.objects.get(ip=ip)
             try:
                 entry_ptr = address.ns_entries.get(type='PTR')
-            except ObjectDoesNotExist as err:
+            except ObjectDoesNotExist:
                 entry_ptr = None
             try:
                 entry_a = address.ns_entries.get(type='A')
-            except ObjectDoesNotExist as err:
+            except ObjectDoesNotExist:
                 entry_a = None
             address.delete()
         except (ObjectDoesNotExist, IntegrityError) as err:
