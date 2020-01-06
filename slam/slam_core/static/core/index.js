@@ -17,12 +17,7 @@ class NetworksCtrl {
                 $.each(data, function(key, item){
                     self.networks.push(item.name);
                 });
-                self.show();
             }
         })
-    }
-
-    show() {
-        var self = this;
     }
 }

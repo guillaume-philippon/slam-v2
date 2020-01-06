@@ -124,11 +124,9 @@ class HostViewListener {
     }
 
     check (){
-        var network = $('#networks').val()
         var hostname = $('#hostname').val();
         var domain = $('#domains').val();
         var mac_address = $('#interface').val();
-        var owner = $('#owner').val();
         var name_regex = new RegExp("^(([a-zA-Z0-9-_\.])*)*$");
         var mac_address_regex = new RegExp('([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])');
 
@@ -159,12 +157,10 @@ class HostViewListener {
                                 }
                             );
                         }
-//                        if (mac_address != ''){
                             $('#alert-message').text('')
                             $('#alert-message').append(alert_message_hostname);
                             $('#alert-message').append(alert_message_mac_address);
                             $('#alert-box').collapse('show')
-//                        }
                     }
                 }
             })
@@ -173,7 +169,6 @@ class HostViewListener {
 
     add (){
         $('#add-host').attr("disabled", true);
-        var self = this;
         var csrftoken = $.cookie('csrftoken');
         this.hostname = $('#hostname').val();
         this.domain = $('#domains').val();
@@ -183,16 +178,14 @@ class HostViewListener {
             'ns': $('#hostname').val()
         }
         if ($('#no-ip').is(':checked')) {
-            console.log('No IP');
             options.no_ip = 'True' // We must put a python like boolean
             options.network = $('#networks').val();
         } else if ($('#ip-address').val() == ''){
-            console.log('Network')
             options.network = $('#networks').val();
         } else {
-            console.log('IP ' + $('#ip-address').val());
             options.ip_address = $('#ip-address').val()
         }
+        options.owner = $('#owner').val()
         if (! $('#dhcp').is(':checked')) {
             options.dhcp = 'False' // We must put a python like boolean
         }
@@ -206,13 +199,9 @@ class HostViewListener {
             success: function(data){
                         console.log(data)
                         if (data.status != 'done') {
-                            console.log('here we are')
                             $('#alert-message').text(data.message)
                              $('#alert-box').collapse('show')
                         } else {
-                            console.log('--')
-                            console.log(data.addresses[0].ip)
-                            console.log('--')
                             $('#success-ip-address').text(data.addresses[0].ip)
                             $('#success-box').collapse('show')
                             $('#hostname').val('')
@@ -225,7 +214,6 @@ class HostViewListener {
 
      commit (){
         $('#add-host').attr("disabled", true);
-        var self = this;
         var csrftoken = $.cookie('csrftoken')
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
@@ -278,7 +266,6 @@ class NetworkView {
     }
     show(){
         var self = this;
-//        console.log(this.per_cent)
         var card = $('<div/>', {
             class: 'card ml-2 mb2',
             style: 'width: 18rem'
@@ -315,9 +302,6 @@ class NetworkView {
             role: 'progressbar',
             style: 'width: ' + self.per_cent + '%',
         })
-
-        var progress_build = progress.append(progress_bar)
-        var footer_buid = card_footer.append()
         $('#network-cards').append(
          card.append(
                 card_body.append(
@@ -336,7 +320,7 @@ class NetworkView {
 
 
 $(function(){
-    var domains = new DomainsCtrl();
-    var networks = new NetworkCtrl();
-    var hostListener = new HostViewListener();
+    new DomainsCtrl();
+    new NetworkCtrl();
+    new HostViewListener();
 })

@@ -45,7 +45,6 @@ class DomainsViewListener {
     }
 
     modify (field) {
-        var self = this;
         if (! this.modified.includes(field)) {
             this.modified.push(field);
         }
@@ -141,7 +140,6 @@ class DomainsModelController {
     }
 
     put(domain, options) {
-        var self = this;
         var csrftoken = $.cookie('csrftoken')
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
@@ -223,5 +221,5 @@ class Domains {
 $(function(){
     var domains_ctrl = new DomainsModelController();
     var domains = new Domains(domains_ctrl);
-    var listener = new DomainsViewListener(domains);
+    new DomainsViewListener(domains);
 });

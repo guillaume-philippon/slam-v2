@@ -1,6 +1,5 @@
 class CommitPublishCtrl{
     commit() {
-        var self = this;
         var csrftoken = $.cookie('csrftoken')
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
@@ -16,7 +15,6 @@ class CommitPublishCtrl{
     }
 
     publish() {
-        var self = this;
         var csrftoken = $.cookie('csrftoken')
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }

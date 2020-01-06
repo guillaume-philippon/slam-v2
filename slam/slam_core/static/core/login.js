@@ -39,5 +39,5 @@ class LoginViewListener {
 
 $(function(){
     var authentication = new Authentication();
-    var listener = new LoginViewListener(authentication);
+    new LoginViewListener(authentication);
 })

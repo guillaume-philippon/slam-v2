@@ -3,7 +3,7 @@ As this is a django internal template, we disable pylint
 """
 # pylint: disable=W0611
 from django.test import TestCase
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 from slam_domain.models import Domain
 # Create your tests here.
 
@@ -22,14 +22,6 @@ class DomainTestCase(TestCase):
         Domain.create(name='full.com', args=options_full)
         Domain.create(name='delete.com', args=options_empty)
         Domain.create(name='update.com', args=options_empty)
-
-    def test_domain_create(self):
-        result = {
-            'status': 'done',
-            'network': 'create.com'
-        }
-        # self.assert(Domain.create(name='create.com', args={'dns_master': '127.0.0.1'}),
-        #                      result)
 
     def test_domain_get(self):
         empty_com = Domain.objects.get(name='empty.com')

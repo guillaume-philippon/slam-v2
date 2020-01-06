@@ -64,5 +64,5 @@ class Hosts {
 }
 
 $(function(){
-    var host = new Hosts()
+    new Hosts()
 })

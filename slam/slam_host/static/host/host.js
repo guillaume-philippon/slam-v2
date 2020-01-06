@@ -94,9 +94,7 @@ class Host {
         var self = this;
         $('#addresses').text('')
         $.each(this.addresses, function(key, address){
-            var current_address = address
             var color = ''
-            var body = $('<p/>',{})
             if (key == self.address_index) {
                 color = 'btn-success'
             } else {
@@ -137,7 +135,6 @@ class Host {
     }
 
     show(){
-        var selected_address = '';
         var self = this;
         $('#name').text(this.name)
         $('#host-delete-confirm-name').text(this.name)
@@ -253,7 +250,6 @@ class AddressCtrl {
                     )
                 )
             })
-            var select_target = null
             if (record.type == 'A') {
                 $('#network-edit-add-target').append(
                     new Option(record.name + '.' + record.domain.name,
@@ -277,7 +273,6 @@ class AddressCtrl {
         var new_record_domain = $('#network-edit-add-domain').val()
         var new_record_target_name = $('#network-edit-add-target').val().split('.')[0]
         var new_record_target_domain = $('#network-edit-add-target').val().split('.').slice(1).join('.')
-        var self = this;
         var options = {
             'name': new_record_name,
             'domain': new_record_domain,
@@ -295,8 +290,6 @@ class AddressCtrl {
             type: 'POST',
             data: options,
             success: function(data){
-//                        console.log('Add ' + new_record_domain + ' ' + new_record_name)
-//                        console.log(data)
                         $('#network-edit').modal('hide')
                     }
         })
@@ -399,7 +392,7 @@ $(function(){
     $('#hardware-edit-save').on('click', function(){
         hardwareCtrl.save()
     })
-    var domains = new DomainsCtrl();
+    new DomainsCtrl();
     var mac_address = new InterfaceCtrl();
 
     $('#unlink-interface-btn').on('click', function(){
