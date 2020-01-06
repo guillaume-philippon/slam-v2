@@ -140,7 +140,7 @@ class DomainsModelController {
     }
 
     put(domain, options) {
-        var csrftoken = $.cookie('csrftoken')
+        var csrftoken = $.cookie('csrftoken');
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
         });
@@ -148,7 +148,7 @@ class DomainsModelController {
             url: '/domains/' + domain,
             type: 'PUT',
             data: options
-        })
+        });
     }
 }
 
@@ -170,7 +170,7 @@ class Domain {
             'description': this.description,
             'master': this.master,
             'contact': this.contact
-        }
+        };
         this.ctrl.put(this.name, options);
     }
 

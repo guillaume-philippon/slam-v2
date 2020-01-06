@@ -1,6 +1,8 @@
+/*jshint esversion: 6 */
+
 class CommitPublishCtrl{
     commit() {
-        var csrftoken = $.cookie('csrftoken')
+        var csrftoken = $.cookie('csrftoken');
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
         });
@@ -9,13 +11,13 @@ class CommitPublishCtrl{
             type: 'POST',
             success: function(data){
                         $('#commit-publish-diff').text(data.data);
-                        $('#commit-publish-publish').attr("disabled", false)
+                        $('#commit-publish-publish').attr("disabled", false);
                     }
-        })
+        });
     }
 
     publish() {
-        var csrftoken = $.cookie('csrftoken')
+        var csrftoken = $.cookie('csrftoken');
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
         });
@@ -24,19 +26,19 @@ class CommitPublishCtrl{
             type: 'POST',
             success: function(data){
                         $('#commit-publish-diff').text('');
-                        $('#commit-publish-publish').attr("disabled", true)
-                        $('#commit-publish').modal('hide')
+                        $('#commit-publish-publish').attr("disabled", true);
+                        $('#commit-publish').modal('hide');
                     }
-        })
+        });
     }
 }
 
 $(function(){
-    var ctrl = new CommitPublishCtrl()
+    var ctrl = new CommitPublishCtrl();
     $('#commit-publish-commit').on('click', function(){
-        ctrl.commit()
-    })
+        ctrl.commit();
+    });
     $('#commit-publish-publish').on('click', function(){
-        ctrl.publish()
-    })
-})
+        ctrl.publish();
+    });
+});

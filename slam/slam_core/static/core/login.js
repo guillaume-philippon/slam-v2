@@ -1,7 +1,9 @@
+/*jshint esversion: 6 */
+
 $.urlParam = function(name){
 	var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
 	return results[1] || 0;
-}
+};
 
 class Authentication {
     constructor () {
@@ -13,14 +15,14 @@ class Authentication {
         var data = {
             username: this.username,
             password: this.password
-        }
-        var csrftoken = $.cookie('csrftoken')
+        };
+        var csrftoken = $.cookie('csrftoken');
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
         });
-        var next = $.urlParam('next')
+        var next = $.urlParam('next');
         $.post('/login?next=' + next, data, function(result){
-            $(location).attr('href', result.next)
+            $(location).attr('href', result.next);
         });
     }
 }
@@ -33,11 +35,11 @@ class LoginViewListener {
             self.authentication.username = $('#username').val();
             self.authentication.password = $('#password').val();
             self.authentication.login();
-        })
+        });
     }
 }
 
 $(function(){
     var authentication = new Authentication();
     new LoginViewListener(authentication);
-})
+});

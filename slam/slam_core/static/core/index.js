@@ -3,14 +3,14 @@
 class NetworksCtrl {
     constructor () {
         this.uri = '/networks';
-        this.networks = []
+        this.networks = [];
     }
 
     _get() {
         var self = this;
         $.ajaxSetup({
             headers: {'Accept': 'application/json'}
-        })
+        });
         $.ajax({
             url: self.uri,
             success: function(data){
@@ -18,6 +18,6 @@ class NetworksCtrl {
                     self.networks.push(item.name);
                 });
             }
-        })
+        });
     }
 }
