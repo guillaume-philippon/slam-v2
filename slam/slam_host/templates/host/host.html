@@ -9,10 +9,34 @@
     <div class="card">
         <div class="card-body">
             <h5 class="card-title" id=""><span id="name"></span>
-            <button class="btn btn-outline-danger bt-sm"  type="button" data-toggle="modal"
-              data-target="#host-delete-confirm">delete</button></h5>
+            </h5>
             <h6 class="card-subtitle mb-2 text-muted text-right" id="network"></h6>
             <h6 class="card-subtitle mb-2 text-muted text-right" id="creation_date"></h6>
+            <hr/>
+            <div class="row">
+                <div class="col-sm-4">
+                    <button class="btn btn-outline-primary btn-sm"
+                            type="button" data-toggle="modal"
+                            data-target="#unlink-interface-confirm">unlink interface
+                    </button>
+<!--                    <button class="btn btn-primary bt-sm"-->
+<!--                            type="button" data-toggle="modal"-->
+<!--                            data-target="#add-hardware-confirm">+-->
+<!--                    </button>-->
+                </div>
+                <div class="col-sm-4">
+                    <button class="btn btn-danger btn-sm"
+                            type="button" data-toggle="modal"
+                            data-target="#host-delete-confirm">delete host
+                    </button>
+                </div>
+<!--                <div class="col-sm-4 text-right">-->
+<!--                    <button class="btn btn-success bt-sm"-->
+<!--                            type="button" data-toggle="modal"-->
+<!--                            data-target="#unlink-address-confirm">unlink address-->
+<!--                    </button>-->
+<!--                </div>-->
+            </div>
             <p class="card-text" id="description"></p>
             <div class="row">
                 <div class="col-sm-5">

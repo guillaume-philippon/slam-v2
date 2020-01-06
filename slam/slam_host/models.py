@@ -208,8 +208,11 @@ class Host(models.Model):
         """
         try:
             host = Host.objects.get(name=name)
-            if interface is not None:  # If we want to update the interface, we need to get it.
-                host.interface = Interface.objects.get(mac_address=interface)
+            if interface is not None:
+                if interface == '':  # If interface name is '' then, we want to remove interface
+                    host.interface = None
+                else:  # else, we update it.
+                    host.interface = Interface.objects.get(mac_address=interface)
             if network is not None:  # If we want to update the network, we need to get it.
                 host.network = Network.objects.get(name=network)
             if dns_entry is not None:  # If we want to update the NS record, we need to get.

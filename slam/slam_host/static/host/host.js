@@ -2,8 +2,9 @@ class Host {
     constructor() {
         this.uri = $(location).attr('pathname');
         this.address_index = 0;
-        this.address = new AddressCtrl()
-        this._get()
+        this.address = new AddressCtrl();
+//        this.interface = new InterfaceCtrl();
+        this._get();
     }
 
     _get() {
@@ -14,6 +15,8 @@ class Host {
         $.ajax({
             url: self.uri,
             success: function(data){
+                $('#network-edit-add-button').unbind()
+                $('#network-edit-remove-button').unbind()
                 self.name = data.name
                 self.interface = data.interface
                 self.addresses = data.addresses
@@ -36,7 +39,6 @@ class Host {
                 })
                 self.show();
                 self.address.show()
-//                console.log(self)
             }
         })
     }
@@ -63,13 +65,13 @@ class Host {
 
     switch_index(new_index) {
         this.address_index = new_index;
-        this.show_record()
-        this.show_ip_address()
+        this._get()
+//        this.show_ip_address()
     }
 
     show_record() {
         var self = this;
-        $('#records').text('')
+        $('#records').empty()
         $.each(this.addresses, function(key, address){
             var records = $('<ul/>', {})
             if (key == self.address_index) {
@@ -96,7 +98,7 @@ class Host {
             var color = ''
             var body = $('<p/>',{})
             if (key == self.address_index) {
-                color = 'btn-outline-primary'
+                color = 'btn-success'
             } else {
                 color = 'btn-outline-secondary'
             }
@@ -113,7 +115,7 @@ class Host {
 
     show_interfaces() {
         var self = this;
-        $('#interfaces').text('')
+        $('#interfaces').empty()
         if (this.interface != null && this.interface.hardware != null) {
             $.each(this.interface.hardware.interfaces, function(key, mac_address){
                 var color = ''
@@ -129,7 +131,6 @@ class Host {
                     class: 'btn btn-sm ml-1 mb-1 ' + color,
                     disabled: disabled
                 })
-//                console.log(mac_address)
                 $('#interfaces').append(result_interface)
             })
         }
@@ -259,14 +260,12 @@ class AddressCtrl {
                                record.name + '.' + record.domain.name))
             }
         })
-        console.log(self.removable)
+//        console.log(self.removable)
     }
 
     check() {
         var name_regex = new RegExp("^(([a-zA-Z0-9-_\.])*)*$");
         var new_record_name = $('#network-edit-add-name').val()
-        console.log("new_record_name")
-        console.log(new_record_name)
         $('#network-edit-add-button').attr('disabled', true)
         if (name_regex.test(new_record_name)) {
             $('#network-edit-add-button').attr('disabled', false)
@@ -296,13 +295,11 @@ class AddressCtrl {
             type: 'POST',
             data: options,
             success: function(data){
-                        console.log(data)
+//                        console.log('Add ' + new_record_domain + ' ' + new_record_name)
+//                        console.log(data)
                         $('#network-edit').modal('hide')
                     }
         })
-        console.log(options)
-//        self.show()
-//        $('#network-edit').modal('hide')
     }
 
     remove() {
@@ -312,8 +309,6 @@ class AddressCtrl {
                 var record_to_delete = $("#" + record).val()
                 var record_to_delete_name = record_to_delete.split('.')[0]
                 var record_to_delete_domain = record_to_delete.split('.').slice(1).join('.')
-                console.log(record_to_delete_name)
-                console.log(record_to_delete_domain)
                 var csrftoken = $.cookie('csrftoken')
                 var options = {
                     'type': 'CNAME'
@@ -327,9 +322,10 @@ class AddressCtrl {
                     data: options,
                     success: function(data){
                                 console.log(data)
-                                $('#network-edit').modal('hide')
+//                                $('#network-edit').modal('hide')
                             }
                 })
+                $(document).ajaxStop(function(){$('#network-edit').modal('hide')})
             }
         })
 //        self.show()
@@ -368,6 +364,32 @@ class DomainsCtrl {
     }
 }
 
+class InterfaceCtrl {
+    unlink() {
+        var csrftoken = $.cookie('csrftoken')
+        var options = {
+            'interface': ''
+        }
+        $.ajaxSetup({
+            headers: {
+                "X-CSRFToken": csrftoken,
+                'Accept': 'application/json'
+            }
+        });
+        $.ajax({
+            url: '/hosts/' + $('#name').text(),
+            type: 'PUT',
+            data: options,
+            success: function(data){
+                if (data.status != 'failed') {
+                    console.log(data)
+                    $('#unlink-interface-confirm').modal('hide')
+                }
+            }
+        })
+    }
+}
+
 $(function(){
     var host = new Host()
     $('#delete-host').on('click', function(){
@@ -377,10 +399,18 @@ $(function(){
     $('#hardware-edit-save').on('click', function(){
         hardwareCtrl.save()
     })
-
     var domains = new DomainsCtrl();
+    var mac_address = new InterfaceCtrl();
+
+    $('#unlink-interface-btn').on('click', function(){
+        mac_address.unlink()
+    })
 
     $('#network-edit').on('hidden.bs.modal', function () {
         host._get()
     });
+    $('#unlink-interface-confirm').on('hidden.bs.modal', function () {
+        host._get()
+    });
+
 })
