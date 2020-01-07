@@ -100,7 +100,7 @@ class NetworksCtrl {
             });
             var card_subtitle = $('<h6/>', {
                 class: 'card-subtitle mb-2 text-muted',
-                text: network.address + '+' + network.prefix
+                text: network.address + '/' + network.prefix
             });
             var card_text = $('<p/>', {
                 class: 'card-text',
