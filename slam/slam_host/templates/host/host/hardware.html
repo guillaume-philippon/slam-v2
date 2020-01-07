@@ -1,18 +1,12 @@
-<div class="card col-sm-12 mb-2">
-    <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted text-right">Interface</h6>
-        <p class="card-text" id="interfaces">
-                    <button class="btn btn-primary btn-sm"
-                            type="button" data-toggle="modal"
-                            data-target="#unlink-hardware-confirm">Add
-                    </button>
-        </p>
-    </div>
-</div>
+<!--<div class="card col-sm-4 mb-2">-->
+<!--    <div class="card-body">-->
+<!--    </div>-->
+<!--</div>-->
+
 <div class="card col-sm-12">
     <div class="card-body">
         <h6 class="card-subtitle mb-2 text-muted text-right">Hardware</h6>
-        <div class="form">
+        <div class="form col-sm-12">
             <div class="form-group row">
                 <label for="hardware-name" class="col-sm-4 col-form-label text-truncate">Name</label>
                 <div class="col-sm-8">
@@ -38,8 +32,16 @@
                 </div>
             </div>
         </div>
+        <hr/>
+        <h6 class="card-subtitle mb-2 text-muted text-right">Interfaces</h6>
+        <p class="col-sm-12" id="interfaces">
+<!--                    <button class="btn btn-primary btn-sm"-->
+<!--                            type="button" data-toggle="modal"-->
+<!--                            data-target="#interface-remove-confirm">Add-->
+<!--                    </button>-->
+        </p>
         <div class="text-right">
-            <button class="btn btn-outline-danger btn-sm" type="button" data-toggle="modal"
+            <button class="btn btn-outline-danger btn-sm btn-block" type="button" data-toggle="modal"
               data-target="#hardware-edit">edit</button>
         </div>
     </div>

@@ -5,7 +5,6 @@ class Host {
         this.uri = $(location).attr('pathname');
         this.address_index = 0;
         this.address = new AddressCtrl();
-//        this.interface = new InterfaceCtrl();
         this._get();
     }
 
@@ -117,6 +116,8 @@ class Host {
         var self = this;
         $('#interfaces').empty();
         if (this.interface != null && this.interface.hardware != null) {
+            $('#interface-add-btn').hide()
+            $('#interface-remove-confirm-btn').show()
             $.each(this.interface.hardware.interfaces, function(key, mac_address){
                 var color = '';
                 var disabled = true;
@@ -126,6 +127,7 @@ class Host {
                 } else {
                     color = 'btn-outline-secondary';
                 }
+                var result_interface_div = $('<div/>', {});
                 var result_interface = $('<button/>', {
                     text: mac_address.mac_address,
                     class: 'btn btn-sm ml-1 mb-1 ' + color,
@@ -133,6 +135,9 @@ class Host {
                 });
                 $('#interfaces').append(result_interface);
             });
+        } else {
+            $('#interface-remove-confirm-btn').hide()
+            $('#interface-add-btn').show()
         }
     }
 
@@ -381,10 +386,34 @@ class InterfaceCtrl {
             success: function(data){
                 if (data.status != 'failed') {
                     console.log(data);
-                    $('#unlink-interface-confirm').modal('hide');
+                    $('#interface-remove-confirm').modal('hide');
                 }
             }
         });
+    }
+
+    link(mac_address) {
+        var csrftoken = $.cookie('csrftoken');
+        var options = {
+            'interface': ''
+        };
+        $.ajaxSetup({
+            headers: {
+                "X-CSRFToken": csrftoken,
+                'Accept': 'application/json'
+            }
+        });
+//        $.ajax({
+//            url: '/hosts/' + $('#name').text(),
+//            type: 'PUT',
+//            data: options,
+//            success: function(data){
+//                if (data.status != 'failed') {
+//                    console.log(data);
+//                    $('#unlink-interface-confirm').modal('hide');
+//                }
+//            }
+//        });
     }
 }
 
