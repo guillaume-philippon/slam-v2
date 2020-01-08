@@ -173,18 +173,33 @@ class Host {
 
 class HardwareCtrl {
     constructor(){
-        this.name = $('#hardware-name-edit').val();
-        this.owner = $('#hardware-owner-edit').val();
-        this.buying_date = $('#hardware-buying-date-edit').val();
-        this.description = $('#hardware-description-edit').val();
+        this.name = $(HARDWARE_CTRL_VIEW.view.name + '-edit').val();
+        this.owner = $(HARDWARE_CTRL_VIEW.view.owner + '-edit').val();
+        this.buying_date = $(HARDWARE_CTRL_VIEW.view.buying_date + '-edit').val();
+        this.description = $(HARDWARE_CTRL_VIEW.view.description + '-edit').val();
+        this.vendor = $(HARDWARE_CTRL_VIEW.view.vendor + '-edit').val();
+        this.model = $(HARDWARE_CTRL_VIEW.view.model + '-edit').val();
+        this.serial_number = $(HARDWARE_CTRL_VIEW.view.serial_number + '-edit').val();
+        this.inventory = $(HARDWARE_CTRL_VIEW.view.inventory + '-edit').val();
+        this.warranty = $(HARDWARE_CTRL_VIEW.view.warranty + '-edit').val();
+//        'vendor': '#hardware-vendor',
+//        'model': '#hardware-model',
+//        'serial_number': '#hardware-serial-number',
+//        'inventory': '#hardware-inventory',
+//        'warranty': '#hardware-warranty',
     }
 
     save() {
 //        console.log('save')
-        var new_name = $('#hardware-name-edit').val();
-        var new_owner = $('#hardware-owner-edit').val();
-        var new_buying_date = $('#hardware-buying-date-edit').val();
-        var new_description = $('#hardware-description-edit').val();
+        var new_name = $(HARDWARE_CTRL_VIEW.view.name + '-edit').val();
+        var new_owner = $(HARDWARE_CTRL_VIEW.view.owner + '-edit').val();
+        var new_buying_date = $(HARDWARE_CTRL_VIEW.view.buying_date + '-edit').val();
+        var new_description = $(HARDWARE_CTRL_VIEW.view.description + '-edit').val();
+        var new_vendor = $(HARDWARE_CTRL_VIEW.view.vendor + '-edit').val();
+        var new_model = $(HARDWARE_CTRL_VIEW.view.model + '-edit').val();
+        var new_serial_number = $(HARDWARE_CTRL_VIEW.view.serial_number + '-edit').val();
+        var new_inventory = $(HARDWARE_CTRL_VIEW.view.inventory + '-edit').val();
+        var new_warranty = $(HARDWARE_CTRL_VIEW.view.warranty + '-edit').val();
         var options = {};
         if ( new_name != this.name ) {
             options.name = new_name;
@@ -195,8 +210,23 @@ class HardwareCtrl {
         if ( new_buying_date != this.buying_date ) {
             options.buying_date = new_buying_date;
         }
-        if ( new_name != this.description ) {
+        if ( new_description != this.description ) {
             options.description = new_description;
+        }
+        if ( new_vendor != this.vendor ) {
+            options.vendor = new_vendor;
+        }
+        if ( new_model != this.model ) {
+            options.model = new_model;
+        }
+        if ( new_serial_number != this.serial_number ) {
+            options.serial_number = new_serial_number;
+        }
+        if ( new_inventory != this.inventory ) {
+            options.inventory = new_inventory;
+        }
+        if ( new_warranty != this.warranty ) {
+            options.warranty = new_warranty;
         }
         var csrftoken = $.cookie('csrftoken');
         $.ajaxSetup({
@@ -206,16 +236,33 @@ class HardwareCtrl {
             }
         });
         $.ajax({
-            url: '/hardware/' + $('#hardware-name').text(),
+            url: '/hardware/' + $(HARDWARE_CTRL_VIEW.view.name).text(),
             type: 'PUT',
             data: options,
             success: function(data){
                 if (data.status != 'failed') {
-                    $('#hardware-name').text(data.name);
-                    $('#hardware-owner').text(data.owner);
-                    $('#hardware-buying-date').text(data.buying_date);
-                    $('#hardware-description').text(data.description);
-                    $('#hardware-edit').modal('hide');
+                    $(HARDWARE_CTRL_VIEW.view.name).text(data.name);
+                    $(HARDWARE_CTRL_VIEW.view.owner).text(data.owner);
+                    $(HARDWARE_CTRL_VIEW.view.buying_date).text(data.buying_date);
+                    $(HARDWARE_CTRL_VIEW.view.description).text(data.description);
+                    $(HARDWARE_CTRL_VIEW.view.vendor).text(data.vendor);
+                    $(HARDWARE_CTRL_VIEW.view.model).text(data.model);
+                    $(HARDWARE_CTRL_VIEW.view.serial_number).text(data.serial_number);
+                    $(HARDWARE_CTRL_VIEW.view.inventory).text(data.inventory);
+                    $(HARDWARE_CTRL_VIEW.view.warranty).text(data.warranty);
+
+                    this.name = $(HARDWARE_CTRL_VIEW.view.name + '-edit').val();
+                    this.owner = $(HARDWARE_CTRL_VIEW.view.owner + '-edit').val();
+                    this.buying_date = $(HARDWARE_CTRL_VIEW.view.buying_date + '-edit').val();
+                    this.description = $(HARDWARE_CTRL_VIEW.view.description + '-edit').val();
+                    this.vendor = $(HARDWARE_CTRL_VIEW.view.vendor + '-edit').val();
+                    this.model = $(HARDWARE_CTRL_VIEW.view.model + '-edit').val();
+                    this.serial_number = $(HARDWARE_CTRL_VIEW.view.serial_number + '-edit').val();
+                    this.inventory = $(HARDWARE_CTRL_VIEW.view.inventory + '-edit').val();
+                    this.warranty = $(HARDWARE_CTRL_VIEW.view.warranty + '-edit').val();
+                    // $('#hardware-edit').modal('hide');
+                    $('#hardware').show();
+                    $('#hardware-add').hide();
                 }
             }
         });
@@ -239,11 +286,11 @@ class HardwareCtrl {
             data: options,
             success: function(data){
                 if (data.status != 'failed') {
-                    $('#hardware-name').text(data.name);
-                    $('#hardware-owner').text(data.owner);
-                    $('#hardware-buying-date').text(data.buying_date);
-                    $('#hardware-description').text(data.description);
-                    $('#hardware-edit').modal('hide');
+                    $(HARDWARE_CTRL_VIEW.view.name).text(data.name);
+                    $(HARDWARE_CTRL_VIEW.view.owner).text(data.owner);
+                    $(HARDWARE_CTRL_VIEW.view.buying_date).text(data.buying_date);
+                    $(HARDWARE_CTRL_VIEW.view.description).text(data.description);
+                    // $('#hardware-edit').modal('hide');
                 }
             }
         });
@@ -484,10 +531,6 @@ $(function(){
     });
 
 //    console.log('bind unlink-interface-confirm')
-    $('#interface-remove-confirm').on('hidden.bs.modal', function () {
-        host._get();
-    });
-
     $('#interface-remove-confirm').on('hidden.bs.modal', function () {
         host._get();
     });

@@ -152,6 +152,8 @@ class HostViewListener {
     }
 
      push (){
+        console.log('push')
+        $('#push').attr("disabled", true);
         $(HOST_CTRL_VIEW.add.btn).attr("disabled", true);
         var self = this;
         var csrftoken = $.cookie('csrftoken');
