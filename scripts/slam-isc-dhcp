@@ -1,0 +1,9 @@
+#!/bin/bash
+
+BIND_SLAM_DIR='/etc/dhcp/slam'
+GIT_CMD='git pull'
+SERVICE_CMD='service dhcpd reload'
+
+cd $BIND_SLAM_DIR
+$GIT_CMD
+$SERVICE_CMD

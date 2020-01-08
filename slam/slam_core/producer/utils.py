@@ -64,21 +64,24 @@ def publish(message='This is the default comment'):
     result = ''
     domains = Domain.objects.all()
     networks = Network.objects.all()
-    for domain in domains:
+    for domain in domains:  # We get DNS servers
         if domain.dns_master is not None:
             dns_servers.append(domain.dns_master)
-    for network in networks:
+    for network in networks:  # We get DNS, DHCP servers
         if network.dns_master is not None:
             dns_servers.append(network.dns_master)
         if network.dhcp is not None:
             dhcp_servers.append(network.dhcp)
+    # We commit & push data
     build_repo = git.Repo(PRODUCER_DIRECTORY)
     build_repo.git.add('.')
     build_repo.git.commit(m=message)
     build_repo.git.push()
+
+    # We create a ssh client objects
     client = SSHClient()
     client.load_system_host_keys()
-    for dns_server in dns_servers:
+    for dns_server in dns_servers:  # And we start SLAM sync. scripts for each domains
         client.connect(hostname=dns_server, username='root')
         stdin, stdout, stderr = client.exec_command('/usr/bin/slam-bind')
         for line in stdout.readlines():
@@ -88,7 +91,7 @@ def publish(message='This is the default comment'):
             result += '{}\n'.format(line)
     for dhcp_server in dhcp_servers:
         client.connect(hostname=dns_server, username='root')
-        stdin, stdout, stderr = client.exec_command('/usr/bin/slam-dhcp')
+        stdin, stdout, stderr = client.exec_command('/usr/bin/slam-isc-dhcp')
     for line in stdout.readlines():
         result += 'DHCP pull {}'.format(dhcp_server)
         result += '{}\n'.format(line)

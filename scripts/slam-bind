@@ -1,0 +1,9 @@
+#!/bin/bash
+
+BIND_SLAM_DIR='/var/named/slam'
+GIT_CMD='git pull'
+SERVICE_CMD='service named reload'
+
+cd $BIND_SLAM_DIR
+$GIT_CMD
+$SERVICE_CMD
