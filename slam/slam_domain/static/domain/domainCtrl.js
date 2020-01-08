@@ -158,9 +158,12 @@ class DomainsCtrl {
                 class: 'card-link',
                 text: 'More info.'
             });
-            var card_record = $('<p/>', {
-                class: 'card-text text-right',
-                text: 'ns: '
+            var card_record_div = $('<p/>', {
+                class: 'text-right'
+            })
+            var card_record = $('<span/>', {
+                class: 'badge badge-primary',
+                text: domain.entries_count
             });
 //            var progress = $('<div/>', {
 //                class: 'progress'
@@ -174,12 +177,14 @@ class DomainsCtrl {
                 card.append(
                     card_body.append(
                         card_title,
+                        card_record_div.append(
+                            card_record,
+                        ),
                         card_subtitle,
 //                        progress.append(
 //                            progress_bar
 //                        ),
                         card_text,
-                        card_record,
                         card_link
                     )
                 )

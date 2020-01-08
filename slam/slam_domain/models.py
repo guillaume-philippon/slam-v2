@@ -56,6 +56,7 @@ class Domain(models.Model):
             result = {
                 'name': self.name,
                 'description': self.description,
+                'entries_count': DomainEntry.objects.filter(domain=self).count()
             }
         else:
             result_entries = []
