@@ -5,6 +5,7 @@ This module provide some useful tools for GitPython
 # disable no-member error from pylint
 # pylint: disable=E1101
 import git
+from paramiko import SSHClient
 
 from slam_network.models import Network
 from slam_domain.models import Domain
@@ -57,11 +58,43 @@ def publish(message='This is the default comment'):
 
     :return:
     """
+    dns_servers = []
+    dhcp_servers = []
+    freeradius_servers = []
+    result = ''
+    domains = Domain.objects.all()
+    networks = Network.objects.all()
+    for domain in domains:
+        if domain.dns_master is not None:
+            dns_servers.append(domain.dns_master)
+    for network in networks:
+        if network.dns_master is not None:
+            dns_servers.append(network.dns_master)
+        if network.dhcp is not None:
+            dhcp_servers.append(network.dhcp)
     build_repo = git.Repo(PRODUCER_DIRECTORY)
     build_repo.git.add('.')
     build_repo.git.commit(m=message)
     build_repo.git.push()
-    result = {
-        'data': message
+    client = SSHClient()
+    client.load_system_host_keys()
+    for dns_server in dns_servers:
+        client.connect(hostname=dns_server, username='root')
+        stdin, stdout, stderr = client.exec_command('/usr/bin/slam-bind')
+        for line in stdout.readlines():
+            result += 'DNS pull {}'.format(dns_server)
+            result += '{}\n'.format(line)
+        for line in stderr.readlines():
+            result += '{}\n'.format(line)
+    for dhcp_server in dhcp_servers:
+        client.connect(hostname=dns_server, username='root')
+        stdin, stdout, stderr = client.exec_command('/usr/bin/slam-dhcp')
+    for line in stdout.readlines():
+        result += 'DHCP pull {}'.format(dhcp_server)
+        result += '{}\n'.format(line)
+    for line in stderr.readlines():
+        result += '{}\n'.format(line)
+    result_json = {
+        'data': result
     }
-    return result
+    return result_json
