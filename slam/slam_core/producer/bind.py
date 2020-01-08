@@ -75,7 +75,20 @@ class Bind:
         new_filename = '{}/{}.soa.{}.new'.format(self.directory, self.domain.name,
                                                  now)
         filename = '{}/{}.soa.db'.format(self.directory, self.domain.name)
-        os.rename(filename, backup_filename)
+        try:
+            os.rename(filename, backup_filename)
+        except FileNotFoundError:
+            # If the file not exist, we create a standard SOA file
+            result = '$TTL    2H\n'
+            result += '@ IN  SOA dns-master.example.com. contact.example.com. (\n'
+            result += '          {} ; Serial\n'.format(datetime.now().strftime("%Y%m%d00"))
+            result += '          7200          ; Refresh - 2hours\n'
+            result += '          1200          ; Retry - 20 minutess\n'
+            result += '          3600000       ; Expire - 6 weeks\n'
+            result += '          86400 )       ;  Minimum - 24 hours\n'
+            backup_file = open(backup_filename, 'w')
+            backup_file.write(result)
+            backup_file.close()
         new_file = open(new_filename, 'w')
         backup_file = open(backup_filename, 'r')
         for line in backup_file.readlines():
@@ -143,12 +156,25 @@ class BindReverse:
         :return:
         """
         now = datetime.now()
-        backup_filename = '{}/{}.soa.{}.old'.format(self.directory, self.network.name,
+        backup_filename = '{}/{}.soa.{}.old'.format(self.directory, self.network.ip.replace(':', '.'),
                                                     now)
-        new_filename = '{}/{}.soa.{}.new'.format(self.directory, self.network.name,
+        new_filename = '{}/{}.soa.{}.new'.format(self.directory, self.network.ip.replace(':', '.'),
                                                  now)
-        filename = '{}/{}.soa.db'.format(self.directory, self.network.name)
-        os.rename(filename, backup_filename)
+        filename = '{}/{}.soa.db'.format(self.directory, self.network.ip.replace(':', '.'))
+        try:
+            os.rename(filename, backup_filename)
+        except FileNotFoundError:
+            # If the file not exist, we create a standard SOA file
+            result = '$TTL    2H\n'
+            result += '@ IN  SOA dns-master.example.com. contact.example.com. (\n'
+            result += '          {} ; Serial\n'.format(datetime.now().strftime("%Y%m%d00"))
+            result += '          7200          ; Refresh - 2hours\n'
+            result += '          1200          ; Retry - 20 minutess\n'
+            result += '          3600000       ; Expire - 6 weeks\n'
+            result += '          86400 )       ;  Minimum - 24 hours\n'
+            backup_file = open(backup_filename, 'w')
+            backup_file.write(result)
+            backup_file.close()
         new_file = open(new_filename, 'w')
         backup_file = open(backup_filename, 'r')
         for line in backup_file.readlines():
@@ -168,7 +194,7 @@ class BindReverse:
 
         :return:
         """
-        filename = '{}/{}.db'.format(self.directory, self.network.name)
+        filename = '{}/{}.db'.format(self.directory, self.network.ip.replace(':', '.'))
         with open(filename, 'w') as lock_file:
             locks.lock(lock_file, locks.LOCK_EX)
             lock_file.write(self.show())
