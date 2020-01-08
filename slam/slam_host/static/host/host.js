@@ -143,11 +143,16 @@ class Host {
 
     show(){
         var self = this;
+        $('#hardware').hide();
+        $('#hardware-add').show();
         $('#name').text(this.name);
         $('#host-delete-confirm-name').text(this.name);
         $('#network').text(this.network.name);
         $('#creation_date').text(this.creation_date);
+        console.log(this.interface.hardware)
         if (this.interface.hardware != null) {
+            $('#hardware-add').hide();
+            $('#hardware').show();
             $('#hardware-name').text(this.interface.hardware.name);
             $('#hardware-mac-address').text(this.interface.mac_address);
             $('#hardware-owner').text(this.interface.hardware.owner);
@@ -175,6 +180,7 @@ class HardwareCtrl {
     }
 
     save() {
+//        console.log('save')
         var new_name = $('#hardware-name-edit').val();
         var new_owner = $('#hardware-owner-edit').val();
         var new_buying_date = $('#hardware-buying-date-edit').val();
@@ -201,6 +207,34 @@ class HardwareCtrl {
         });
         $.ajax({
             url: '/hardware/' + $('#hardware-name').text(),
+            type: 'PUT',
+            data: options,
+            success: function(data){
+                if (data.status != 'failed') {
+                    $('#hardware-name').text(data.name);
+                    $('#hardware-owner').text(data.owner);
+                    $('#hardware-buying-date').text(data.buying_date);
+                    $('#hardware-description').text(data.description);
+                    $('#hardware-edit').modal('hide');
+                }
+            }
+        });
+    }
+
+    async add_interface() {
+        console.log('Add interface')
+        var options = {
+            'interface': $('#hardware-add-interface').val()
+        };
+        var csrftoken = $.cookie('csrftoken');
+        $.ajaxSetup({
+            headers: {
+                "X-CSRFToken": csrftoken,
+                'Accept': 'application/json'
+            }
+        });
+        $.ajax({
+            url: '/hosts/' + $('#name').text(),
             type: 'PUT',
             data: options,
             success: function(data){
@@ -418,25 +452,43 @@ class InterfaceCtrl {
 }
 
 $(function(){
+//    console.log('load host');
     var host = new Host();
     $('#delete-host').on('click', function(){
         host.remove();
     });
+//    console.log('load hardware');
     var hardwareCtrl = new HardwareCtrl();
     $('#hardware-edit-save').on('click', function(){
         hardwareCtrl.save();
     });
+//    console.log('load domain');
     new DomainsCtrl();
+//    console.log('load interface');
     var mac_address = new InterfaceCtrl();
 
+//    console.log('bind unlink-interface-btn')
+//    console.log(mac_address)
     $('#unlink-interface-btn').on('click', function(){
         mac_address.unlink();
+        host._get();
+    });
+    $('#hardware-add-btn').on('click', function(){
+        hardwareCtrl.add_interface();
+        host._get();
     });
 
+//    console.log('bind network-edit')
     $('#network-edit').on('hidden.bs.modal', function () {
         host._get();
     });
-    $('#unlink-interface-confirm').on('hidden.bs.modal', function () {
+
+//    console.log('bind unlink-interface-confirm')
+    $('#interface-remove-confirm').on('hidden.bs.modal', function () {
+        host._get();
+    });
+
+    $('#interface-remove-confirm').on('hidden.bs.modal', function () {
         host._get();
     });
 });

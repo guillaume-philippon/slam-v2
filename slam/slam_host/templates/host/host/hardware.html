@@ -4,31 +4,48 @@
 <!--</div>-->
 
 <div class="card col-sm-12">
-    <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted text-right">Hardware</h6>
+    <div class="card-body" id="hardware-add">
+        <div class="text-center col-sm-12">
+            <h6 class="card-subtitle mb-2 text-muted text-right">Hardware</h6>
+<!--            <div class="form-group row">-->
+                <label for="hardware-add-interface" class="col-sm-12 col-form-label">
+                    Interface MAC address</label>
+                <div class="col-sm-12 mb-2">
+                    <input type="text" class="form-control" id="hardware-add-interface">
+                </div>
+<!--            </div>-->
+<!--                <button class="btn btn-outline-primary btn-sm btn-block" type="button" data-toggle="modal"-->
+<!--                  data-target="#hardware-edit-save">save</button>-->
+                <div class="col-sm-12">
+                    <button class="btn btn-lg btn-primary btn-sm btn-block" id="hardware-add-btn">add
+                    </button>
+                </div>
+        </div>
+    </div>
+    <div class="card-body" id="hardware">
         <div class="form col-sm-12">
             <div class="form-group row">
                 <label for="hardware-name" class="col-sm-4 col-form-label text-truncate">Name</label>
                 <div class="col-sm-8">
-                    <p type="text" class="form-control-plaintext" id="hardware-name" value="">
+                    <p class="form-control-plaintext" type="text" id="hardware-name"></p>
                 </div>
             </div>
             <div class="form-group row">
-                <label for="hardware-owner" class="col-sm-4 col-form-label text-truncate">Owner</label>
+                <label for="hardware-owner-edit" class="col-sm-4 col-form-label text-truncate">Owner</label>
                 <div class="col-sm-8">
-                    <p type="text" class="form-control-plaintext" id="hardware-owner">
+                    <input type="text" class="form-control" id="hardware-owner-edit">
                 </div>
             </div>
             <div class="form-group row">
-                <label for="hardware-buying-date" class="col-sm-4 col-form-label text-truncate">Buying Date</label>
+                <label for="hardware-buying-date-edit" class="col-sm-4 col-form-label text-truncate">Buying Date</label>
                 <div class="col-sm-8">
-                    <p type="text" class="form-control-plaintext" id="hardware-buying-date">
+                    <input type="text" class="form-control" id="hardware-buying-date-edit">
                 </div>
             </div>
             <div class="form-group row">
-                <label for="hardware-description" class="col-sm-4 col-form-label text-truncate">Description</label>
+                <label for="hardware-description-edit" class="col-sm-4 col-form-label text-truncate">Description</label>
                 <div class="col-sm-8">
-                    <p type="textarea" class="form-control-plaintext" id="hardware-description"></p>
+                    <input type="text" class="form-control" id="hardware-description-edit">
                 </div>
             </div>
         </div>
@@ -40,9 +57,17 @@
 <!--                            data-target="#interface-remove-confirm">Add-->
 <!--                    </button>-->
         </p>
-        <div class="text-right">
-            <button class="btn btn-outline-danger btn-sm btn-block" type="button" data-toggle="modal"
-              data-target="#hardware-edit">edit</button>
+        <div class="row">
+            <div class="col-sm-6">
+                <button class="btn btn-outline-danger btn-sm btn-block" type="button" data-toggle="modal"
+                  data-target="#interface-remove-confirm">unlink</button>
+            </div>
+            <div class="text-right col-sm-6">
+<!--                <button class="btn btn-outline-primary btn-sm btn-block" type="button" data-toggle="modal"-->
+<!--                  data-target="#hardware-edit-save">save</button>-->
+                <button class="btn btn-lg btn-danger btn-sm btn-block" id="hardware-edit-save">save
+                </button>
+            </div>
         </div>
     </div>
 </div>
