@@ -21,15 +21,16 @@ from slam_network.exceptions import NetworkFull
 class Network(models.Model):
     """
     Network class represent a IPv4 or IPv6 network
-     - name: The human reading name of the network
-     - description: A short description of the network
-     - address: network address (192.168.0.0)
-     - prefix: network prefix (/24)
-     - gateway: the IP of the network gateway
-     - dns_master: The IP of DNS master for reverse resolution (used to push data in production)
-     - contact: a contact email for the network
-     - dhcp: the IP of DHCP server (used to push data in production)
-     - vlan: the VLAN id of the network
+      - name: The human reading name of the network
+      - description: A short description of the network
+      - address: network address (192.168.0.0)
+      - prefix: network prefix (/24)
+      - gateway: the IP of the network gateway
+      - dns_master: The IP of DNS master for reverse resolution (used to push data in production)
+      - contact: a contact email for the network
+      - dhcp: the IP of DHCP server (used to push data in production)
+      - freeradius: the IP of freeradius server (used to push data in production)
+      - vlan: the VLAN id of the network
     """
     name = models.CharField(max_length=50, unique=True, validators=[name_validator])
     ip = models.GenericIPAddressField(unique=True)
@@ -38,6 +39,7 @@ class Network(models.Model):
     gateway = models.GenericIPAddressField(blank=True, null=True)
     dns_master = models.GenericIPAddressField(blank=True, null=True)
     dhcp = models.GenericIPAddressField(blank=True, null=True)
+    radius = models.GenericIPAddressField(blank=True, null=True)
     vlan = models.IntegerField(default=1)
     contact = models.EmailField(blank=True, null=True)
 
@@ -75,6 +77,7 @@ class Network(models.Model):
                 'gateway': self.gateway,
                 'dns_master': self.dns_master,
                 'dhcp': self.dhcp,
+                'radius': self.radius,
                 'vlan': self.vlan,
                 'contact': self.contact,
                 'used_addresses': addresses_used,
@@ -126,7 +129,7 @@ class Network(models.Model):
 
     @staticmethod
     def create(name, address, prefix, description='A short description', gateway=None,
-               dns_master=None, dhcp=None, vlan=1, contact=None):
+               dns_master=None, dhcp=None, radius=None, vlan=1, contact=None):
         # pylint: disable=R0913
         """
         This is a custom way to create a network
@@ -144,7 +147,7 @@ class Network(models.Model):
         try:
             network = Network(name=name, ip=address, prefix=prefix, description=description,
                               gateway=gateway, dns_master=dns_master, dhcp=dhcp, vlan=vlan,
-                              contact=contact)
+                              contact=contact, radius=radius)
             network.full_clean()
         except (IntegrityError, ValidationError) as err:  # In case network already exist
             return error_message('network', name, err)
@@ -157,7 +160,7 @@ class Network(models.Model):
 
     @staticmethod
     def update(name, description=None, gateway=None, dns_master=None, dhcp=None, vlan=None,
-               contact=None):
+               contact=None, radius=None):
         # pylint: disable=R0913
         """
         This is a custom method to update value on a existing network
@@ -182,6 +185,8 @@ class Network(models.Model):
             network.dns_master = dns_master
         if dhcp is not None:
             network.dhcp = dhcp
+        if radius is not None:
+            network.radius = radius
         if vlan is not None:
             network.vlan = vlan
         if contact is not None:

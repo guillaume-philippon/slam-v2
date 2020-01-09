@@ -60,7 +60,7 @@ def publish(message='This is the default comment'):
     """
     dns_servers = []
     dhcp_servers = []
-    freeradius_servers = []
+    radius_servers = []
     result = ''
     domains = Domain.objects.all()
     networks = Network.objects.all()
@@ -72,6 +72,8 @@ def publish(message='This is the default comment'):
             dns_servers.append(network.dns_master)
         if network.dhcp is not None:
             dhcp_servers.append(network.dhcp)
+        if network.radius is not None:
+            radius_servers.append(network.radius)
     # We commit & push data
     build_repo = git.Repo(PRODUCER_DIRECTORY)
     build_repo.git.add('.')
@@ -92,11 +94,19 @@ def publish(message='This is the default comment'):
     for dhcp_server in dhcp_servers:
         client.connect(hostname=dns_server, username='root')
         stdin, stdout, stderr = client.exec_command('/usr/bin/slam-isc-dhcp')
-    for line in stdout.readlines():
-        result += 'DHCP pull {}'.format(dhcp_server)
-        result += '{}\n'.format(line)
-    for line in stderr.readlines():
-        result += '{}\n'.format(line)
+        for line in stdout.readlines():
+            result += 'DHCP pull {}'.format(dhcp_server)
+            result += '{}\n'.format(line)
+        for line in stderr.readlines():
+            result += '{}\n'.format(line)
+    for radius in radius_servers:
+        client.connect(hostname=radius, username='root')
+        stdin, stdout, stderr = client.exec_command('/usr/bin/slam-freeradius')
+        for line in stdout.readlines():
+            result += 'Radius pull {}'.format(radius)
+            result += '{}\n'.format(line)
+        for line in stderr.readlines():
+            result += '{}\n'.format(line)
     result_json = {
         'data': result
     }
