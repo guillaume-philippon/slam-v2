@@ -6,7 +6,8 @@ DOMAIN_CTRL_VIEW = {
         'description': '#domain-description',
         'dns_master': '#domain-dns-master',
         'contact': '#domain-contact',
-        'creation_date': '#domain-creation-date'
+        'creation_date': '#domain-creation-date',
+        'records': '#domain-records'
     },
     'edit': {
         'button': '#domain-edit-btn'
@@ -17,6 +18,12 @@ DOMAINS_CTRL_VIEW = {
     'select': '#domains-select',
     'dashboard': '#domains-dashboard'
 };
+
+RECORD_CTRL = {
+    'name': '#record-name',
+    'type': '#record-type',
+    'addresses': '#record-addresses',
+}
 
 class DomainCtrl {
     constructor(domain, data){
@@ -40,7 +47,16 @@ class DomainCtrl {
             url: '/domains/' + self.name,
             type: 'GET',
             success: function(data) {
-                console.log(data);
+//                console.log(data);
+                self.description = data.description;
+                self.dns_master = data.dns_master;
+                self.contact = data.contact;
+                self.creation_date = data.creation_date;
+                self.records = [];
+                $.each(data.entries,function(_, record) {
+                    self.records.push(new RecordCtrl(record.name, self.name, record.type))
+                })
+                console.log(self)
                 self.view();
                 self.edit();
             }
@@ -74,6 +90,28 @@ class DomainCtrl {
         $(DOMAIN_CTRL_VIEW.view.dns_master).text(this.dns_master);
         $(DOMAIN_CTRL_VIEW.view.contact).text(this.contact);
         $(DOMAIN_CTRL_VIEW.view.creation_date).text(this.creation_date);
+
+        var records = []
+        $.each(this.records, function(_, record){
+            var record_type = '';
+            console.log(record)
+//            console.log(record.type)
+            if (record.type != null) {
+                record_type = record.type;
+            };
+            records.push([
+                record.name + '.' + record.domain,
+                record_type
+            ]);
+        });
+//        console.log(records);
+        $(DOMAIN_CTRL_VIEW.view.records).DataTable({
+            data: records,
+            columns: [
+                { title: 'name' },
+                { title: 'type'}
+            ]
+        });
     }
 
     edit() {
@@ -195,9 +233,12 @@ class DomainsCtrl {
 }
 
 class RecordCtrl {
-    constructor(name, domain) {
+    constructor(name, domain, type) {
         this.name = name;
         this.domain = domain;
+        if (type != null) {
+            this.type = type;
+        }
         this.exist = false;
         this.get();
     }
@@ -214,8 +255,8 @@ class RecordCtrl {
             url: '/domains/' + self.domain + '/' + self.name,
             type: 'GET',
             success: function(data) {
-                console.log('-- RecordCtrl GET --');
-                console.log(data);
+//                console.log('-- RecordCtrl GET --');
+//                console.log(data);
                 if (data.status == null) {
                     self.exist = true;
                     self.type = data.type;
@@ -223,7 +264,7 @@ class RecordCtrl {
                     self.description = data.description;
                     self.creation_date = data.creation_date;
                 }
-                console.log(self)
+//                console.log(self)
             }
         })
     }

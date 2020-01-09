@@ -25,7 +25,7 @@ class HostCtrl {
         var domain = DomainCtrl.get_selected();
 
         $(HOST_CTRL_VIEW.edit.add.btn).attr('disabled', true);
-        var domain_record = new RecordCtrl(name, domain);
+        var domain_record = new RecordCtrl(name, domain, null);
         if (domain_record.exist) {
             console.log('-- exist --');
         }

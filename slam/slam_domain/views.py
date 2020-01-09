@@ -45,7 +45,9 @@ def domain_view(request, uri_domain):
     :param request: full HTTP request from user
     :param uri_domain: the name of domain from URI (per example example.com is our URI)
     """
-    if request.method == 'GET':
+    if request.method == 'GET' and request.headers['Accept'] != 'application/json':
+        return render(request, 'domains/domain.html', dict())
+    elif request.method == 'GET':
         # If we just want to retrieve (GET) information for the domain. We're looking for
         # domain and all entries associated to it.
         result = Domain.get(uri_domain)

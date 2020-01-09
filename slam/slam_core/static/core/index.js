@@ -57,7 +57,7 @@ class HostViewListener {
 
         $(HOST_CTRL_VIEW.add.btn).attr("disabled", true);
         if (hostname != '' && name_regex.test(hostname)) {
-            var domain_record = new RecordCtrl(hostname, domain);
+            var domain_record = new RecordCtrl(hostname, domain, null);
             var domain_record_exist = await domain_record.is_exist();
                 if (domain_record_exist || (!mac_address_regex.test(mac_address) &&
                                mac_address != '')) {
