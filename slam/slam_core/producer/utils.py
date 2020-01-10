@@ -27,7 +27,8 @@ def commit():
         domain_bind.save()
     for network in Network.objects.all():
         network_bind = BindReverse(network.name, PRODUCER_DIRECTORY + '/bind')
-        network_bind.save()
+        # network_bind.save()
+        network_bind.produce()
         network_isc_dhcp = IscDhcp(network.name, PRODUCER_DIRECTORY + '/isc-dhcp')
         network_isc_dhcp.save()
     freeradius = FreeRadius(PRODUCER_DIRECTORY + '/freeradius')

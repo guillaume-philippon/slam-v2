@@ -128,6 +128,13 @@ class BindReverse:
         :param directory: directory where to put
         """
         self.network = Network.objects.get(name=network)
+        ip_network = ipaddress.ip_network('{}/{}'.format(self.network.ip, self.network.prefix))
+        if ip_network.prefixlen < 24 and ip_network.version == 4:
+            self.subnets = []
+            for subnet in ip_network.subnets(new_prefix=24):
+                self.subnets.append(subnet)
+        else:
+            self.subnets = [ip_network]
         self.directory = directory
 
     def show(self):
@@ -156,37 +163,44 @@ class BindReverse:
         :return:
         """
         now = datetime.now()
-        backup_filename = '{}/{}.soa.{}.old'.format(self.directory, self.network.ip.replace(':', '.'),
-                                                    now)
-        new_filename = '{}/{}.soa.{}.new'.format(self.directory, self.network.ip.replace(':', '.'),
-                                                 now)
-        filename = '{}/{}.soa.db'.format(self.directory, self.network.ip.replace(':', '.'))
-        try:
-            os.rename(filename, backup_filename)
-        except FileNotFoundError:
-            # If the file not exist, we create a standard SOA file
-            result = '$TTL    2H\n'
-            result += '@ IN  SOA dns-master.example.com. contact.example.com. (\n'
-            result += '          {} ; Serial\n'.format(datetime.now().strftime("%Y%m%d00"))
-            result += '          7200          ; Refresh - 2hours\n'
-            result += '          1200          ; Retry - 20 minutess\n'
-            result += '          3600000       ; Expire - 6 weeks\n'
-            result += '          86400 )       ;  Minimum - 24 hours\n'
-            backup_file = open(backup_filename, 'w')
-            backup_file.write(result)
-            backup_file.close()
-        new_file = open(new_filename, 'w')
-        backup_file = open(backup_filename, 'r')
-        for line in backup_file.readlines():
-            if 'Serial' in line:
-                item = line.split()
-                serial = item[0]
-                new_serial = int(serial) + 1
-                new_file.write(line.replace(serial, str(new_serial)))
-            else:
-                new_file.write(line)
-        os.rename(new_filename, filename)
-        os.remove(backup_filename)
+        for network in self.subnets:
+            backup_filename = '{}/{}.soa.{}.old'.format(self.directory,
+                                                        str(network.network_address).
+                                                        replace(':', '.'),
+                                                        now)
+            new_filename = '{}/{}.soa.{}.new'.format(self.directory,
+                                                     str(network.network_address).
+                                                     replace(':', '.'),
+                                                     now)
+            filename = '{}/{}.soa.db'.format(self.directory,
+                                             str(network.network_address).
+                                             replace(':', '.'))
+            try:
+                os.rename(filename, backup_filename)
+            except FileNotFoundError:
+                # If the file not exist, we create a standard SOA file
+                result = '$TTL    2H\n'
+                result += '@ IN  SOA dns-master.example.com. contact.example.com. (\n'
+                result += '          {} ; Serial\n'.format(datetime.now().strftime("%Y%m%d00"))
+                result += '          7200          ; Refresh - 2hours\n'
+                result += '          1200          ; Retry - 20 minutess\n'
+                result += '          3600000       ; Expire - 6 weeks\n'
+                result += '          86400 )       ;  Minimum - 24 hours\n'
+                backup_file = open(backup_filename, 'w')
+                backup_file.write(result)
+                backup_file.close()
+            new_file = open(new_filename, 'w')
+            backup_file = open(backup_filename, 'r')
+            for line in backup_file.readlines():
+                if 'Serial' in line:
+                    item = line.split()
+                    serial = item[0]
+                    new_serial = int(serial) + 1
+                    new_file.write(line.replace(serial, str(new_serial)))
+                else:
+                    new_file.write(line)
+            os.rename(new_filename, filename)
+            os.remove(backup_filename)
 
     def save(self):
         """
@@ -200,3 +214,25 @@ class BindReverse:
             lock_file.write(self.show())
             lock_file.close()
         self.update_soa()
+
+    def produce(self):
+        networks = []
+        for network in self.subnets:
+            output = ''
+            for address in self.network.addresses():
+                if ipaddress.ip_address(address.ip) in network:
+                    print('    address: {}'.format(address.ip))
+                    for entry in address.ns_entries.filter(type='PTR'):
+                        reversed_ip = ipaddress.ip_address(address.ip).reverse_pointer
+                        output += '{}    IN {}    {}.{}. ; {} \n'.format(reversed_ip, entry.type,
+                                                                         entry.name,
+                                                                         entry.domain.name,
+                                                                         address.creation_date)
+            filename = '{}/{}.db'.format(self.directory,
+                                         str(network.network_address).replace(':', '.'))
+            with open(filename, 'w') as lock_file:
+                locks.lock(lock_file, locks.LOCK_EX)
+                lock_file.write(self.show())
+                lock_file.close()
+            networks.append(output)
+        print(networks)

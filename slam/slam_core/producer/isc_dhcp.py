@@ -39,8 +39,7 @@ class IscDhcp:
         """
         if self.network.version() == 6:
             return ''
-        result = '# SLAM generated file for network {}. {}\n'.format(self.network.name,
-                                                                     datetime.now())
+        result = ''
         result_host = ''
         for host in self.hosts:
             if host.interface is not None and host.dhcp:
