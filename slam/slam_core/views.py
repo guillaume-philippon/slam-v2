@@ -44,6 +44,11 @@ def login(request):
         if user is not None:
             auth.login(request, user)
             return JsonResponse({'next': redirect_page})
+        else:
+            return JsonResponse({
+                'status': 'failed',
+                'message': 'Authentication problem, check your login/password'
+            })
     return render(request, "core/login.html", dict())
 
 

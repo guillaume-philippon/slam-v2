@@ -1,8 +1,5 @@
 /*jshint esversion: 8 */
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 class HostViewListener {
     constructor(){

@@ -1,6 +1,11 @@
 /*jshint esversion: 6 */
 
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 class CommitPublishCtrl{
     commit() {
         var csrftoken = $.cookie('csrftoken');
