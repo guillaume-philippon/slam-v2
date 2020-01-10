@@ -216,12 +216,10 @@ class BindReverse:
         self.update_soa()
 
     def produce(self):
-        networks = []
         for network in self.subnets:
             output = ''
             for address in self.network.addresses():
                 if ipaddress.ip_address(address.ip) in network:
-                    print('    address: {}'.format(address.ip))
                     for entry in address.ns_entries.filter(type='PTR'):
                         reversed_ip = ipaddress.ip_address(address.ip).reverse_pointer
                         output += '{}    IN {}    {}.{}. ; {} \n'.format(reversed_ip, entry.type,
@@ -232,7 +230,6 @@ class BindReverse:
                                          str(network.network_address).replace(':', '.'))
             with open(filename, 'w') as lock_file:
                 locks.lock(lock_file, locks.LOCK_EX)
-                lock_file.write(self.show())
+                lock_file.write(output)
                 lock_file.close()
-            networks.append(output)
         self.update_soa()
