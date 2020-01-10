@@ -235,4 +235,4 @@ class BindReverse:
                 lock_file.write(self.show())
                 lock_file.close()
             networks.append(output)
-        print(networks)
+        self.update_soa()
