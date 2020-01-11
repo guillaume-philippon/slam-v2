@@ -13,7 +13,7 @@ HARDWARE_CTRL_VIEW = {
         'warranty': '#hardware-warranty',
         'mac_address': '#hw-interface-mac-address'
     }
-}
+};
 
 //class HardwareCtrl {
 //    constructor() {

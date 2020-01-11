@@ -1,4 +1,4 @@
-/*jshint esversion: 6 */
+/*jshint esversion: 8 */
 
 $.urlParam = function(name){
 	var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -24,7 +24,7 @@ class Authentication {
         $.post('/login?next=' + next, data, function(result){
             console.log(result);
             if (result.status != null && result.status == 'failed' ) {
-                $('#alert-box').text(result.message)
+                $('#alert-box').text(result.message);
                 $('#alert-box').collapse('show');
             } else {
                 $(location).attr('href', result.next);

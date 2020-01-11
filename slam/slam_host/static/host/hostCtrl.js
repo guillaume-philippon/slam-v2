@@ -9,7 +9,7 @@ HOST_CTRL_VIEW = {
         'btn': '#host-add-btn',
         'alert': '#host-add-alert'
     },
-}
+};
 
 class HostCtrl {
     constructor(name, data) {
@@ -21,7 +21,7 @@ class HostCtrl {
 
     check() {
         console.log(' HostCtrl check');
-        var name = $(HOST_CTRL_VIEW.edit.name).val()
+        var name = $(HOST_CTRL_VIEW.edit.name).val();
         var domain = DomainCtrl.get_selected();
 
         $(HOST_CTRL_VIEW.edit.add.btn).attr('disabled', true);

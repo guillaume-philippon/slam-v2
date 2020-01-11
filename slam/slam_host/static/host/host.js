@@ -1,4 +1,4 @@
-/*jshint esversion: 6 */
+/*jshint esversion: 8 */
 
 class Host {
     constructor() {
@@ -116,8 +116,8 @@ class Host {
         var self = this;
         $('#interfaces').empty();
         if (this.interface != null && this.interface.hardware != null) {
-            $('#interface-add-btn').hide()
-            $('#interface-remove-confirm-btn').show()
+            $('#interface-add-btn').hide();
+            $('#interface-remove-confirm-btn').show();
             $.each(this.interface.hardware.interfaces, function(key, mac_address){
                 var color = '';
                 var disabled = true;
@@ -136,8 +136,8 @@ class Host {
                 $('#interfaces').append(result_interface);
             });
         } else {
-            $('#interface-remove-confirm-btn').hide()
-            $('#interface-add-btn').show()
+            $('#interface-remove-confirm-btn').hide();
+            $('#interface-add-btn').show();
         }
     }
 
@@ -149,7 +149,6 @@ class Host {
         $('#host-delete-confirm-name').text(this.name);
         $('#network').text(this.network.name);
         $('#creation_date').text(this.creation_date);
-        console.log(this.interface.hardware)
         if (this.interface.hardware != null) {
             $('#hardware-add').hide();
             $('#hardware').show();
@@ -190,7 +189,6 @@ class HardwareCtrl {
     }
 
     save() {
-//        console.log('save')
         var new_name = $(HARDWARE_CTRL_VIEW.view.name + '-edit').val();
         var new_owner = $(HARDWARE_CTRL_VIEW.view.owner + '-edit').val();
         var new_buying_date = $(HARDWARE_CTRL_VIEW.view.buying_date + '-edit').val();
@@ -269,7 +267,6 @@ class HardwareCtrl {
     }
 
     async add_interface() {
-        console.log('Add interface')
         var options = {
             'interface': $('#hardware-add-interface').val()
         };

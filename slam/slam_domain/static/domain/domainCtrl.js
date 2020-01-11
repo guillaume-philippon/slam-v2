@@ -1,4 +1,4 @@
-/*jshint esversion: 6 */
+/*jshint esversion: 8 */
 
 DOMAIN_CTRL_VIEW = {
     'view': {
@@ -23,7 +23,7 @@ RECORD_CTRL = {
     'name': '#record-name',
     'type': '#record-type',
     'addresses': '#record-addresses',
-}
+};
 
 class DomainCtrl {
     constructor(domain, data){
@@ -47,16 +47,30 @@ class DomainCtrl {
             url: '/domains/' + self.name,
             type: 'GET',
             success: function(data) {
-//                console.log(data);
                 self.description = data.description;
                 self.dns_master = data.dns_master;
                 self.contact = data.contact;
                 self.creation_date = data.creation_date;
                 self.records = [];
+
                 $.each(data.entries,function(_, record) {
-                    self.records.push(new RecordCtrl(record.name, self.name, record.type))
-                })
-                console.log(self)
+                    var result_record = [
+                        record.name + '.' + record.domain.name,
+                        record.type,
+
+                    ];
+                    var result_addresses = [];
+                    $.each(record.addresses, function(_, address) {
+                        result_addresses.push(address.ip);
+                    });
+                    var result_sub_entries = [];
+                    $.each(record.entries, function(_, sub_entry) {
+                        result_sub_entries.push(sub_entry.name);
+                    });
+                    result_record.push(result_addresses.join(', '));
+                    result_record.push(result_sub_entries.join(', '));
+                    self.records.push(result_record);
+                });
                 self.view();
                 self.edit();
             }
@@ -64,7 +78,6 @@ class DomainCtrl {
     }
 
     put() {
-//        console.log('-- DomainCtrl put --');
         var self = this;
         var options = {};
         $.ajaxSetup({
@@ -77,7 +90,6 @@ class DomainCtrl {
             url: '/domains/' + self.name,
             type: 'GET',
             success: function(data) {
-                console.log(data);
                 self.view();
                 self.edit();
             }
@@ -91,25 +103,14 @@ class DomainCtrl {
         $(DOMAIN_CTRL_VIEW.view.contact).text(this.contact);
         $(DOMAIN_CTRL_VIEW.view.creation_date).text(this.creation_date);
 
-        var records = []
-        $.each(this.records, function(_, record){
-            var record_type = '';
-            console.log(record)
-//            console.log(record.type)
-            if (record.type != null) {
-                record_type = record.type;
-            };
-            records.push([
-                record.name + '.' + record.domain,
-                record_type
-            ]);
-        });
-//        console.log(records);
+        var records = [];
         $(DOMAIN_CTRL_VIEW.view.records).DataTable({
-            data: records,
+            data: this.records,
             columns: [
                 { title: 'name' },
-                { title: 'type'}
+                { title: 'type'},
+                { title: 'addresses'},
+                { title: 'pointer'},
             ]
         });
     }
@@ -198,19 +199,11 @@ class DomainsCtrl {
             });
             var card_record_div = $('<p/>', {
                 class: 'text-right'
-            })
+            });
             var card_record = $('<span/>', {
                 class: 'badge badge-primary',
                 text: domain.entries_count
             });
-//            var progress = $('<div/>', {
-//                class: 'progress'
-//            });
-//            var progress_bar = $('<div/>', {
-//                class: 'progress-bar progress-bar-stripped',
-//                role: 'progressbar',
-//                style: 'width: ' + '14' + '%'
-//            });
             $(DOMAINS_CTRL_VIEW.dashboard).append(
                 card.append(
                     card_body.append(
@@ -219,9 +212,6 @@ class DomainsCtrl {
                             card_record,
                         ),
                         card_subtitle,
-//                        progress.append(
-//                            progress_bar
-//                        ),
                         card_text,
                         card_link
                     )
@@ -229,7 +219,6 @@ class DomainsCtrl {
             );
         });
     }
-
 }
 
 class RecordCtrl {
@@ -255,8 +244,6 @@ class RecordCtrl {
             url: '/domains/' + self.domain + '/' + self.name,
             type: 'GET',
             success: function(data) {
-//                console.log('-- RecordCtrl GET --');
-//                console.log(data);
                 if (data.status == null) {
                     self.exist = true;
                     self.type = data.type;
@@ -264,9 +251,8 @@ class RecordCtrl {
                     self.description = data.description;
                     self.creation_date = data.creation_date;
                 }
-//                console.log(self)
             }
-        })
+        });
     }
 
     async is_exist() {

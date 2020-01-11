@@ -56,11 +56,11 @@ class Domain(models.Model):
             result = {
                 'name': self.name,
                 'description': self.description,
-                'entries_count': DomainEntry.objects.filter(domain=self).count()
+                'entries_count': DomainEntry.objects.filter(domain=self).exclude(type='PTR').count()
             }
         else:
             result_entries = []
-            entries = DomainEntry.objects.filter(domain=self)
+            entries = DomainEntry.objects.filter(domain=self).exclude(type='PTR')
             for entry in entries:
                 result_entries.append(entry.show(key=True))
             result = {
@@ -265,12 +265,21 @@ class DomainEntry(models.Model):
         :param description: A short description of the entry
         :return:
         """
+        sub_entry_obj = None
         if ' ' in name:
             return error_message('domain', name, 'Space not allowed in name')
         try:  # First, we get the domain
             entry_domain = Domain.objects.get(name=domain)
         except ObjectDoesNotExist as err:
             return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
+        if sub_entry is not None:
+            try:
+                sub_entry_domain = Domain.objects.get(name=sub_entry['domain'])
+                sub_entry_obj = DomainEntry.objects.get(name=sub_entry['name'],
+                                                        domain=sub_entry_domain,
+                                                        type=sub_entry['type'])
+            except ObjectDoesNotExist as err:
+                return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         # We must check
         #  - if it s a A record, no similar CNAME
         #  - if it s a CNAME, no similar A record
@@ -295,11 +304,7 @@ class DomainEntry(models.Model):
         except (IntegrityError, ValidationError) as err:
             return error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         entry.save()
-        if sub_entry is not None:
-            sub_entry_domain = Domain.objects.get(name=sub_entry['domain'])
-            sub_entry_obj = DomainEntry.objects.get(name=sub_entry['name'],
-                                                    domain=sub_entry_domain,
-                                                    type=sub_entry['type'])
+        if sub_entry_obj is not None:
             entry.entries.add(sub_entry_obj)
         return {
             'entry': '{}.{} {}'.format(name, domain, ns_type),

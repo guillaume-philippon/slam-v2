@@ -80,7 +80,7 @@ class HostViewListener {
                     $('#alert-box').collapse('show');
                 } else {
                     $(HOST_CTRL_VIEW.add.btn).attr('disabled', false);
-                };
+                }
         }
     }
 
@@ -88,7 +88,7 @@ class HostViewListener {
         $(HOST_CTRL_VIEW.add.btn).attr("disabled", true);
         var csrftoken = $.cookie('csrftoken');
         this.hostname = $(HOST_CTRL_VIEW.view.name).val();
-        this.domain = DomainsCtrl.get_selected()
+        this.domain = DomainsCtrl.get_selected();
         var options = {
             'domain': DomainsCtrl.get_selected(),
             'interface': $(HARDWARE_CTRL_VIEW.view.mac_address).val(),
@@ -110,7 +110,6 @@ class HostViewListener {
             headers: { "X-CSRFToken": csrftoken }
         });
         $.ajax({
-            url: '/hosts/' + $(HOST_CTRL_VIEW.view.name).val() + '.' + DomainsCtrl.get_selected(),
             url: '/hosts/' + $(HOST_CTRL_VIEW.view.name).val() + '.' + DomainsCtrl.get_selected(),
             type: 'POST',
             data: options,
@@ -149,7 +148,6 @@ class HostViewListener {
     }
 
      push (){
-        console.log('push')
         $('#push').attr("disabled", true);
         $(HOST_CTRL_VIEW.add.btn).attr("disabled", true);
         var self = this;

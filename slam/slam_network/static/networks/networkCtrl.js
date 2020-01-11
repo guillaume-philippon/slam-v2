@@ -5,12 +5,12 @@ NETWORK_CTRL_VIEW = {
         'name': '#network-name',
         'description': '#network-description',
     }
-}
+};
 
 NETWORKS_CTRL_VIEW = {
     'select': '#networks-select',
     'dashboard': '#networks-dashboard'
-}
+};
 
 class NetworkCtrl {
     constructor(network, data) {
@@ -83,10 +83,7 @@ class NetworksCtrl {
     view_dashboard() {
         var self = this;
         $.each(this.networks, function(_, network) {
-//            console.log(' -- dashboard --')
-//            console.log(network)
-            var used_per_cent = network.used_addresses * 100 / network.total
-            console.log(used_per_cent)
+            var used_per_cent = network.used_addresses * 100 / network.total;
             var card = $('<div/>', {
                 class: 'card ml-2 mb-2',
                 style: 'width: 18rem'
@@ -136,7 +133,6 @@ class NetworksCtrl {
     }
 
     static get_selected() {
-//        console.log(' -- NetworkCtrl selected ---')
-        return $(NETWORKS_CTRL_VIEW.select).val()
+        return $(NETWORKS_CTRL_VIEW.select).val();
     }
 }
