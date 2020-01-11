@@ -23,13 +23,13 @@ class FreeRadius:
     """
     This class manage freeradius configuration
     """
-    def __init__(self, directory):
+    def __init__(self, hosts, directory):
         """
         This is just a constructor. We just need a directory to put data
 
         :param directory: directory where to put data
         """
-        self.hosts = Host.objects.all()
+        self.hosts = hosts
         self.directory = directory
 
     def show(self):

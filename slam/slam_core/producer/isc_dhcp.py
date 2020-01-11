@@ -18,7 +18,7 @@ class IscDhcp:
     This class manage ISC-DHCP configuration. It will only provide host configuration, you have to
     include those file on DHCP configuration
     """
-    def __init__(self, network, directory):
+    def __init__(self, network, hosts, directory):
         """
         This is just a constructor. We need a network and a directory where to put configuration
         file
@@ -26,8 +26,8 @@ class IscDhcp:
         :param network: network name
         :param directory: directory where to put data
         """
-        self.network = Network.objects.get(name=network)
-        self.hosts = Host.objects.all()
+        self.network = network
+        self.hosts = hosts
         self.directory = directory
 
     def show(self):
@@ -40,20 +40,17 @@ class IscDhcp:
         if self.network.version() == 6:
             return ''
         result = ''
-        result_host = ''
         for host in self.hosts:
+            result_host = ''
             if host.interface is not None and host.dhcp:
-                for address in host.addresses.all():
-                    if address in self.network.addresses():
-                        result_host = 'host {} {{\n'.format(host.name)
-                        result_host += '    hardware ethernet {};\n'.format(
-                            host.interface.mac_address)
-                        result_host += '    fixed-address {};\n'.format(address.ip)
-                        result_host += '}\n'
-                    if result_host != '':
-                        result += result_host
-                        result_host = ''
-                        break
+                # for address in host.addresses.filter(network=self.network):
+                    # if address.network == self.network:
+                result_host = 'host {} {{\n'.format(host.name)
+                result_host += '    hardware ethernet {};\n'.format(
+                    host.interface.mac_address)
+                result_host += '    fixed-address {};\n'.format(host.name)
+                result_host += '}\n'
+                result += result_host
         return result
 
     def save(self):

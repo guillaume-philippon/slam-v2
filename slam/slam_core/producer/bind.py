@@ -30,8 +30,8 @@ class Bind:
         :param domain: domain name
         :param directory: directory where to put
         """
-        self.domain = Domain.objects.get(name=domain)
-        self.entries = DomainEntry.objects.filter(domain=self.domain)
+        self.domain = domain
+        self.entries = DomainEntry.objects.filter(domain=self.domain).exclude(type='PTR')
         self.directory = directory
 
     def show(self):
@@ -127,7 +127,7 @@ class BindReverse:
         :param network: network name
         :param directory: directory where to put
         """
-        self.network = Network.objects.get(name=network)
+        self.network = network
         ip_network = ipaddress.ip_network('{}/{}'.format(self.network.ip, self.network.prefix))
         if ip_network.prefixlen < 24 and ip_network.version == 4:
             self.subnets = []
@@ -146,7 +146,7 @@ class BindReverse:
         """
         result = ''
         for address in self.network.addresses():
-            for entry in address.ns_entries.all():
+            for entry in address.ns_entries.filter(type='PTR'):
                 if entry.type == 'PTR':
                     reversed_ip = ipaddress.ip_address(address.ip).reverse_pointer
                     result += '{}    IN {}    {}.{}. ; {} \n'.format(reversed_ip, entry.type,
@@ -222,10 +222,10 @@ class BindReverse:
                 if ipaddress.ip_address(address.ip) in network:
                     for entry in address.ns_entries.filter(type='PTR'):
                         reversed_ip = ipaddress.ip_address(address.ip).reverse_pointer
-                        output += '{}    IN {}    {}.{}. ; {} \n'.format(reversed_ip, entry.type,
-                                                                         entry.name,
-                                                                         entry.domain.name,
-                                                                         address.creation_date)
+                        output += '{}    IN {}    {}.{}. ; {}\n'.format(reversed_ip, entry.type,
+                                                                        entry.name,
+                                                                        entry.domain.name,
+                                                                        address.creation_date)
             filename = '{}/{}.db'.format(self.directory,
                                          str(network.network_address).replace(':', '.'))
             with open(filename, 'w') as lock_file:

@@ -6,9 +6,11 @@ This module provide some useful tools for GitPython
 # pylint: disable=E1101
 import git
 from paramiko import SSHClient
+from datetime import datetime
 
 from slam_network.models import Network
 from slam_domain.models import Domain
+from slam_host.models import Host
 from slam_core.producer.bind import BindReverse, Bind
 from slam_core.producer.isc_dhcp import IscDhcp
 from slam_core.producer.freeradius import FreeRadius
@@ -22,17 +24,31 @@ def commit():
 
     :return:
     """
-    for domain in Domain.objects.all():
-        domain_bind = Bind(domain.name, PRODUCER_DIRECTORY + '/bind')
+    domains = Domain.objects.all()
+    hosts = Host.objects.all()
+    networks = Network.objects.all()
+    print('#### DOMAINS ####')
+    for domain in domains:
+        print('{}    BEGIN    {}'.format(domain.name, datetime.now()))
+        domain_bind = Bind(domain, PRODUCER_DIRECTORY + '/bind')
         domain_bind.save()
-    for network in Network.objects.all():
-        network_bind = BindReverse(network.name, PRODUCER_DIRECTORY + '/bind')
-        # network_bind.save()
+        print('{}    END      {}'.format(domain.name, datetime.now()))
+    for network in networks:
+        print('#### NETWORK BIND ####')
+        print('{}   BEGIN   {}'.format(network.name, datetime.now()))
+        network_bind = BindReverse(network, PRODUCER_DIRECTORY + '/bind')
         network_bind.produce()
-        network_isc_dhcp = IscDhcp(network.name, PRODUCER_DIRECTORY + '/isc-dhcp')
+        print('{}   END     {}'.format(network.name, datetime.now()))
+        print('#### NETWORK DHCP ####')
+        print('{}   BEGIN   {}'.format(network.name, datetime.now()))
+        network_isc_dhcp = IscDhcp(network, hosts, PRODUCER_DIRECTORY + '/isc-dhcp')
         network_isc_dhcp.save()
-    freeradius = FreeRadius(PRODUCER_DIRECTORY + '/freeradius')
+        print('{}   END     {}'.format(network.name, datetime.now()))
+    print('#### FREERADIUS ####')
+    print('   BEGIN   {}'.format(datetime.now()))
+    freeradius = FreeRadius(hosts, PRODUCER_DIRECTORY + '/freeradius')
     freeradius.save()
+    print('   BEGIN   {}'.format(datetime.now()))
     build_repo = git.Repo(PRODUCER_DIRECTORY)
     result = {
         'data': build_repo.git.diff()

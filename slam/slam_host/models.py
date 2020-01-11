@@ -211,7 +211,17 @@ class Host(models.Model):
                 if interface == '':  # If interface name is '' then, we want to remove interface
                     host.interface = None
                 else:  # else, we update it.
-                    host.interface = Interface.objects.get(mac_address=interface)
+                    try:
+                        host.interface = Interface.objects.get(mac_address=interface)
+                    except ObjectDoesNotExist:
+                        result_interface = Interface.create(mac_address=interface,
+                                                            hardware='{}-{}'.
+                                                            format(name.split('.', 1)[0],
+                                                                   interface.replace(':', '-')))
+                        if result_interface['status'] == 'done':
+                            host.interface = Interface.objects.get(mac_address=interface)
+                        else:
+                            return error_message('host', name, result_interface['message'])
             if network is not None:  # If we want to update the network, we need to get it.
                 host.network = Network.objects.get(name=network)
             if dns_entry is not None:  # If we want to update the NS record, we need to get.

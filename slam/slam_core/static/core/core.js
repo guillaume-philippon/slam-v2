@@ -8,6 +8,7 @@ function sleep(ms) {
 
 class CommitPublishCtrl{
     commit() {
+        console.log('commit')
         var csrftoken = $.cookie('csrftoken');
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
@@ -16,6 +17,7 @@ class CommitPublishCtrl{
             url: '/producer/commit/',
             type: 'POST',
             success: function(data){
+                        console.log(data)
                         $('#commit-publish-diff').text(data.data);
                         $('#commit-publish-publish').attr("disabled", false);
                     }
@@ -42,6 +44,7 @@ class CommitPublishCtrl{
 $(function(){
     var ctrl = new CommitPublishCtrl();
     $('#commit-publish-commit').on('click', function(){
+        console.log('clicked')
         ctrl.commit();
     });
     $('#commit-publish-publish').on('click', function(){
