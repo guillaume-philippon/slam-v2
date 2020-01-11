@@ -45,9 +45,9 @@ class HostViewListener {
         var domain = DomainsCtrl.get_selected();
 
         var mac_address = $(HARDWARE_CTRL_VIEW.view.mac_address).val();
-        var mac_address_regex = new RegExp('([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])');
+        var mac_address_regex = new RegExp('([0-9A-F][0-9A-F]:){5}([0-9A-F][0-9A-F])');
 
-        var name_regex = new RegExp("^(([a-zA-Z0-9-_\.])*)*$");
+        var name_regex = new RegExp("^(([a-z0-9-_\.])*)*$");
 
         this.hostname = hostname;
         this.domain = domain;
@@ -63,14 +63,16 @@ class HostViewListener {
                     if (domain_record_exist) {
                         alert_message_hostname = $(
                             '<p/>', {
-                                text: domain_record.name + ' is already used!'
+                                text: domain_record.name + ' is already used.'
                             }
                         );
                     }
                     if (! mac_address_regex.test(mac_address) && mac_address != '') {
                         alert_message_mac_address = $(
                             '<p/>', {
-                                text: mac_address + ' is not a valid MAC address format'
+                                text: mac_address + ' is not a valid MAC address format.' +
+                                'MAC address must be add with upper case characters like: ' +
+                                'AA:BB:CC:DD:EE:FF'
                             }
                         );
                     }

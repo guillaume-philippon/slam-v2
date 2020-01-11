@@ -57,7 +57,7 @@ def mac_address_validator(mac_address):
     :param mac_address: mac-address provided by user
     :return:
     """
-    regex = r'([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])'
+    regex = r'([0-9A-F][0-9A-F]:){5}([0-9A-F][0-9A-F])'
     pattern = re.compile(regex)
     if not pattern.match(mac_address):
         raise ValidationError('Invalid MAC address format')
