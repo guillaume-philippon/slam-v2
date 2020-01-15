@@ -76,8 +76,6 @@ def publish(message='This is the default comment'):
     :return:
     """
     servers = []
-    dhcp_servers = []
-    radius_servers = []
     result = ''
     domains = Domain.objects.all()
     networks = Network.objects.all()
@@ -107,9 +105,10 @@ def publish(message='This is the default comment'):
     for server in servers:  # And we start SLAM sync. scripts for each domains
         client.connect(hostname=server, username='root')
         stdin, stdout, stderr = client.exec_command('/usr/local/bin/slam-agent')
+        result += 'Reload config. on {}'.format(server)
         for line in stdout.readlines():
-            result += 'Reload config. on {}'.format(server)
             result += '{}\n'.format(line)
+        result += 'stderr on {}'.format(server)
         for line in stderr.readlines():
             result += '{}\n'.format(line)
     result_json = {
