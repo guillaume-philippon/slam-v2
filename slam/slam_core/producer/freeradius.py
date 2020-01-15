@@ -48,7 +48,7 @@ class FreeRadius:
                 result += '    Tunnel-Medium-Type = IEEE-802,\n'
                 result += '    Tunnel-Private-Group-Id = {}\n'.format(host.network.vlan)
         result += 'DEFAULT Auth-Type := Reject\n'
-        result += 'Reply-Message = "No authorisation"\n'
+        result += '    Reply-Message = "No authorisation"\n'
         return result
 
     def save(self):

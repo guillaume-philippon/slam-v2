@@ -43,14 +43,16 @@ class IscDhcp:
         for host in self.hosts:
             result_host = ''
             if host.interface is not None and host.dhcp:
+                addresses = host.addresses.filter(network=self.network).count()
                 # for address in host.addresses.filter(network=self.network):
                     # if address.network == self.network:
-                result_host = 'host {} {{\n'.format(host.name)
-                result_host += '    hardware ethernet {};\n'.format(
-                    host.interface.mac_address)
-                result_host += '    fixed-address {};\n'.format(host.name)
-                result_host += '}\n'
-                result += result_host
+                if addresses != 0:
+                    result_host = 'host {} {{\n'.format(host.name)
+                    result_host += '    hardware ethernet {};\n'.format(
+                        host.interface.mac_address)
+                    result_host += '    fixed-address {};\n'.format(host.name)
+                    result_host += '}\n'
+                    result += result_host
         return result
 
     def save(self):
