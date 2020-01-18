@@ -334,9 +334,9 @@ class Address(models.Model):
             except ObjectDoesNotExist as err:
                 # If NS entry not exist, we create it.
                 result = DomainEntry.create(name=ns_entry['name'], domain=ns_entry['domain'])
-                entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain, type='A')
                 if result['status'] != 'done':
-                    return result
+                    return error_message('address', ip, result['message'])
+                entry = DomainEntry.objects.get(name=ns_entry['name'], domain=domain, type='A')
             try:
                 entry_ptr = DomainEntry.objects.get(name=ns_entry['name'], domain=domain,
                                                     type='PTR')
