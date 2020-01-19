@@ -117,6 +117,11 @@ class Host(models.Model):
         interface_host = None
         network_host = None
         address_host = None
+        if options is None:
+            options = {
+                'no_ip': False,
+                'dhcp': True
+            }
         if network is None and\
                 address is None:  # We need at least one of this options
             return error_message('host', name,
