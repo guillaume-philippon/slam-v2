@@ -109,8 +109,8 @@ class DomainCtrl {
             columns: [
                 { title: 'name' },
                 { title: 'type'},
-                { title: 'addresses'},
-                { title: 'pointer'},
+                { title: 'address'},
+                { title: 'associated'},
             ]
         });
     }
