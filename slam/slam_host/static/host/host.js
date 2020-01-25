@@ -44,6 +44,27 @@ class Host {
         });
     }
 
+    save () {
+        var self = this;
+        var options = {};
+        var csrftoken = $.cookie('csrftoken');
+        options['dhcp'] = $('#host-dhcp').is(':checked');
+        $.ajaxSetup({
+            headers: {
+                "X-CSRFToken": csrftoken,
+                'Accept': 'application/json'
+            }
+        });
+        $.ajax({
+            url: '/hosts/' + $('#name').text(),
+            type: 'PUT',
+            data: options,
+            success: function(data){
+                    self._get();
+                }
+        });
+    }
+
     remove() {
         var csrftoken = $.cookie('csrftoken');
         $.ajaxSetup({
@@ -56,7 +77,6 @@ class Host {
             url: '/hosts/' + $('#name').text(),
             type: 'DELETE',
             success: function(data){
-//                console.log(data);
                 if (data.status == 'done') {
                     $(location).attr('pathname', '/hosts');
                 }
@@ -67,7 +87,6 @@ class Host {
     switch_index(new_index) {
         this.address_index = new_index;
         this._get();
-//        this.show_ip_address();
     }
 
     show_record() {
@@ -501,6 +520,9 @@ $(function(){
     var host = new Host();
     $('#delete-host').on('click', function(){
         host.remove();
+    });
+    $('#host-save-confirm').on('click', function(){
+        host.save();
     });
 //    console.log('load hardware');
     var hardwareCtrl = new HardwareCtrl();

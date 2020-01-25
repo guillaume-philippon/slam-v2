@@ -11,6 +11,8 @@ This module provide a Host model and all associated method.
 # As we use django models.Model, pylint fail to find objects method. We must disable pylint
 # test E1101 (no-member)
 # pylint: disable=E1101
+from distutils.util import strtobool
+
 from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.utils import IntegrityError
@@ -234,7 +236,7 @@ class Host(models.Model):
                 domain_entry = Domain.objects.get(name=dns_entry['domain'])
                 host.dns_entry = DomainEntry.objects.get(name=dns_entry['ns'], domain=domain_entry)
             if dhcp is not None:  # If we want to update DHCP flag
-                host.dhcp = dhcp
+                host.dhcp = strtobool(dhcp)
             try:  # We check the validity of the object
                 host.full_clean()
             except ValidationError as err:
