@@ -26,6 +26,64 @@ We need to install EPEL to have access to python36 modules.
     root@slam# yum -y update
     root@slam# yum install -y git uwsgi-plugin-python36 mod_proxy_uwsgi mariadb-server mariadb-devel gcc python3-devel
 
+MariaDB
+#######
+
+We will use MariaDB to store information. CentOS 7 hasn't got enough recent sqlite
+version for Django but you could use sqlite or other Django 3 database backend for
+SLAM.
+
+.. code-block:: bash
+
+    root@slam# systemctl enable mariadb
+    root@slam# systemctl start mariadb
+    root@slam# mysql -h localhost -u root
+    MariaDB [(none)]> create database slam character set utf8;;
+    MariaDB [(none)]> grant all privileges on slam.* to 'slamdb'@'localhost' identified by 'slamdbpass';
+    MariaDB [(none)]> quit;
+    MariaDB [(none)]> SET sql_mode='STRICT_TRANS_TABLES';
+    MariaDB [(none)]> SET sql_mode='STRICT_ALL_TABLES';
+
 Python Virtualenv
 #################
 
+.. code-block:: bash
+
+    root@slam# python3 --version
+    Python 3.6.8
+    root@slam# mkdir -p /opt/slam
+    root@slam# cd /opt/slam
+    root@slam# git clone https://github.com/guillaume-philippon/slam-v2.git
+    root@slam# python3 -m venv venv
+    root@slam# source /opt/slam/venv/bin/active
+    root@slam# pip install --upgrade pip
+    root@slam# pip install -r requirements.txt
+    root@slam# pip install mysqlclient
+
+Django
+######
+
+Django configuration is done on /opt/slam/slam/settings.py file.
+
+.. code-block:: python
+
+    ALLOWED_HOSTS = [ 'slam-public-ip' ]
+    ...
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'OPTIONS': {
+                'read_default_file': os.path.join(BASE_DIR, 'my.cnf')
+                }
+            }
+        }
+
+You also need put database credential on /opt/slam/slam/my.cnf
+
+.. code-block:: ini
+
+    [client]
+    database = slam
+    user = slamdb
+    password = slamdbpass
+    default-character-set = utf8%
