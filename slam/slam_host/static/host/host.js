@@ -149,6 +149,7 @@ class Host {
         $('#host-delete-confirm-name').text(this.name);
         $('#network').text(this.network.name);
         $('#creation_date').text(this.creation_date);
+        $('#host-dhcp').prop('checked', this.dhcp)
         if (this.interface.hardware != null) {
             $('#hardware-add').hide();
             $('#hardware').show();
