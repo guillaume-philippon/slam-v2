@@ -399,7 +399,6 @@ class Address(models.Model):
         ns = fqdn[0]
         domain_entry = fqdn[1]
         try:
-            # network_entry = Network.objects.get(name=network)
             address_entry = Address.objects.get(ip=ip)
             domain_entry = Domain.objects.get(name=domain_entry)
             ns_entry_entry = DomainEntry.objects.get(name=ns, domain=domain_entry, type=ns_type)
