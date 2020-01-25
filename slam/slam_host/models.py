@@ -199,7 +199,7 @@ class Host(models.Model):
             return error_message('host', name, err)
 
     @staticmethod
-    def update(name, address=None, interface=None, network=None, dns_entry=None):
+    def update(name, address=None, interface=None, network=None, dns_entry=None, dhcp=None):
         """
         This is a custom method to update a Host. Depending of options give, the rightfull field.
 
@@ -208,6 +208,7 @@ class Host(models.Model):
         :param interface: mac-address of the host
         :param network: network of the host
         :param dns_entry: NS record of the host
+        :param dhcp: should DHCP be generated
         :return:
         """
         try:
@@ -232,6 +233,8 @@ class Host(models.Model):
             if dns_entry is not None:  # If we want to update the NS record, we need to get.
                 domain_entry = Domain.objects.get(name=dns_entry['domain'])
                 host.dns_entry = DomainEntry.objects.get(name=dns_entry['ns'], domain=domain_entry)
+            if dhcp is not None:  # If we want to update DHCP flag
+                host.dhcp = dhcp
             try:  # We check the validity of the object
                 host.full_clean()
             except ValidationError as err:
