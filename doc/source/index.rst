@@ -10,6 +10,8 @@ Welcome to slam's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   intro
+   admin
    developper
 
 Indices and tables
