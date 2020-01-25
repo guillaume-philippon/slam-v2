@@ -1,6 +1,6 @@
 /* jshint esversion: 8 */
 
-HARDWARE_CTRL_VIEW = {
+let HARDWARE_CTRL_VIEW = {
     'view': {
         'name': '#hardware-name',
         'buying_date': '#hardware-buying-date',

@@ -1,13 +1,13 @@
 /*jshint esversion: 8 */
 
-NETWORK_CTRL_VIEW = {
+let NETWORK_CTRL_VIEW = {
     'view': {
         'name': '#network-name',
         'description': '#network-description',
     }
 };
 
-NETWORKS_CTRL_VIEW = {
+let NETWORKS_CTRL_VIEW = {
     'select': '#networks-select',
     'dashboard': '#networks-dashboard'
 };
@@ -59,8 +59,6 @@ class NetworksCtrl {
             url: '/networks',
             type: 'GET',
             success: function(data) {
-//                console.log('-- NetworksCtrl GET --');
-//                console.log(data);
                 self.networks = data;
                 self.view();
             }
@@ -73,7 +71,6 @@ class NetworksCtrl {
     }
 
     view_select() {
-        var self = this;
         $.each(this.networks, function(_, network){
             $(NETWORKS_CTRL_VIEW.select).append(new Option(network.name, network.name));
             $(NETWORKS_CTRL_VIEW.select + '-loader').hide();
@@ -81,7 +78,6 @@ class NetworksCtrl {
     }
 
     view_dashboard() {
-        var self = this;
         $.each(this.networks, function(_, network) {
             var used_per_cent = network.used_addresses * 100 / network.total;
             var card = $('<div/>', {

@@ -1,6 +1,6 @@
 /*jshint esversion: 8 */
 
-DOMAIN_CTRL_VIEW = {
+let DOMAIN_CTRL_VIEW = {
     'view': {
         'name': '#domain-name',
         'description': '#domain-description',
@@ -14,12 +14,12 @@ DOMAIN_CTRL_VIEW = {
     }
 };
 
-DOMAINS_CTRL_VIEW = {
+let DOMAINS_CTRL_VIEW = {
     'select': '#domains-select',
     'dashboard': '#domains-dashboard'
 };
 
-RECORD_CTRL = {
+let RECORD_CTRL = {
     'name': '#record-name',
     'type': '#record-type',
     'addresses': '#record-addresses',
@@ -79,7 +79,6 @@ class DomainCtrl {
 
     put() {
         var self = this;
-        var options = {};
         $.ajaxSetup({
             headers: {
                 'X-CSRFToken': $.cookie('csrftoken'),
@@ -103,7 +102,6 @@ class DomainCtrl {
         $(DOMAIN_CTRL_VIEW.view.contact).text(this.contact);
         $(DOMAIN_CTRL_VIEW.view.creation_date).text(this.creation_date);
 
-        var records = [];
         $(DOMAIN_CTRL_VIEW.view.records).DataTable({
             data: this.records,
             columns: [
@@ -142,11 +140,8 @@ class DomainsCtrl {
             url: '/domains',
             type: 'GET',
             success: function(data) {
-//                console.log('-- DomainsCtrl GET --');
-//                console.log(data);
                 self.domains = data;
                 self.view();
-//                self.edit();
             }
         });
     }
@@ -157,7 +152,6 @@ class DomainsCtrl {
     }
 
     view_select() {
-        var self = this;
         $.each(this.domains, function(_, domain){
             $(DOMAINS_CTRL_VIEW.select).append(new Option(domain.name, domain.name));
             $(DOMAINS_CTRL_VIEW.select + '-loader').hide();
@@ -165,14 +159,11 @@ class DomainsCtrl {
     }
 
     static get_selected() {
-//        console.log($(DOMAINS_CTRL_VIEW.select).val());
         return $(DOMAINS_CTRL_VIEW.select).val();
     }
+
     view_dashboard() {
-        var self = this;
         $.each(this.domains, function(_, domain) {
-//            console.log(' -- dashboard --')
-//            console.log(network)
             var card = $('<div/>', {
                 class: 'card ml-2 mb-2',
                 style: 'width: 18rem'
@@ -256,7 +247,6 @@ class RecordCtrl {
     }
 
     async is_exist() {
-        var name_regex = new RegExp("^(([a-zA-Z0-9-_\.])*)*$");
         await this.get();
         return this.exist;
     }

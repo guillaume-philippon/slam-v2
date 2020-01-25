@@ -146,7 +146,6 @@ class Host {
                 } else {
                     color = 'btn-outline-secondary';
                 }
-                var result_interface_div = $('<div/>', {});
                 var result_interface = $('<button/>', {
                     text: mac_address.mac_address,
                     class: 'btn btn-sm ml-1 mb-1 ' + color,
@@ -492,26 +491,12 @@ class InterfaceCtrl {
 
     link(mac_address) {
         var csrftoken = $.cookie('csrftoken');
-        var options = {
-            'interface': ''
-        };
         $.ajaxSetup({
             headers: {
                 "X-CSRFToken": csrftoken,
                 'Accept': 'application/json'
             }
         });
-//        $.ajax({
-//            url: '/hosts/' + $('#name').text(),
-//            type: 'PUT',
-//            data: options,
-//            success: function(data){
-//                if (data.status != 'failed') {
-//                    console.log(data);
-//                    $('#unlink-interface-confirm').modal('hide');
-//                }
-//            }
-//        });
     }
 }
 

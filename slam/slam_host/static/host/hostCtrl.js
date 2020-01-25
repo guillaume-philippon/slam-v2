@@ -1,6 +1,6 @@
 /*jshint esversion: 8 */
 
-HOST_CTRL_VIEW = {
+let HOST_CTRL_VIEW = {
     'view': {
         'name': '#host-name',
         'dhcp': '#host-dhcp'
