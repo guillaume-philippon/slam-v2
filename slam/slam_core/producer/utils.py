@@ -111,7 +111,7 @@ def publish(message='This is the default comment'):
         result += 'stderr on {}'.format(server)
         for line in stderr.readlines():
             result += '{}\n'.format(line)
-    client.close()
+        client.close()
     result_json = {
         'data': result
     }
