@@ -38,22 +38,24 @@ class IscDhcp:
         :return:
         """
         if self.network.version() == 6:
-            return ''
-        result = ''
+            return '', ''
+        result_fixed = ''
+        result_dynamic = 'class "dynamic-{}" {{ match hardware; }}\n'.format(self.network.name)
         for host in self.hosts:
-            result_host = ''
             if host.interface is not None and host.dhcp:
                 addresses = host.addresses.filter(network=self.network).count()
-                # for address in host.addresses.filter(network=self.network):
-                    # if address.network == self.network:
                 if addresses != 0:
                     result_host = 'host {} {{\n'.format(host.name)
                     result_host += '    hardware ethernet {};\n'.format(
                         host.interface.mac_address)
                     result_host += '    fixed-address {};\n'.format(host.name)
                     result_host += '}\n'
-                    result += result_host
-        return result
+                    result_fixed += result_host
+                elif host.network == self.network:
+                    result_dynamic += 'subclass "dynamic-{}" {};\n'.format(self.network.name,
+                                                                           host.interface.
+                                                                           mac_address)
+        return result_fixed, result_dynamic
 
     def save(self):
         """
@@ -62,7 +64,12 @@ class IscDhcp:
         :return:
         """
         filename = '{}/{}.conf'.format(self.directory, self.network.name)
+        fixed, dynamic = self.show()
         with open(filename, 'w') as lock_file:
             locks.lock(lock_file, locks.LOCK_EX)
-            lock_file.write(self.show())
+            lock_file.write(fixed)
+            lock_file.close()
+        with open('{}-dynamic'.format(filename), 'w') as lock_file:
+            locks.lock(lock_file, locks.LOCK_EX)
+            lock_file.write(dynamic)
             lock_file.close()
