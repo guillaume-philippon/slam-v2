@@ -87,3 +87,18 @@ You also need put database credential on /opt/slam/slam/my.cnf
     user = slamdb
     password = slamdbpass
     default-character-set = utf8%
+
+Git
+###
+
+SLAM create configuration file and put it into a git repository. You can look @ github or gitlab to
+have a repository to store data. You will need to clone this git repository on SLAM server
+
+.. code-block:: bash
+
+    root@slam# cd /opt/slam/slam
+    root@slam# mkdir build
+    root@slam# cd build
+    root@slam# git clone https://git.example.com/my-repo .
+    root@slam# chown -R uwsgi:uwsgi .
+
