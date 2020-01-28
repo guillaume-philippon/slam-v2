@@ -39,8 +39,8 @@ class Domain(models.Model):
     def show(self, key=False, short=False):
         """
         This method return a dict construction of the object. We have 3 types of output,
-          - standard: all information about object it-self, short information about associated objects
-            (like ForeignKey and ManyToManyField)
+          - standard: all information about object it-self, short information about associated
+            objects (like ForeignKey and ManyToManyField)
           - short: some basic information about object it-self, primary key of associated objects
           - key: primary key of the object
 
@@ -358,7 +358,7 @@ class DomainEntry(models.Model):
             error_message('entry', '{}.{} {}'.format(name, domain, ns_type), err)
         if sub_entry is not None:
             sub_entry_obj = DomainEntry.get(name=sub_entry['name'], domain=sub_entry['domain'],
-                                        type=sub_entry['type'])
+                                            type=sub_entry['type'])
             entry.entries.remove(sub_entry_obj)
         return {
             'entry': '{}.{} {}'.format(name, domain, ns_type),

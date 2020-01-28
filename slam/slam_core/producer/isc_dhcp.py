@@ -5,12 +5,7 @@ named network.conf (for local.conf).
 # As we use django model that provide objects method which is not visible by pylint, we must
 # disable no-member error from pylint
 # pylint: disable=E1101
-from datetime import datetime
-
 from django.core.files import locks
-
-from slam_network.models import Network
-from slam_host.models import Host
 
 
 class IscDhcp:

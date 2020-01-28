@@ -13,8 +13,7 @@ from datetime import datetime
 
 from django.core.files import locks
 
-from slam_domain.models import Domain, DomainEntry
-from slam_network.models import Network
+from slam_domain.models import DomainEntry
 
 
 class Bind:
@@ -216,6 +215,13 @@ class BindReverse:
         self.update_soa()
 
     def produce(self):
+        """
+        This method will create a set of file for reverse DNS. As bind need to have reverse
+        DNS from /8, /16 or /24 network, if we want to manage a different prefix (/21 per example),
+        we need to create a file for each /24 that compose the subnet.
+
+        :return:
+        """
         for network in self.subnets:
             output = ''
             for address in self.network.addresses():

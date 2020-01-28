@@ -4,9 +4,9 @@ This module provide some useful tools for GitPython
 # As we use django model that provide objects method which is not visible by pylint, we must
 # disable no-member error from pylint
 # pylint: disable=E1101
+from datetime import datetime
 import git
 from paramiko import SSHClient
-from datetime import datetime
 
 from slam_network.models import Network
 from slam_domain.models import Domain
