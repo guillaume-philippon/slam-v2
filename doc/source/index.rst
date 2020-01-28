@@ -11,6 +11,7 @@ Welcome to slam's documentation!
    :caption: Contents:
 
    intro
+   overview
    admin
    developer
 
