@@ -1,8 +1,8 @@
 Administrator Guide
 ===================
 
-SLAM is splitted into 2 differents components. A command line interface project
-called slam-v2-cli and a Django based web services.
+SLAM is split into 2 different components. A command line interface project
+called slam-v2-cli and a Django based web services called slam-v2.
 
 This guide will only provide information about web servies. For more information
 about the CLI, you must look at the project pages.

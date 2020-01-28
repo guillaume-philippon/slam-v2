@@ -12,7 +12,7 @@ Welcome to slam's documentation!
 
    intro
    admin
-   developper
+   developer
 
 Indices and tables
 ==================
