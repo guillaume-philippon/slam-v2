@@ -88,8 +88,8 @@ You also need put database credential on /opt/slam/slam/my.cnf
     password = slamdbpass
     default-character-set = utf8%
 
-Git
-###
+Git & ssh
+#########
 
 SLAM create configuration file and put it into a git repository. You can look @ github or gitlab to
 have a repository to store data. You will need to clone this git repository on SLAM server
@@ -102,3 +102,115 @@ have a repository to store data. You will need to clone this git repository on S
     root@slam# git clone https://git.example.com/my-repo .
     root@slam# chown -R uwsgi:uwsgi .
 
+Now, you need to create a ssh-key pair for uwsgi and put it on /var/run/uwsgi directory (it's the
+home directory of uwsgi user). We also put a config file to avoid strict hostkey checking.
+
+.. code-block:: bash
+
+    root@slam# mkdir -p /var/run/uwsgi/.ssh
+    root@slam# ssh-keygen -t rsa -f /var/run/uwsgi/.ssh/id_rsa
+    root@slam# cat > /var/run/uwsgi/.ssh/config << EOF
+    Host *
+      StrictHostKeyChecking no
+    EOF
+    root@slam# chown -R uwsgi:uwsgi /var/run/uwsgi/.ssh
+    root@slam# chmod 700 /var/run/uwsgi/.ssh
+    root@slam# chmod 600 /var/run/uwsgi/config
+
+You will now need to allow access to git repository for /var/run/uwsgi/.ssh/id_rsa.pub key.
+
+uwsgi && nginx
+##############
+
+Last part of the installation is configuring the uwsgi and nginx server.
+
+Initialization
+--------------
+
+SLAM database
+#############
+
+To initialize SLAM, you need to install slam-v2-cli to create your first network and first domain.
+
+.. code-block:: bash
+
+    user@anywhere$ slam networks create --address 192.168.0.0 --prefix 24 net-example
+    user@anywhere$ slam domains create example.com --dns-master 192.168.0.1
+
+After creating your first network and domain, we will produce generic file.
+
+.. code-block:: bash
+
+    user@anywhere$ slam producer commit
+
+You can check file created on /opt/slam/slam/build/bind. As there are no data, you will
+only have a generic SOA file for bind. You need to edit it to put your specific configuration.
+
+.. code-block:: bash
+
+    root@slam# cd /opt/slam/slam/build/bind
+    root@slam# cat example.com.soa.db
+    $TTL    2H
+    @ IN  SOA dns-master.example.com. contact.example.com. (
+              2020011118 ; Serial
+              7200          ; Refresh - 2hours
+              1200          ; Retry - 20 minutess
+              3600000       ; Expire - 6 weeks
+              86400 )       ;  Minimum - 24 hours
+    root@slam# cat >> example.com.db << EOF
+    ; Include some local configuration
+    $INCLUDE /var/named/example.com.local.db
+    ; Include slam configuration
+    $INCLUDE /var/named/slam/bind/example.com.db
+    EOF
+
+Services servers
+################
+
+Now, let's go to your DNS server (close to the same for DHCP or freeradius)
+
+.. code-block:: bash
+
+    # We first create a ssh-key, we will grant access to git repository
+    root@dns# ssh-keygen -t rsa
+    # We will clone the git repo
+    root@dns# mkdir -p /var/named/slam
+    root@dns# cd /var/named/slam
+    root@dns# git clone https://git.example.com/my-repo .
+
+We will also need to create a small bash script that will be call by SLAM when it want
+to modify DNS record
+
+.. code-block:: bash
+
+    root@dns# cat > /usr/local/bin/slam-agent << EOF
+    #!/bin/bash
+    SLAM_DIR=/var/named/slam
+    SLAM_SERVICES=named
+
+    cd $SLAM_DIR
+    git pull
+    systemctl restart $SLAM_SERVICES
+    EOF
+    root@dns# chmod +x /usr/local/bin/slam-agent
+
+And finaly all access to slam server in dns server
+
+.. code-block:: bash
+
+    root@slam# ssh-copy-id root@dns
+
+First publish
+#############
+
+Now, on your slam client machine, you can ask for publishing
+
+.. code-block:: bash
+
+    user@anywhere$ slam producer publish
+
+This action will:
+
+* trig a git commit and git push action
+* attempt a ssh connection to every dns, dhcp or freeradius declared and launch
+  /usr/local/bin/slam-agent script

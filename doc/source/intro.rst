@@ -25,8 +25,10 @@ For web interface:
 For backend:
 
 * Django_
-* Sphinx_
 * git_
+
+For documentation:
+* Sphinx_
 
 .. _ISC-DHCP: https://www.isc.org/dhcp/
 .. _ISC-Bind9: https://www.isc.org/bind/
