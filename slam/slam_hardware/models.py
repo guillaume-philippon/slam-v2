@@ -99,8 +99,8 @@ class Hardware(models.Model):
     def show(self, key=False, short=False):
         """
         This method return a dict construction of the object. We have 3 types of output,
-          - standard: all information about object it-self, short information about associated objects
-            (like ForeignKey and ManyToManyField)
+          - standard: all information about object it-self, short information about associated
+            objects (like ForeignKey and ManyToManyField)
           - short: some basic information about object it-self, primary key of associated objects
           - key: primary key of the object
 
@@ -274,8 +274,8 @@ class Interface(models.Model):
     def show(self, key=False, short=False):
         """
         This method return a dict construction of the object. We have 3 types of output,
-          - standard: all information about object it-self, short information about associated objects
-            (like ForeignKey and ManyToManyField)
+          - standard: all information about object it-self, short information about associated
+            objects (like ForeignKey and ManyToManyField)
           - short: some basic information about object it-self, primary key of associated objects
           - key: primary key of the object
 
@@ -330,6 +330,7 @@ class Interface(models.Model):
     def remove(mac_address):
         """
         This is a custom method to delete a interface
+
         :return:
         """
         try:
@@ -344,6 +345,13 @@ class Interface(models.Model):
 
     @staticmethod
     def get(mac_address, short=False):
+        """
+        This is a custom method to get a interface from a mac address
+
+        :param mac_address: the mac address we want to get
+        :param short: The output version
+        :return:
+        """
         try:
             interface = Interface.objects.get(mac_address=mac_address)
         except ObjectDoesNotExist as err:

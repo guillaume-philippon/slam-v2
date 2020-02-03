@@ -43,7 +43,7 @@ def network_view(request, uri_network):
     """
     if request.method == 'GET' and request.headers['Accept'] != 'application/json':
         return render(request, 'networks/network.html', dict())
-    elif request.method == 'GET':
+    if request.method == 'GET':
         # If we want to get (GET) information about a network, we're looking for it and send
         # information
         result = Network.get(name=uri_network)

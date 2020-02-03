@@ -6,7 +6,8 @@ This module provide model for networks. There are 2 models
 As we use django models.Model, pylint fail to find objects method. We must disable pylint
 test E1101 (no-member)
 """
-# pylint: disable=E1101
+# We need to remove C0103 form pylint as ip is not reconnized as a valid snake cas naming.
+# pylint: disable=E1101, C0103
 import ipaddress
 
 from django.db import models
@@ -44,6 +45,17 @@ class Network(models.Model):
     contact = models.EmailField(blank=True, null=True)
 
     def show(self, key=False, short=False):
+        """
+        This method return a dict construction of the object. We have 3 types of output,
+          - standard: all information about object it-self, short information about associated
+            objects (like ForeignKey and ManyToManyField)
+          - short: some basic information about object it-self, primary key of associated objects
+          - key: primary key of the object
+
+        :param short: if set to True, method return a short output
+        :param key: if set to True, method return a key output. It will overwrite short param
+        :return:
+        """
         if key:
             result = {
                 'name': self.name
