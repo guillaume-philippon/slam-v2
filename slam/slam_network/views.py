@@ -134,6 +134,7 @@ def entry_view(request, uri_network, uri_address, uri_entry):
     """
     This function manage interaction between user and SLAM for specific address. URI is represented
     by https://slam.example.com/networks/192.168.0.1/www.example.com
+
     :param request: full HTTP request from user
     :param uri_network: the name of the network from URI
     :param uri_address: the IP address from URI

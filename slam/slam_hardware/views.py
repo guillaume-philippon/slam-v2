@@ -27,12 +27,12 @@ from slam_hardware.models import Hardware, Interface
 
 @login_required
 def inventory_view(request):
+    # As we use django view that need request as argument but we not use it, we disable pylint.
     # pylint: disable=W0613
     """
     This function manage interaction between user and SLAM for hardware management. URI is
     represented by https://slam.example.com/hardware
 
-    As we use django view that need request as argument but we not use it, we disable pylint.
     :param request: full HTTP request from user
     """
     result = Hardware.search()

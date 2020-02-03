@@ -300,6 +300,7 @@ class Interface(models.Model):
     def create(mac_address, hardware, args=None):
         """
         This is a custom method to create a interface
+
         :param mac_address: mac address of the interface
         :param hardware: hardware where interface is attached
         :param args: options for Interface creation
@@ -362,6 +363,7 @@ class Interface(models.Model):
     def search(filters=None):
         """
         This is a custom way to get all hardware match the filter
+
         :param filters:
         :return:
         """

@@ -101,6 +101,7 @@ class Network(models.Model):
     def is_include(self, ip):
         """
         This method check if ip is included on a network
+
         :param ip: IP address
         :return:
         """
@@ -113,6 +114,7 @@ class Network(models.Model):
     def addresses(self):
         """
         This method return all addresses which are in the current network.
+
         :return:
         """
         result = self.address_set.all()
@@ -145,6 +147,7 @@ class Network(models.Model):
         # pylint: disable=R0913
         """
         This is a custom way to create a network
+
         :param name: human reading name of the network
         :param address: IPv4 or IPv6 network address
         :param prefix: network prefix
@@ -176,6 +179,7 @@ class Network(models.Model):
         # pylint: disable=R0913
         """
         This is a custom method to update value on a existing network
+
         :param name: human reading name of the network
         :param description: A short description of the network
         :param gateway: The IP of the gateway
@@ -218,6 +222,7 @@ class Network(models.Model):
         """
         This is a custom method to delete a network. As delete is already used by models.Model,
         we should call it with another name
+
         :param name: name of network we want delete
         :return:
         """
@@ -235,6 +240,7 @@ class Network(models.Model):
     def get(name):
         """
         This is a custom method to get all information for a network
+
         :param name: name of the network
         :return:
         """
@@ -249,6 +255,7 @@ class Network(models.Model):
     def search(filters=None):
         """
         This is a custom method to get all networks that match the filters
+
         :param filters: a dict of field / regex
         :return:
         """
@@ -265,8 +272,8 @@ class Network(models.Model):
 class Address(models.Model):
     """
     Address class represent a specific address on a network.
-     - ip: IPv4 or IPv6 address
-     - ns_entries: all other NS entries for this IP (CNAME, A, ...)
+      - ip: IPv4 or IPv6 address
+      - ns_entries: all other NS entries for this IP (CNAME, A, ...)
     """
     ip = models.GenericIPAddressField(unique=True)
     ns_entries = models.ManyToManyField(DomainEntry)
@@ -370,6 +377,7 @@ class Address(models.Model):
     def include(ip, network, ns_entry, ns_type='A'):
         """
         This is a custom method to add a entry in a address
+
         :param ip: IP address
         :param network: network
         :param ns_entry: NS entry
@@ -401,6 +409,7 @@ class Address(models.Model):
     def exclude(ip, network, ns_entry, ns_type='A'):
         """
         This is a custom method to remove a NS entry from address
+
         :param ip: IP address
         :param network: network
         :param ns_entry: NS entry
@@ -426,6 +435,7 @@ class Address(models.Model):
     def remove(ip, network, ns_entry=True):
         """
         This is a custom method to delete Address
+
         :param ip: The IP address we will delete
         :param network: The network name
         :param ns_entry: If true, we also remove PTR and A resolution name (default True)
@@ -475,6 +485,7 @@ class Address(models.Model):
     def get(ip, network):
         """
         This is a custom method to get information about a address
+
         :param ip: IP address
         :param network: Network
         :return:
@@ -494,6 +505,7 @@ class Address(models.Model):
     def search(filters=None):
         """
         This is a custom method to get all networks that match the filters
+
         :param filters: a dict of field / regex
         :return:
         """
@@ -510,6 +522,7 @@ class Address(models.Model):
     def match_network(ip):
         """
         This method return the network associated with the address
+
         :return:
         """
         networks = Network.objects.all()
