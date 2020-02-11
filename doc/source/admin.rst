@@ -102,22 +102,19 @@ have a repository to store data. You will need to clone this git repository on S
     root@slam# git clone https://git.example.com/my-repo .
     root@slam# chown -R uwsgi:uwsgi .
 
-Now, you need to create a ssh-key pair for uwsgi and put it on /var/run/uwsgi directory (it's the
-home directory of uwsgi user). We also put a config file to avoid strict hostkey checking.
+Now, you need to create a ssh-key pair for uwsgi and put it on /opt/slam/slam/ssh directory.
+We also put a config file to avoid strict hostkey checking.
 
 .. code-block:: bash
 
-    root@slam# mkdir -p /var/run/uwsgi/.ssh
-    root@slam# ssh-keygen -t rsa -f /var/run/uwsgi/.ssh/id_rsa
-    root@slam# cat > /var/run/uwsgi/.ssh/config << EOF
-    Host *
+    root@slam# ssh-keygen -t rsa -f /opt/slam/slam/ssh/id_rsa
+    root@slam# cat >> /etc/ssh_config << EOF
       StrictHostKeyChecking no
     EOF
-    root@slam# chown -R uwsgi:uwsgi /var/run/uwsgi/.ssh
-    root@slam# chmod 700 /var/run/uwsgi/.ssh
-    root@slam# chmod 600 /var/run/uwsgi/config
+    root@slam# # If you use selinux
+    root@slam# chcon -t chcon -R -t httpd_sys_content_t /opt/slam/slam/ssh
 
-You will now need to allow access to git repository for /var/run/uwsgi/.ssh/id_rsa.pub key.
+You will now need to allow access to git repository for /opt/slam/slam/ssh/id_rsa.pub key.
 
 uwsgi && nginx
 ##############
