@@ -103,7 +103,7 @@ def publish(message='This is the default comment'):
     client = SSHClient()
     client.load_system_host_keys()
     for server in servers:  # And we start SLAM sync. scripts for each domains
-        client.connect(hostname=server, username='root')
+        client.connect(hostname=server, username='root', pkey='ssh/id_rsa')
         _, stdout, stderr = client.exec_command('/usr/local/bin/slam-agent')
         result += 'Reload config. on {}'.format(server)
         for line in stdout.readlines():
