@@ -174,14 +174,16 @@ class HostViewListener {
 
 function search_request() {
     var raw_request = $('#search-box').val();
-    var search_regex = new RegExp("((\\w*):(\\w*))*");
+    var search_regex = new RegExp("((\\w*):(\\w*))+");
+    var request = ''
     if (search_regex.test(raw_request)) {
-        var request = search_regex.exec(raw_request);
+        request = search_regex.exec(raw_request);
         console.log('construct request')
         console.log(request)
     } else {
-        var request = 'name=' + request;
+        request = 'name=' + raw_request;
     }
+    console.log('/search?' + request)
     $(location).attr('href', '/search?' + request);
 }
 
