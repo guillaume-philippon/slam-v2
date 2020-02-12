@@ -172,10 +172,30 @@ class HostViewListener {
     }
 }
 
+function search_request() {
+    var raw_request = $('#search-box').val();
+    var search_regex = new RegExp("((\\w*):(\\w*))*");
+    if (search_regex.test(raw_request)) {
+        var request = search_regex.exec(raw_request);
+        console.log('construct request')
+        console.log(request)
+    } else {
+        var request = 'name=' + request;
+    }
+    $(location).attr('href', '/search?' + request);
+}
+
 $(function(){
     new DomainsCtrl();
     new NetworksCtrl();
 //    new NetworkCtrl();
     new HostCtrl();
     new HostViewListener();
+
+    $('#search-box').keypress(function(event){
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13') {
+            search_request()
+        }
+    })
 });
