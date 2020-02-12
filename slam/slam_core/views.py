@@ -93,6 +93,8 @@ def search(request):
     :param request: full HTTP request from user
     :return:
     """
+    if request.method == 'GET' and request.headers['Accept'] != 'application/json':
+        return render(request, 'core/search.html', dict())
     data = request.GET.dict()
     options = dict()
     for item in data:
