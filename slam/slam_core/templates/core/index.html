@@ -10,6 +10,10 @@
 
 {% block main %}
 <main role="main" class="container">
+    <div class="container mb-2">
+        <input id="search-box" class="form-control form-control-sm" type="text"
+               placeholder="search...">
+    </div>
     <div class="jumbotron">
         <h3>Super LAN Address Manager</h3>
         <p>SLAM allow you to reserve IP address and generate DHCP/DNS/freeradius configuration</p>
@@ -18,14 +22,12 @@
                   data-target="#reservationForm">IP Address</button>
         </p>
     </div>
-    <div class="container">
-        <input id="search-box" class="form-control form-control-sm" type="text"
-               placeholder="search...">
-    </div>
-    <h3>Domains</h3>
-    <div id="domains-dashboard" class="container row"></div>
-    <h3>Networks</h3>
-    <div id="networks-dashboard" class="container row"></div>
+<!--    <div class="container">-->
+        <h3>Domains</h3>
+        <div id="domains-dashboard" class="container row"></div>
+        <h3>Networks</h3>
+        <div id="networks-dashboard" class="container row"></div>
+<!--    </div>-->
 </main>
 {% endblock %}
 
