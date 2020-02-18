@@ -148,10 +148,10 @@ class BindReverse:
             for entry in address.ns_entries.filter(type='PTR'):
                 if entry.type == 'PTR':
                     reversed_ip = ipaddress.ip_address(address.ip).reverse_pointer
-                    result += '{}    IN {}    {}.{}. ; {} \n'.format(reversed_ip, entry.type,
-                                                                     entry.name,
-                                                                     entry.domain.name,
-                                                                     address.creation_date)
+                    result += '{}.    IN {}    {}.{}. ; {} \n'.format(reversed_ip, entry.type,
+                                                                      entry.name,
+                                                                      entry.domain.name,
+                                                                      address.creation_date)
         return result
 
     def update_soa(self):
