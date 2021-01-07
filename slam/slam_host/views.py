@@ -20,6 +20,10 @@ following nomenclature
   - uri_*: input retrieve from URI structure itself
   - raw_*: a raw version of variable
 """
+import logging
+import json
+
+from datetime import datetime
 from distutils.util import strtobool
 
 from django.shortcuts import render
@@ -27,6 +31,8 @@ from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
 
 from slam_host.models import Host
+
+LOGGER = logging.getLogger('api')
 
 
 @login_required
@@ -89,8 +95,18 @@ def host_view(request, uri_host):
             options['options']['dhcp'] = strtobool(request.POST.get('dhcp'))
         else:
             options['options']['dhcp'] = True
+
+        LOGGER.info('{}: {} created host {} with options {}'.format(
+            datetime.now(),
+            request.user,
+            uri_host,
+            json.dumps(options)))
         result = Host.create(**options)
     elif request.method == 'DELETE':  # If we request to delete a Host
+        LOGGER.info('{}: {} deleted host {}'.format(
+            datetime.now(),
+            request.user,
+            uri_host))
         result = Host.remove(uri_host)
     elif request.method == 'GET':  # If we request to get a dict abstraction of a Host
         result = Host.get(uri_host)
@@ -104,6 +120,11 @@ def host_view(request, uri_host):
         for args in data:
             # We don't care about the sanity of options as Host.update take care of it.
             options[args] = data.get(args)
+        LOGGER.info('{}: {} updated host {} with options {}'.format(
+            datetime.now(),
+            request.user,
+            uri_host,
+            json.dumps(options)))
         result = Host.update(uri_host, **options)
     else:
         # We just support GET / POST / PUT / DELETE HTTP method. If anything else arrived, we

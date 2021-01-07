@@ -184,3 +184,10 @@ def publish(request):
     """
     result = utils.publish()
     return JsonResponse(result)
+
+
+@login_required
+def logs(request):
+    with open('./slam.log', 'r') as file:
+        log_file = file.read().replace('\n', '<br/>')
+    return render(request, 'core/logs.html', {'logs': log_file})
