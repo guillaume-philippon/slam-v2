@@ -14,11 +14,18 @@ following nomenclature
  - result_*: a temporary structure that represent a part of the output (per example result_entries)
  - uri_*: input retrieve from URI structure itself
 """
+import logging
+import json
+
+from datetime import datetime
+
 from django.shortcuts import render
 from django.http import JsonResponse, QueryDict
 from django.contrib.auth.decorators import login_required
 
 from slam_domain.models import Domain, DomainEntry
+
+LOGGER = logging.getLogger('api')
 
 
 @login_required
@@ -58,6 +65,11 @@ def domain_view(request, uri_domain):
         for args in request.POST:
             # We don't care about the saintly of options as Domain.create take care of it.
             options[args] = request.POST.get(args)
+        LOGGER.info('{}: {} created domain {} with options {}'.format(
+            datetime.now(),
+            request.user,
+            uri_domain,
+            json.dumps(options)))
         result = Domain.create(name=uri_domain, args=options)
     elif request.method == 'PUT':
         # If we want to update (PUT) a existing domain. We retrieve all mutable value and change it.
@@ -67,9 +79,18 @@ def domain_view(request, uri_domain):
         for args in data:
             # We don't care about the saintly of options as Domain.update take care of it.
             options[args] = data.get(args)
+        LOGGER.info('{}: {} updated domain {} with options {}'.format(
+            datetime.now(),
+            request.user,
+            uri_domain,
+            json.dumps(options)))
         result = Domain.update(uri_domain, args=options)
     elif request.method == 'DELETE':
         # If we want to delete (DELETE) a existing domain, we just do it.
+        LOGGER.info('{}: {} deleted domain {}'.format(
+            datetime.now(),
+            request.user,
+            uri_domain))
         result = Domain.remove(uri_domain)
     else:
         # We just support GET / POST / PUT / DELETE HTTP method. If anything else arrived, we
@@ -112,13 +133,23 @@ def entry_view(request, uri_domain, uri_entry):
                 'domain': request.POST.get('sub_entry_domain'),
                 'type': request.POST.get('sub_entry_type')
             }
-        print(options)
+        LOGGER.info('{}: {} created domain record {} with options {}'.format(
+            datetime.now(),
+            request.user,
+            '{}.{}'.format(uri_entry, uri_domain),
+            json.dumps(options)
+        ))
         result = DomainEntry.create(**options)
     elif request.method == 'DELETE':
         # If we want to remove a specific entry, we must retrieve the entry associated with the
         # right domain and delete it.
         raw_data = request.body
         data = QueryDict(raw_data)
+        LOGGER.info('{}: {} deleted domain record {}'.format(
+            datetime.now(),
+            request.user,
+            '{}.{}'.format(uri_entry, uri_domain),
+        ))
         if data.get('type') is not None:
             result = DomainEntry.remove(uri_entry, uri_domain, ns_type=data.get('type'))
         else:
@@ -137,7 +168,12 @@ def entry_view(request, uri_domain, uri_entry):
                 'name': data.get('sub_entry_name'),
                 'domain': data.get('sub_entry_domain')
             }
-        print(options)
+        LOGGER.info('{}: {} updated domain record {} with options {}'.format(
+            datetime.now(),
+            request.user,
+            '{}.{}'.format(uri_entry, uri_domain),
+            json.dumps(options)
+        ))
         result = DomainEntry.update(**options)
     else:
         # We just support GET / POST / PUT / DELETE HTTP method. If anything else arrived, we

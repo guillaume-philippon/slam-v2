@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+
+{% block scripts %}
+{% endblock%}
+
+{% block main %}
+<main role="main" class="container">
+    <div class="container">
+        {% autoescape off %}{{ logs }}{% endautoescape %}
+    </div>
+</main>
+{% endblock %}
+
+{% block modal %}
+{% endblock %}

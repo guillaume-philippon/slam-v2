@@ -23,6 +23,7 @@ urlpatterns = [
     path('login', views.login, name='login'),
     path('logout', views.logout, name='logout'),
     path('search', views.search, name='search'),
+    path('logs', views.logs, name='logs'),
     path('producer/commit/', views.commit, name='commit'),
     path('producer/publish/', views.publish, name='publish'),
     path('producer/diff', views.diff, name='diff'),

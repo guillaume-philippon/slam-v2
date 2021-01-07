@@ -1,5 +1,6 @@
 venv/
 ssh/
+slam.log
 *00*_*
 *__pycache__*
 *build*
