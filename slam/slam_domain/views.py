@@ -12,7 +12,7 @@ following nomenclature
  - options: a generic structure that represent arguments we send/receive to/from function
  - result: a temporary structure that represent the output of the view
  - result_*: a temporary structure that represent a part of the output (per example result_entries)
- - uri_*: input retrieve from URI structure itself
+ - uri_*: input retrieve from URI structure itselfmkdir -p /opt/slam
 """
 import logging
 import json
