@@ -188,6 +188,14 @@ def publish(request):
 
 @login_required
 def logs(request):
+    """
+    This function display slam log file into a web pages
+
+    :param request: full HTTP request from user
+    :return:
+    """
     with open('./slam.log', 'r') as file:
-        log_file = file.read().replace('\n', '<br/>')
+        log_lines = file.readlines()
+        reversed_lines = log_lines[::-1]
+        log_file = '<br/>'.join(reversed_lines)
     return render(request, 'core/logs.html', {'logs': log_file})
