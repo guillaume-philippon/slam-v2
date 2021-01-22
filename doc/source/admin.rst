@@ -38,11 +38,11 @@ SLAM.
     root@slam# systemctl enable mariadb
     root@slam# systemctl start mariadb
     root@slam# mysql -h localhost -u root
-    MariaDB [(none)]> create database slam character set utf8;;
+    MariaDB [(none)]> create database slam character set utf8;
     MariaDB [(none)]> grant all privileges on slam.* to 'slamdb'@'localhost' identified by 'slamdbpass';
-    MariaDB [(none)]> quit;
     MariaDB [(none)]> SET sql_mode='STRICT_TRANS_TABLES';
     MariaDB [(none)]> SET sql_mode='STRICT_ALL_TABLES';
+    MariaDB [(none)]> quit;
 
 Python Virtualenv
 #################
@@ -55,15 +55,15 @@ Python Virtualenv
     root@slam# cd /opt/slam
     root@slam# git clone https://github.com/guillaume-philippon/slam-v2.git
     root@slam# python3 -m venv venv
-    root@slam# source /opt/slam/venv/bin/active
+    root@slam# source /opt/slam/venv/bin/activate
     root@slam# pip install --upgrade pip
-    root@slam# pip install -r requirements.txt
+    root@slam# pip install -r slam-v2/requirements.txt
     root@slam# pip install mysqlclient
 
 Django
 ######
 
-Django configuration is done on /opt/slam/slam/settings.py file.
+Django configuration is done on /opt/slam/slam-v2/slam/slam/settings.py file.
 
 .. code-block:: python
 
@@ -78,7 +78,7 @@ Django configuration is done on /opt/slam/slam/settings.py file.
             }
         }
 
-You also need put database credential on /opt/slam/slam/my.cnf
+You also need put database credential on /opt/slam/slam-v2/slam/my.cnf
 
 .. code-block:: ini
 
@@ -86,7 +86,7 @@ You also need put database credential on /opt/slam/slam/my.cnf
     database = slam
     user = slamdb
     password = slamdbpass
-    default-character-set = utf8%
+    default-character-set = utf8
 
 Git & ssh
 #########
@@ -96,23 +96,24 @@ have a repository to store data. You will need to clone this git repository on S
 
 .. code-block:: bash
 
-    root@slam# cd /opt/slam/slam
+    root@slam# cd /opt/slam/slam-v2
     root@slam# mkdir build
     root@slam# cd build
     root@slam# git clone https://git.example.com/my-repo .
     root@slam# chown -R uwsgi:uwsgi .
 
-Now, you need to create a ssh-key pair for uwsgi and put it on /opt/slam/slam/ssh directory.
+Now, you need to create a ssh-key pair for uwsgi and put it on /opt/slam/slam-v2/ssh directory.
 We also put a config file to avoid strict hostkey checking.
 
 .. code-block:: bash
 
-    root@slam# ssh-keygen -t rsa -f /opt/slam/slam/ssh/id_rsa
+    root@slam# mkdir -p /opt/slam/slam-v2/ssh
+    root@slam# ssh-keygen -t rsa -f /opt/slam/slam-v2/ssh/id_rsa
     root@slam# cat >> /etc/ssh_config << EOF
       StrictHostKeyChecking no
     EOF
     root@slam# # If you use selinux
-    root@slam# chcon -t chcon -R -t httpd_sys_content_t /opt/slam/slam/ssh
+    root@slam# chcon -t chcon -R -t httpd_sys_content_t /opt/slam/slam-v2/ssh
 
 You will now need to allow access to git repository for /opt/slam/slam/ssh/id_rsa.pub key.
 
@@ -120,6 +121,59 @@ uwsgi && nginx
 ##############
 
 Last part of the installation is configuring the uwsgi and nginx server.
+
+.. code-block:: bash
+
+    # On CentOS 7 some directory are not created by default through rpm
+    root@slam# mkdir -p /run/uwsgi
+    root@slam# chown uwsgi:uwsgi /run/uwsgi
+    root@slam# mkdir -p /var/log/uwsgi/
+    root@slam# chown -R uwsgi:uwsgi /var/log/uwsgi
+
+    root@slam# cat > /etc/uwsgi.d/slam.ini
+    [uwsgi]
+    plugin = python36
+    single-interpreter = true
+
+    master=True
+    pidfile=/tmp/project-master.pid
+    vacuum=True
+    max-requests=5000
+    daemonize=/var/log/uwsgi/slam.log
+
+    # chdir is required by Django to be the root of the project files
+    chdir=/opt/slam/slam-v2
+    touch-reload = /opt/slam/slam-v2/slam/slam/wsgi.py
+    wsgi-file = /opt/slam/slam-v2/slam/slam/wsgi.py
+    virtualenv = /opt/slam/venv
+
+    socket = 127.0.0.1:8008
+    stats = /var/run/uwsgi/slam.sock
+    protocol = uwsgi
+    EOF
+    root@slam# chown -R uwsgi:uwsgi /etc/uwsgi.d/slam.ini
+    root@slam# systemctl restart uwsgi
+
+    # apache configuration
+    root@slam# cd /etc/httpd/httpd.d
+    root@slam# cat > slam.conf <<EOF
+    LoadModule proxy_uwsgi_module modules/mod_proxy_uwsgi.so
+
+    ErrorLog	logs/slam.errorlog
+    CustomLog	logs/slam.accesslog common
+    LogLevel	Warn
+
+    Alias "/static" "/opt/slam/static"
+
+    ProxyPass /static !
+    ProxyPass / uwsgi://127.0.0.1:8008/
+
+    <Directory /opt/slam/static>
+        AllowOverride None
+        Require all granted
+    </Directory>
+    EOF
+    root@slam# systemctl restart httpd
 
 Initialization
 --------------
