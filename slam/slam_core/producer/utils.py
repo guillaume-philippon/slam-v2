@@ -16,6 +16,7 @@ from slam_core.producer.isc_dhcp import IscDhcp
 from slam_core.producer.freeradius import FreeRadius
 
 PRODUCER_DIRECTORY = './build'
+PRODUCER_SSH_DIR = './ssh'
 
 
 def commit():
@@ -94,10 +95,12 @@ def publish(message='This is the default comment'):
                 network.radius not in servers:
             servers.append(network.radius)
     # We commit & push data
-    build_repo = git.Repo(PRODUCER_DIRECTORY)
-    build_repo.git.add('.')
-    build_repo.git.commit(m=message)
-    build_repo.git.push()
+    git_cmd = 'ssh -i ssh/id_rsa'
+    with git.Git().custom_environment(GIT_SSH_COMMAND=git_cmd):
+        build_repo = git.Repo(PRODUCER_DIRECTORY)
+        build_repo.git.add('.')
+        build_repo.git.commit(m=message)
+        build_repo.git.push()
 
     # We create a ssh client objects
     client = SSHClient()
