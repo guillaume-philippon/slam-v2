@@ -6,7 +6,7 @@ This module provide some useful tools for GitPython
 # pylint: disable=E1101
 from datetime import datetime
 import git
-from paramiko import SSHClient
+from paramiko import SSHClient, AutoAddPolicy
 
 from slam_network.models import Network
 from slam_domain.models import Domain
@@ -16,6 +16,7 @@ from slam_core.producer.isc_dhcp import IscDhcp
 from slam_core.producer.freeradius import FreeRadius
 
 PRODUCER_DIRECTORY = './build'
+PRODUCER_SSH_DIR = './ssh'
 
 
 def commit():
@@ -96,12 +97,16 @@ def publish(message='This is the default comment'):
     # We commit & push data
     build_repo = git.Repo(PRODUCER_DIRECTORY)
     build_repo.git.add('.')
-    build_repo.git.commit(m=message)
+    try:  # If there are no modification, PythonGit raise a exception.
+        build_repo.git.commit(m=message)
+    except git.GitCommandError:
+        pass
     build_repo.git.push()
 
     # We create a ssh client objects
     client = SSHClient()
     client.load_system_host_keys()
+    client.set_missing_host_key_policy(AutoAddPolicy())
     for server in servers:  # And we start SLAM sync. scripts for each domains
         client.connect(hostname=server, username='root', key_filename='ssh/id_rsa')
         _, stdout, stderr = client.exec_command('/usr/local/bin/slam-agent')
