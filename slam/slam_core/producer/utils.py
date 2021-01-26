@@ -97,7 +97,10 @@ def publish(message='This is the default comment'):
     # We commit & push data
     build_repo = git.Repo(PRODUCER_DIRECTORY)
     build_repo.git.add('.')
-    build_repo.git.commit(m=message)
+    try:  # If there are no modification, PythonGit raise a exception.
+        build_repo.git.commit(m=message)
+    except git.GitCommandError as err:
+        pass
     build_repo.git.push()
 
     # We create a ssh client objects
