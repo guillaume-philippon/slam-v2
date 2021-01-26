@@ -99,7 +99,7 @@ def publish(message='This is the default comment'):
     build_repo.git.add('.')
     try:  # If there are no modification, PythonGit raise a exception.
         build_repo.git.commit(m=message)
-    except git.GitCommandError as err:
+    except git.GitCommandError:
         pass
     build_repo.git.push()
 
