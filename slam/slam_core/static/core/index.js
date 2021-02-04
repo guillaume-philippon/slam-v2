@@ -94,7 +94,8 @@ class HostViewListener {
         var options = {
             'domain': DomainsCtrl.get_selected(),
             'interface': $(HARDWARE_CTRL_VIEW.view.mac_address).val(),
-            'ns': $(HOST_CTRL_VIEW.view.name).val()
+            'ns': $(HOST_CTRL_VIEW.view.name).val(),
+            'owner': $(HARDWARE_CTRL_VIEW.view.owner).val()
         };
         if ($('#no-ip').is(':checked')) {
             options.no_ip = 'True'; // We must put a python like boolean
@@ -104,7 +105,7 @@ class HostViewListener {
         } else {
             options.ip_address = $('#ip-address').val();
         }
-        options.owner = $(HARDWARE_CTRL_VIEW.view.owner).val();
+        // options.owner = $(HARDWARE_CTRL_VIEW.view.owner).val();
         if (! $('#dhcp').is(':checked')) {
             options.dhcp = 'False'; // We must put a python like boolean
         }
