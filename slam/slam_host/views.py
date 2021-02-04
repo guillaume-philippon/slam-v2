@@ -95,19 +95,29 @@ def host_view(request, uri_host):
             options['options']['dhcp'] = strtobool(request.POST.get('dhcp'))
         else:
             options['options']['dhcp'] = True
-
+        result = Host.create(**options)
         LOGGER.info('{}: {} created host {} with options {}'.format(
             datetime.now(),
             request.user,
             uri_host,
             json.dumps(options)))
-        result = Host.create(**options)
+        if result['status'] != 'done':
+            LOGGER.info('{}: {} creation failed with message {}'.format(
+                datetime.now(),
+                uri_host,
+                result['message']))
+
     elif request.method == 'DELETE':  # If we request to delete a Host
+        result = Host.remove(uri_host)
         LOGGER.info('{}: {} deleted host {}'.format(
             datetime.now(),
             request.user,
             uri_host))
-        result = Host.remove(uri_host)
+        if result['status'] != 'done':
+            LOGGER.info('{}: {} suppression failed with message {}'.format(
+                datetime.now(),
+                uri_host,
+                result['message']))
     elif request.method == 'GET':  # If we request to get a dict abstraction of a Host
         result = Host.get(uri_host)
     elif request.method == 'PUT':  # If we request to update a Host
@@ -120,12 +130,17 @@ def host_view(request, uri_host):
         for args in data:
             # We don't care about the sanity of options as Host.update take care of it.
             options[args] = data.get(args)
+        result = Host.update(uri_host, **options)
         LOGGER.info('{}: {} updated host {} with options {}'.format(
             datetime.now(),
             request.user,
             uri_host,
             json.dumps(options)))
-        result = Host.update(uri_host, **options)
+        if result['status'] != 'done':
+            LOGGER.info('{}: {} update failed with message {}'.format(
+                datetime.now(),
+                uri_host,
+                result['message']))
     else:
         # We just support GET / POST / PUT / DELETE HTTP method. If anything else arrived, we
         # just drop it.
