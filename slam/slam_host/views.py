@@ -137,7 +137,7 @@ def host_view(request, uri_host):
             uri_host,
             json.dumps(options)))
         if result['status'] != 'done':
-            LOGGER.info('{}: update failed with message {}'.format(
+            LOGGER.info('{}: {} update failed with message {}'.format(
                 datetime.now(),
                 uri_host,
                 result['message']))
