@@ -114,7 +114,7 @@ def host_view(request, uri_host):
             request.user,
             uri_host))
         if result['status'] != 'done':
-            LOGGER.info('{}: delation failed with message {}'.format(
+            LOGGER.info('{}: {} suppression failed with message {}'.format(
                 datetime.now(),
                 uri_host,
                 result['message']))
