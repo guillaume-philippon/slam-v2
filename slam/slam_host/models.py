@@ -147,7 +147,7 @@ class Host(models.Model):
                 # We generate a default HW name
                 hardware_name = '{}-{}'.format(name.split('.', 1)[0], interface.replace(':', '-'))
                 hardware_args = {
-                    'owner': owner
+                    'owner': owner_host
                 }
                 # We create a interface and a hardware for this interface
                 result = Interface.create(mac_address=interface, hardware=hardware_name,
