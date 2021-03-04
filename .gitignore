@@ -1,6 +1,8 @@
 venv/
 ssh/
+.idea/
 slam.log
+*db.sqlite3*
 *00*_*
 *__pycache__*
 *build*
