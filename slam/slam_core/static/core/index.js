@@ -134,6 +134,8 @@ class HostViewListener {
      commit (){
         $(HOST_CTRL_VIEW.add.btn).attr("disabled", true);
         var csrftoken = $.cookie('csrftoken');
+        $('#commit').attr('disabled', true);
+        $('#diff').text('Please wait...');
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
         });
@@ -151,6 +153,7 @@ class HostViewListener {
 
      push (){
         $('#push').attr("disabled", true);
+        $('#commit').attr('disabled', false);
         $(HOST_CTRL_VIEW.add.btn).attr("disabled", true);
         var self = this;
         var csrftoken = $.cookie('csrftoken');
