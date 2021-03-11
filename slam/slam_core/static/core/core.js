@@ -10,6 +10,8 @@ class CommitPublishCtrl{
     commit() {
         console.log('commit')
         var csrftoken = $.cookie('csrftoken');
+        $('#commit-publish-commit').attr("disabled", true);
+        $('#commit-publish-diff').text('Please Wait...');
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
         });
@@ -26,6 +28,7 @@ class CommitPublishCtrl{
 
     publish() {
         $('#commit-publish-publish').attr("disabled", true);
+        $('#commit-publish-commit').attr("disabled", false);
         var csrftoken = $.cookie('csrftoken');
         $.ajaxSetup({
             headers: { "X-CSRFToken": csrftoken }
