@@ -110,7 +110,8 @@ class NetworksCtrl {
             var progress_bar = $('<div/>', {
                 class: 'progress-bar progress-bar-stripped',
                 role: 'progressbar',
-                style: 'width: ' + used_per_cent + '%'
+                style: 'width: ' + used_per_cent + '%',
+                text: used_per_cent.toFixed(0) + '%'
             });
             $(NETWORKS_CTRL_VIEW.dashboard).append(
                 card.append(
