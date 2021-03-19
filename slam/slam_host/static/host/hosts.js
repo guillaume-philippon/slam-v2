@@ -49,6 +49,9 @@ class Hosts {
 //        console.log(self.hosts);
         $('#hosts').DataTable({
             data: self.hosts,
+            columnDefs: [
+                { type: 'ip-address', targets: 3}
+            ],
             columns: [
                 { title: 'name' ,
                     "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
