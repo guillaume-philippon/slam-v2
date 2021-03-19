@@ -55,8 +55,11 @@ class Network {
         });
         $('#addresses').DataTable({
             data: datatable_addresses,
+            columnDefs: [
+                { type: 'ip-address', targets: 0}
+            ],
             columns: [
-                { title: 'address' },
+                { title: 'address'},
                 { title: 'reverse DNS'},
                 { title: 'creation date'}
             ]
