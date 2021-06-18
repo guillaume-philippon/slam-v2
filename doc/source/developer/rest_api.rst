@@ -30,3 +30,21 @@ HTTP method
 * **POST**: to create a new object
 * **PUT**: to update object information
 * **DELETE**: to delete a object
+
+Hosts API
+---------
+
+Through API, you can manipulation hosts. The base URI for hosts is https://slam.example.com/hosts
+
+Creation
+########
+Creation is done by POST HTTP method with the following data:
+* interface: the MAC address of the network interface
+* owner: the owner of the machine
+* network: the network we want to use
+* ip_address: if we want to specify a IP address
+* no_ip: if we don't want IP address. It will provide radius configuration but no IP address will be
+  associated to the machine
+* dhcp: if we want (or not) DHCP configuration
+* ns: the name of the machine (fqdn will be ns+domain)
+* domain: the domain name (fqdn will be ns+domain)

@@ -310,7 +310,7 @@ class Interface(models.Model):
             hardware = Hardware.objects.get(name=hardware)
         except ObjectDoesNotExist:
             # If hardware not exist, we create it
-            Hardware.create(name=hardware)
+            Hardware.create(name=hardware, args=args)
             hardware = Hardware.objects.get(name=hardware)
         try:
             interface = Interface(mac_address=mac_address)

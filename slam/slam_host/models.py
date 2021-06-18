@@ -100,7 +100,8 @@ class Host(models.Model):
         return result
 
     @staticmethod
-    def create(name, address=None, interface=None, network=None, dns_entry=None, options=None):
+    def create(name, address=None, interface=None, network=None, owner=None, dns_entry=None,
+               options=None):
         """
         This is a custom method to create a host w/ some check like.
           - Interface: check if it exist and it s free. If not, create a new one.
@@ -112,6 +113,7 @@ class Host(models.Model):
         :param address: IP address for the Host
         :param interface: interface associated to this Host
         :param network: network associated to this Host
+        :param owner: the owner of this Host
         :param dns_entry: NS record for the Host
         :param options: Some other options like 'no_ip' to force not get IP (Host w/o IP)
         :return:
@@ -119,11 +121,14 @@ class Host(models.Model):
         interface_host = None
         network_host = None
         address_host = None
+        owner_host = None
         if options is None:
             options = {
                 'no_ip': False,
                 'dhcp': True
             }
+        if owner is not None:
+            owner_host = owner
         if network is None and\
                 address is None:  # We need at least one of this options
             return error_message('host', name,
@@ -141,8 +146,12 @@ class Host(models.Model):
             except ObjectDoesNotExist:  # If interface not exist, we create a new one
                 # We generate a default HW name
                 hardware_name = '{}-{}'.format(name.split('.', 1)[0], interface.replace(':', '-'))
+                hardware_args = {
+                    'owner': owner_host
+                }
                 # We create a interface and a hardware for this interface
-                result = Interface.create(mac_address=interface, hardware=hardware_name)
+                result = Interface.create(mac_address=interface, hardware=hardware_name,
+                                          args=hardware_args)
                 if result['status'] != 'done':  # If we failed to create the interface
                     return result
                 # We get the new interface

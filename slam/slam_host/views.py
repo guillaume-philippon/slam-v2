@@ -79,6 +79,8 @@ def host_view(request, uri_host):
             options['interface'] = request.POST.get('interface')
         if request.POST.get('network') is not None:  # If we provide network name as param
             options['network'] = request.POST.get('network')
+        if request.POST.get('owner') is not None:  # If we provide owner information
+            options['owner'] = request.POST.get('owner')
         if request.POST.get('ns') is not None and \
                 request.POST.get('domain') is not None:  # If we provide all info for NS record
             options['dns_entry'] = {
