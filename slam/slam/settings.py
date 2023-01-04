@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'slam',
+    #'slam',
     'slam_core',
     'slam_hardware',
     'slam_network',
