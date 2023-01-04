@@ -6,7 +6,7 @@ This module provide some useful tools for GitPython
 # pylint: disable=E1101
 from datetime import datetime
 import git
-from paramiko import SSHClient, AutoAddPolicy
+from paramiko import SSHClient, AutoAddPolicy, RSAKey, __version__ as paramiko_version
 
 from slam_network.models import Network
 from slam_domain.models import Domain
@@ -107,8 +107,18 @@ def publish(message='This is the default comment'):
     client = SSHClient()
     client.load_system_host_keys()
     client.set_missing_host_key_policy(AutoAddPolicy())
+    # The next 2 lines are required for paramiko 2.8+ to work with EL6 systems
+    # that don't support RSA2 algorithms
+    client.disabled_algorithms = {'keys': ['rsa-sha2-256', 'rsa-sha2-512']}
+    client.disabled_keys = {'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']}
+    # Instanciate the appropriate key class rather than relying on key_file which is
+    # attempting all possible class with the file resulting in inappropriate error messages
+    # making debugging harder.
+    # TBD: retrieve the key file name from a configuration file with its associated type
+    with open('ssh/id_rsa') as f:
+        private_key = RSAKey.from_private_key(f)
     for server in servers:  # And we start SLAM sync. scripts for each domains
-        client.connect(hostname=server, username='root', key_filename='ssh/id_rsa')
+        client.connect(hostname=server, username='root', pkey=private_key)
         _, stdout, stderr = client.exec_command('/usr/local/bin/slam-agent')
         result += 'Reload config. on {}'.format(server)
         for line in stdout.readlines():
