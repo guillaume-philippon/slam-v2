@@ -1,4 +1,5 @@
 venv/
+.venv/
 ssh/
 .idea/
 slam.log
