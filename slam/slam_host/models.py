@@ -121,7 +121,7 @@ class Host(models.Model):
         interface_host = None
         network_host = None
         address_host = None
-        owner_host = None
+        owner_host = ''
         if options is None:
             options = {
                 'no_ip': False,
