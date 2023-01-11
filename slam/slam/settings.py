@@ -34,13 +34,13 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'slam.apps.SlamAdminConfig' if ( django.get_version() >= "3" ) else 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'slam',
+    #'slam',
     'slam_core',
     'slam_hardware',
     'slam_network',

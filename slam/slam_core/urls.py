@@ -28,8 +28,8 @@ urlpatterns = [
     path('producer/publish/', views.publish, name='publish'),
     path('producer/diff', views.diff, name='diff'),
 
-    path('domains', include('slam_domain.urls')),
-    path('networks', include('slam_network.urls')),
-    path('hardware', include('slam_hardware.urls')),
-    path('hosts', include('slam_host.urls')),
+    path('domains/', include('slam_domain.urls')),
+    path('networks/', include('slam_network.urls')),
+    path('hardware/', include('slam_hardware.urls')),
+    path('hosts/', include('slam_host.urls')),
 ]
